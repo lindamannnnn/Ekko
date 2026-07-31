@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block h1 %}登录{% endblock %}
+{% block sub %}欢迎回来，继续你的课评工作{% endblock %}
+{% block content %}
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <label for="email">邮箱</label>
+    {{ form.email(class="", placeholder="you@example.com") }}
+    <label for="password">密码</label>
+    {{ form.password(placeholder="请输入密码") }}
+    <div class="remember">{{ form.remember() }} {{ form.remember.label }}</div>
+    {{ form.submit(class="btn") }}
+  </form>
+
+  <div class="alt"><a href="{{ url_for('auth.forgot_password') }}">忘记密码？</a></div>
+
+  {% if providers %}
+  <div class="providers">
+    {% for p in providers %}
+      <button class="provider-btn {% if p.available %}enabled{% endif %}" {% if not p.available %}disabled{% endif %}>
+        {{ p.label }}{% if not p.available %}（即将推出）{% endif %}
+      </button>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="alt">还没有账号？<a href="{{ url_for('auth.register') }}">立即注册</a></div>
+{% endblock %}

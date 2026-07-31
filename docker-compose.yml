@@ -1,0 +1,14 @@
+services:
+  web:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_APP=app:create_app
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-change-in-prod}
+      - AI_API_KEY=${AI_API_KEY}
+      - AI_BASE_URL=${AI_BASE_URL:-https://open.bigmodel.cn/api/paas/v4}
+      - AI_MODEL=${AI_MODEL:-glm-4-flash}
+    volumes:
+      - ./instance:/app/instance
+    restart: unless-stopped

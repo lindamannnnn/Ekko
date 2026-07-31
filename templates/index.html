@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block h1 %}欢迎，{{ user.display_name or user.email }}{% endblock %}
+{% block sub %}课评系统已就绪（仪表盘将在后续阶段接入）{% endblock %}
+{% block content %}
+  {% if not user.email_verified_at %}
+  <div class="banner">
+    你的邮箱尚未验证。验证邮箱后可解锁全部功能。
+    <form method="post" action="{{ url_for('auth.resend_verify') }}" style="margin-top:10px">
+      <button class="btn btn-secondary" type="submit" style="margin-top:0">重新发送验证邮件</button>
+    </form>
+  </div>
+  {% endif %}
+
+  <p style="font-size:14px;color:var(--muted);line-height:1.7">
+    账号：{{ user.email }}<br>
+    注册类型：邮箱密码登录<br>
+    邮箱状态：{{ '已验证' if user.email_verified_at else '未验证' }}
+  </p>
+
+  <a class="btn btn-secondary" href="{{ url_for('auth.logout') }}">退出登录</a>
+{% endblock %}

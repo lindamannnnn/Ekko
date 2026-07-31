@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><title>重置密码</title></head>
+<body style="margin:0;background:#f5f7fa;padding:24px;font-family:system-ui,'PingFang SC','Microsoft YaHei',sans-serif;color:#1f2933">
+  <div style="max-width:480px;margin:0 auto;background:#fff;border-radius:12px;padding:32px;border:1px solid #e5e7eb">
+    <h2 style="margin:0 0 12px">重置你的密码</h2>
+    <p style="color:#6b7280;line-height:1.6">你好，{{ user.display_name or user.email }}：</p>
+    <p style="color:#1f2933;line-height:1.6">我们收到了重置密码的请求。请点击下面的按钮设置新密码（链接 60 分钟内有效）：</p>
+    <p style="text-align:center;margin:28px 0">
+      <a href="{{ link }}" style="background:#2f6fed;color:#fff;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:15px">重置密码</a>
+    </p>
+    <p style="color:#6b7280;font-size:12px;line-height:1.6">如果按钮无法点击，请复制以下链接到浏览器打开：<br>{{ link }}</p>
+    <p style="color:#9ca3af;font-size:12px;margin-top:24px">若非本人操作，请忽略此邮件，密码不会更改。</p>
+  </div>
+</body>
+</html>

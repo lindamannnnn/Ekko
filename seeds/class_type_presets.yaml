@@ -1,0 +1,145 @@
+# 班级类型预置（8 类）。载入后成为 class_type_presets 表，全局只读。
+# card_template: work(作品展示型) / skill(动作技能型) / academic(学业进阶型) / general(通用型)
+- code: coding
+  name: 编程
+  dimensions: [课堂状态, 知识点掌握, 思维能力, 作品/项目完成度, 建议与期待]
+  tone: 专业、具体、鼓励为主
+  length_min: 180
+  length_max: 320
+  emoji_min: 2
+  emoji_max: 5
+  prompt_hints:
+    focus: 关注逻辑思维、调试过程、任务拆解能力，避免只说"写得不错"
+    vocab: [逻辑, 调试, 算法, 变量, 函数, 结构, 思路]
+    avoid: [聪明, 天才, 没有天赋]
+  quick_tags:
+    课堂状态: [专注投入, 偶尔走神, 需多次提醒, 主动提问, 乐于协助同伴]
+    知识点: [理解到位, 需再巩固, 能举一反三, 概念混淆]
+    思维: [逻辑清晰, 敢于试错, 善于拆解, 需要引导]
+    作品: [独立完成, 需老师辅助, 功能完整, 有创意]
+  card_template: academic
+
+- code: art
+  name: 美术
+  dimensions: [课堂状态, 技法掌握, 作品完成度, 创意表现, 建议与期待]
+  tone: 感性、鼓励、关注观察力与表达
+  length_min: 180
+  length_max: 320
+  emoji_min: 2
+  emoji_max: 5
+  prompt_hints:
+    focus: 关注构图、色彩、线条控制、观察力，避免用"画得像不像"评判
+    vocab: [构图, 配色, 线条, 层次, 细节刻画, 观察]
+    avoid: [天赋, 没有美术细胞, 画得不像]
+  quick_tags:
+    课堂状态: [专注投入, 偶尔走神, 需多次提醒, 主动提问]
+    技法: [起稿准确, 用色大胆, 线条流畅, 比例待调整]
+    作品: [独立完成, 需老师辅助, 细节丰富, 未完成]
+  card_template: work
+
+- code: dance
+  name: 舞蹈
+  dimensions: [课堂状态, 基本功, 动作协调, 节奏感, 表现力, 建议与期待]
+  tone: 鼓励、关注身体控制与自信
+  length_min: 180
+  length_max: 320
+  emoji_min: 2
+  emoji_max: 5
+  prompt_hints:
+    focus: 关注软开度、动作质感、节奏配合与舞台表现，避免"身体条件"类评判
+    vocab: [软开度, 动作质感, 节奏, 协调, 表现力, 力度]
+    avoid: [天生软, 不是这块料, 条件差]
+  quick_tags:
+    课堂状态: [专注投入, 容易紧张, 需多次示范, 主动练习]
+    基本功: [软开进步, 动作规范, 力量不足, 需加强]
+    表现: [自信大方, 富有感染力, 略显害羞]
+  card_template: skill
+
+- code: sports
+  name: 体育
+  dimensions: [课堂状态, 体能, 技术动作, 规则意识, 意志品质, 建议与期待]
+  tone: 鼓励、关注坚持与团队
+  length_min: 180
+  length_max: 320
+  emoji_min: 2
+  emoji_max: 5
+  prompt_hints:
+    focus: 关注动作要领、耐力、协调与拼搏精神，避免"身体素质"类标签
+    vocab: [动作要领, 耐力, 协调, 配合, 拼搏, 规范]
+    avoid: [不是运动的料, 体质差, 笨]
+  quick_tags:
+    课堂状态: [积极投入, 容易放弃, 需鼓励, 乐于挑战]
+    技术: [动作标准, 发力正确, 需纠动作, 进步明显]
+    品质: [坚持不懈, 团队配合, 需增强自信]
+  card_template: skill
+
+- code: calligraphy
+  name: 书法
+  dimensions: [课堂状态, 握笔/坐姿, 笔画结构, 章法布局, 建议与期待]
+  tone: 平和、关注习惯与耐心
+  length_min: 180
+  length_max: 320
+  emoji_min: 2
+  emoji_max: 5
+  prompt_hints:
+    focus: 关注笔法、间架结构、章法与专注力，避免"写得漂不漂亮"单一评判
+    vocab: [笔法, 间架, 章法, 提按, 结构, 神韵]
+    avoid: [没有天分, 写得丑]
+  quick_tags:
+    课堂状态: [专注耐心, 易急躁, 需提醒坐姿, 静心]
+    技法: [笔画有力, 结构工整, 需练基本功, 章法有进步]
+    习惯: [坐姿端正, 执笔正确, 需纠正习惯]
+  card_template: work
+
+- code: english
+  name: 英语
+  dimensions: [课堂状态, 听说, 读写, 词汇语法, 兴趣, 建议与期待]
+  tone: 鼓励、关注语感与运用
+  length_min: 180
+  length_max: 320
+  emoji_min: 2
+  emoji_max: 5
+  prompt_hints:
+    focus: 关注口语表达、阅读习惯与词汇积累，避免"语感差"类空泛评价
+    vocab: [语感, 发音, 阅读, 词汇, 句型, 表达]
+    avoid: [不开窍, 没语言天赋]
+  quick_tags:
+    课堂状态: [积极开口, 不敢说, 需鼓励, 主动参与]
+    能力: [发音标准, 词汇增长, 阅读流畅, 需练听力]
+    兴趣: [乐于表达, 喜欢阅读, 需激发兴趣]
+  card_template: academic
+
+- code: tutoring
+  name: 学科辅导
+  dimensions: [课堂状态, 知识掌握, 解题思路, 学习习惯, 建议与期待]
+  tone: 务实、具体、鼓励
+  length_min: 180
+  length_max: 320
+  emoji_min: 2
+  emoji_max: 5
+  prompt_hints:
+    focus: 关注知识点漏洞、解题方法与学习习惯，避免"粗心"一刀切
+    vocab: [知识点, 思路, 错题, 习惯, 方法, 巩固]
+    avoid: [不聪明, 学不会]
+  quick_tags:
+    课堂状态: [专注听讲, 易走神, 主动提问, 需督促]
+    掌握: [理解到位, 存在漏洞, 需巩固, 进步明显]
+    习惯: [作业认真, 错题整理, 需规范, 方法待改进]
+  card_template: academic
+
+- code: other
+  name: 其他
+  dimensions: [课堂状态, 学习表现, 亮点, 待提升, 建议与期待]
+  tone: 通用、鼓励、具体
+  length_min: 180
+  length_max: 320
+  emoji_min: 2
+  emoji_max: 5
+  prompt_hints:
+    focus: 围绕本节课具体表现展开，优点不足约 7:3，给一条可执行建议
+    vocab: [专注, 进步, 主动, 需要, 建议]
+    avoid: [天赋, 不行, 差]
+  quick_tags:
+    课堂状态: [专注投入, 偶尔分心, 需提醒, 积极主动]
+    表现: [有亮点, 稳步提升, 需加强, 完成度好]
+  card_template: general

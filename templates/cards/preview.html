@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>课评图片模板 · {{ review.student_id[:6] }}</title>
+  <style>
+    :root { --brand:#2f6fed; --text:#1f2933; --muted:#6b7280; --bg:#f5f7fa; --card:#fff; --border:#e5e7eb; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; background:var(--bg); }
+    .stage { display:flex; justify-content:center; padding:32px; }
+    .pcard { width:360px; background:var(--card); border:1px solid var(--border); border-radius:16px;
+             box-shadow:0 10px 40px rgba(31,41,51,.12); padding:24px; }
+    .pcard.skill { border-top:6px solid #1f9d57; }
+    .pcard.academic { border-top:6px solid #c97a16; }
+    .pcard.work { border-top:6px solid var(--brand); }
+    .pcard.general { border-top:6px solid #d64545; }
+    .badge { display:inline-block; font-size:12px; padding:3px 10px; border-radius:12px; background:#eef2ff; color:var(--brand); }
+    .ttl { font-size:22px; font-weight:700; margin:14px 0 6px; }
+    . meta { color:var(--muted); font-size:13px; }
+    .body { font-size:14px; line-height:1.9; white-space:pre-wrap; min-height:120px; }
+    .org { margin-top:14px; font-size:13px; color:var(--muted); }
+    .btn { background:var(--brand); color:#fff; border:none; padding:10px 18px; border-radius:8px; font-size:14px; cursor:pointer; }
+    .btn:hover { background:#1f56c4; }
+  </style>
+</head>
+<body>
+  <div class="stage">
+    <div class="pcard {{ (preset.card_template if preset else 'general') }}">
+      <span class="badge">{{ (klass.type_name_custom or (preset.name if preset else '通用')) }}</span>
+      <div class="ttl">{{ (klass.type_name_custom or (preset.name if preset else '通用')) }} · 课评</div>
+      <div class="meta">学生：{{ review.student_id[:6] }} · 课次：{{ lesson.title if lesson else '—' }}</div>
+      <div class="body" id="card-body">{{ review.content or '（尚无内容，先去编辑器生成）' }}</div>
+      <div class="org">机构：{{ current_user.org_name or '示例机构' }}</div>
+      <button class="btn" id="export-png">导出为图片</button>
+      <span id="busy" style="color:var(--muted);font-size:13px;margin-left:8px;"></span>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script>
+    document.getElementById('export-png').addEventListener('click', async () => {
+      const card = document.querySelector('.pcard');
+      document.getElementById('busy').textContent = '渲染中…';
+      try {
+        const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+        const link = document.createElement('a');
+        link.download = 'keping-{{ (klass.name or 'preset') }}-{{ review.student_id[:6] }}.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        document.getElementById('busy').textContent = '已导出 PNG';
+      } catch (e) { alert('导出失败：' + e); }
+    });
+  </script>
+</body>
+</html>

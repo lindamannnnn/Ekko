@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>{{ klass.name }}</h1>
+  <p class="muted">类型：{{ klass.type_code }}</p>
+  <h3>学生（{{ students|length }}）</h3>
+  <ul class="list">
+    {% for s in students %}<li>{{ s.name }}{% if s.preferred_name %}（{{ s.preferred_name }}）{% endif %}</li>{% endfor %}
+  </ul>
+  <a class="btn" href="{{ url_for('classes.add_students', class_id=klass.id) }}">+ 添加学生</a>
+  <form method="POST" action="{{ url_for('classes.archive', class_id=klass.id) }}" style="display:inline">
+    <button type="submit" onclick="return confirm('确认归档？')">归档班级</button>
+  </form>
+  <a class="btn" href="{{ url_for('lessons.new', class_id=klass.id) }}">+ 新建课次</a>
+</div>
+{% endblock %}

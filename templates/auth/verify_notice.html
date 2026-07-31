@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block h1 %}注册成功{% endblock %}
+{% block sub %}我们还差最后一步：验证你的邮箱{% endblock %}
+{% block content %}
+  <p style="font-size:14px;color:var(--muted);line-height:1.6">
+    我们已经向 <strong>{{ email }}</strong> 发送了一封验证邮件。<br>
+    请点击邮件中的链接完成验证，之后即可使用全部功能。
+  </p>
+
+  {% if dev_mode %}
+    <div class="alert alert-warning">
+      当前为 <strong>dev 模式</strong>：SMTP 未配置，邮件未真正发送。
+      开发阶段可直接使用下方链接完成验证：
+    </div>
+    <a class="dev-link" href="{{ url_for('auth.login') }}">前往登录页（请改用控制台打印的验证链接）</a>
+  {% endif %}
+
+  <a class="btn btn-secondary" href="{{ url_for('auth.login') }}">前往登录</a>
+  <div class="alt">没收到邮件？<a href="{{ url_for('auth.login') }}">登录后重新发送</a></div>
+{% endblock %}

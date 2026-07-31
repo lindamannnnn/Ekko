@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>{{ lesson.title }}</h1>
+  <p class="muted">{{ lesson.lesson_date or '未设日期' }}</p>
+  <p>共性表现：{{ lesson.common_notes or '（无）' }}</p>
+  <a class="btn" href="{{ url_for('classes.detail', class_id=lesson.class_id) }}">← 返回班级</a>
+</div>
+{% endblock %}

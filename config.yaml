@@ -1,0 +1,61 @@
+# 课评自动生成系统配置
+
+# 路径配置
+paths:
+  data: ./data
+  courses: ./data/courses
+  students: ./.claude/memory/class
+  references: ./references
+  output: ./output
+  templates: ./data/templates
+
+# AI配置
+ai:
+  # 使用 Kimi API (Moonshot)
+  # API密钥 - 优先从 .env 文件或环境变量读取
+  # 如需直接配置，取消下行注释并填入密钥
+  # api_key: your-api-key-here
+  api_url: https://api.moonshot.cn/v1/chat/completions
+  model: moonshot-v1-8k
+  max_tokens: 2000
+  temperature: 0.7
+
+# 参考资料匹配规则
+reference_matching:
+  # 年龄段心理发展资料
+  age_psychology:
+    "6-8": "age-psychology/6-8岁-编程学习特点.md"
+    "9-11": "age-psychology/9-11岁-逻辑思维发展.md"
+    "12-14": "age-psychology/12-14岁-抽象思维建立.md"
+
+  # 课程难点资料
+  course_difficulties:
+    "C++": "course-difficulties/C++-常见错误与困难.md"
+    "Kitten": "course-difficulties/Kitten-图形化编程难点.md"
+    "Scratch": "course-difficulties/Kitten-图形化编程难点.md"
+
+  # 学习阶段特征
+  learning_stages:
+    "0-3": "learning-stages/入门期-0-3个月.md"
+    "3-6": "learning-stages/适应期-3-6个月.md"
+    "6-12": "learning-stages/突破期-6-12个月.md"
+    "12+": "learning-stages/进阶期-1年以上.md"
+
+# 课评风格配置
+review_style:
+  # 评价维度
+  dimensions:
+    - 课堂表现
+    - 作业情况
+    - 亮点时刻
+    - 建议与期待
+
+  # 语言风格
+  tone: 鼓励为主，具体指出问题
+  length: 中等（300-500字）
+
+# Web服务配置
+web:
+  host: 127.0.0.1
+  port: 5000
+  debug: true

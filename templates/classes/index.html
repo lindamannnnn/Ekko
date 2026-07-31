@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>我的班级</h1>
+  {% if klasses %}
+  <ul class="list">
+    {% for k in klasses %}
+    <li>
+      <a href="{{ url_for('classes.detail', class_id=k.id) }}">{{ k.name }}</a>
+      <span class="muted">（{{ k.type_code }}）</span>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p>还没有班级，<a href="{{ url_for('classes.new') }}">创建一个</a>。</p>
+  {% endif %}
+  <a class="btn" href="{{ url_for('classes.new') }}">+ 新建班级</a>
+</div>
+{% endblock %}

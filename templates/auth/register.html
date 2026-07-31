@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block h1 %}注册{% endblock %}
+{% block sub %}创建账号，开始为家长生成课评{% endblock %}
+{% block content %}
+  <form method="post" novalidate>
+    {{ form.hidden_tag() }}
+    <label for="display_name">昵称（选填）</label>
+    {{ form.display_name(placeholder="例如：王老师") }}
+    <label for="email">邮箱</label>
+    {{ form.email(placeholder="you@example.com") }}
+    <label for="password">密码</label>
+    {{ form.password(placeholder="至少 8 位") }}
+    <label for="confirm">确认密码</label>
+    {{ form.confirm(placeholder="再次输入密码") }}
+    {{ form.submit(class="btn") }}
+  </form>
+
+  {% if providers %}
+  <div class="providers">
+    {% for p in providers %}
+      <button class="provider-btn {% if p.available %}enabled{% endif %}" {% if not p.available %}disabled{% endif %}>
+        {{ p.label }}{% if not p.available %}（即将推出）{% endif %}
+      </button>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <div class="alt">已有账号？<a href="{{ url_for('auth.login') }}">去登录</a></div>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>新建课次 · {{ klass.name }}</h1>
+  <form method="POST">
+    <label>课次标题 <input name="title" required></label>
+    <label>上课日期 <input type="date" name="lesson_date"></label>
+    <label>全班共性表现
+      <textarea name="common_notes" rows="3" placeholder="（可选）描述全班整体表现"></textarea>
+    </label>
+    <label>知识点（逗号分隔）
+      <input name="objectives" placeholder="例如：循环,条件判断,函数">
+    </label>
+    <label>课件正文
+      <textarea name="courseware_text" rows="6" placeholder="粘贴本节课课件/教案正文"></textarea>
+    </label>
+    <button type="submit">创建课次</button>
+  </form>
+</div>
+{% endblock %}

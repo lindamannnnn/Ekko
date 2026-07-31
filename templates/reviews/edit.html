@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>编辑课评</h1>
+  <form method="POST">
+    <textarea name="content" rows="12">{{ review.content or '' }}</textarea>
+    <button type="submit">保存</button>
+  </form>
+</div>
+{% endblock %}

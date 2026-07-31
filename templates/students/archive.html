@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>学生档案 · {{ student.name }}</title>
+  <style>
+    :root { --bg:#f5f7fa; --card:#fff; --text:#1f2933; --muted:#6b7280; --border:#e5e7eb;
+            --primary:#2f6fed; --primary-dark:#1f56c4; --success:#1f9d57; --radius:12px;
+            --shadow:0 6px 24px rgba(31,41,51,.08); }
+    * { box-sizing:border-box; }
+    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+           background:var(--bg); color:var(--text); }
+    .wrap { max-width:860px; margin:0 auto; padding:24px 20px 60px; }
+    h1 { font-size:20px; margin:0 0 4px; }
+    .sub { color:var(--muted); font-size:14px; margin-bottom:20px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+            box-shadow:var(--shadow); padding:16px; margin-bottom:16px; }
+    .card h2 { font-size:15px; margin:0 0 12px; }
+    .timeline { border-left:3px solid var(--border); padding-left:16px; margin-left:6px; }
+    .tl-item { margin-bottom:16px; }
+    .tl-date { font-size:13px; color:var(--muted); }
+    .tl-class { font-size:12px; color:var(--primary); margin:2px 0; }
+    .tl-content { font-size:14px; line-height:1.7; white-space:pre-wrap; }
+    .btn { background:var(--primary); color:#fff; border:none; padding:9px 18px; border-radius:8px;
+           font-size:14px; cursor:pointer; }
+    .btn:hover { background:var(--primary-dark); }
+    .btn:disabled { opacity:.6; cursor:not-allowed; }
+    textarea { width:100%; min-height:180px; border:1px solid var(--border); border-radius:8px;
+               padding:10px; font-family:inherit; font-size:13px; line-height:1.6; }
+    .summary { white-space:pre-wrap; font-size:14px; line-height:1.8; background:#fbfcfe;
+               border:1px solid var(--border); border-radius:8px; padding:12px; }
+    .empty { color:var(--muted); font-size:13px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>{{ student.name }}{% if student.preferred_name %}（{{ student.preferred_name }}）{% endif %}</h1>
+    <div class="sub">所属班级：{{ classes | map(attribute='name') | join('、') or '（暂无）' }}</div>
+
+    <div class="card">
+      <h2>阶段总结</h2>
+      <button class="btn" id="gen-summary">生成阶段总结</button>
+      <span id="busy" style="color:var(--muted);font-size:13px;margin-left:8px;"></span>
+      <div id="summary-area" style="margin-top:12px;">
+        {% for s in summaries %}
+          <div class="summary" style="margin-bottom:12px;">
+            <div style="font-size:12px;color:var(--muted);margin-bottom:6px;">{{ s.term_label }}</div>
+            {{ s.content }}
+          </div>
+        {% else %}
+          <div class="empty">暂无阶段总结。确认若干课评后，点上方按钮生成。</div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>课评时间线（跨班）</h2>
+      <div class="timeline">
+        {% for r in reviews %}
+          {% set les = r.lesson %}
+          <div class="tl-item">
+            <div class="tl-date">{{ les.lesson_date if les and les.lesson_date else '日期未知' }}</div>
+            <div class="tl-class">{{ les.title }}</div>
+            <div class="tl-content">{{ r.content or '（未生成）' }}</div>
+          </div>
+        {% else %}
+          <div class="empty">该生还没有课评记录。</div>
+        {% endfor %}
+      </div>
+    </div>
+    <a href="{{ url_for('main.index') }}">← 返回首页</a>
+  </div>
+
+  <script>
+    document.getElementById('gen-summary').addEventListener('click', async () => {
+      const btn = document.getElementById('gen-summary');
+      btn.disabled = true; document.getElementById('busy').textContent = '生成中…';
+      const r = await fetch(window.location.pathname + '/summary', { method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'period_label=本学期' });
+      const j = await r.json();
+      btn.disabled = false; document.getElementById('busy').textContent = '';
+      if (j.ok) {
+        const div = document.createElement('div');
+        div.className = 'summary'; div.style.marginBottom = '12px';
+        div.innerHTML = '<div style="font-size:12px;color:var(--muted);margin-bottom:6px;">本学期（新）</div>' + j.content.replace(/\\n/g,'<br>');
+        document.getElementById('summary-area').prepend(div);
+      } else { alert('生成失败：' + (j.error || '未知错误')); }
+    });
+  </script>
+</body>
+</html>

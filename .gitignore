@@ -1,0 +1,27 @@
+# 密钥与环境（绝不入库）
+.env
+*.env
+.env.*
+!.env.example
+
+# 运行时产物
+instance/
+uploads/
+__pycache__/
+*.pyc
+*.pyo
+
+# 旧单体残留（不允许提交）
+src/web/
+src/oj/
+rules/
+start.bat
+tools/
+output/
+data/
+references/
+123/
+
+# 平台无关
+.venv/
+venv/

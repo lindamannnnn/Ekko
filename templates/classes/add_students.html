@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1>添加学生到 {{ klass.name }}</h1>
+  <form method="POST">
+    <label>学生姓名（每行 / 逗号分隔一个）
+      <textarea name="names" rows="8" placeholder="张三&#10;李四&#10;王五"></textarea>
+    </label>
+    <button type="submit">添加</button>
+  </form>
+</div>
+{% endblock %}
