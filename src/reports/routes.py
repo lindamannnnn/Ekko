@@ -1,13 +1,13 @@
 """存档导出（Excel / PDF）+ 首页未写提醒。"""
 from io import BytesIO
 
-from flask import render_template, send_file, request, jsonify
+from flask import Blueprint, render_template, send_file, request, jsonify
 from flask_login import login_required, current_user
 from extensions import db
 from models.class_student import Klass, Student, Enrollment
 from models.lesson import Lesson, Review
 
-from . import reports_bp
+reports_bp = Blueprint("reports", __name__)
 
 
 @reports_bp.route("/export-xlsx/<class_id>", methods=["GET"])

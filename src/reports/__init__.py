@@ -1,1 +1,1 @@
-from . import reports_bp
+from .routes import reports_bp

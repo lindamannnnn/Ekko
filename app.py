@@ -86,7 +86,7 @@ def create_app(config: dict | None = None) -> Flask:
     from lessons import lessons_bp
     from reviews import reviews_bp
     from students import students_bp
-    from cards import cards_bp
+    from cards import card_bp
     from reports import reports_bp
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
@@ -94,7 +94,7 @@ def create_app(config: dict | None = None) -> Flask:
     app.register_blueprint(lessons_bp)
     app.register_blueprint(reviews_bp)
     app.register_blueprint(students_bp)
-    app.register_blueprint(cards_bp)
+    app.register_blueprint(card_bp)
     app.register_blueprint(reports_bp)
     # reviews 蓝图是纯 JSON API（前端 fetch 带登录态），整体豁免 CSRF；
     # 鉴权仍由 @login_required 保证。登录/注册表单在 auth 蓝图，仍受 CSRF 保护。

@@ -9,10 +9,11 @@ from models.lesson import Review, Lesson
 from models.class_student import Klass
 from models.class_type_preset import ClassTypePreset
 
-from . import cards_bp
+from flask import Blueprint
+card_bp = Blueprint("cards", __name__)
 
 
-@cards_bp.route("/preview/<review_id>", methods=["GET", "POST"])
+@card_bp.route("/preview/<review_id>", methods=["GET", "POST"])
 @login_required
 def preview(review_id):
     review = Review.query.filter_by(id=review_id, user_id=current_user.id).first_or_404()
