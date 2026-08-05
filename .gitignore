@@ -31,7 +31,7 @@ venv/
 logs_*.txt
 _removed_orphan_*/
 _旧git历史_*/
-quantifying/
+*quantifying*/   # 含鬼目录 ' quantifying/'（首 commit 误提交）
 *.lnk
 
 # 笔记/草稿
