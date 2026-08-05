@@ -80,6 +80,8 @@ def create_app(config: dict | None = None) -> Flask:
         MAIL_PASSWORD=os.environ.get('MAIL_PASSWORD', ''),
         MAIL_DEFAULT_SENDER=os.environ.get('MAIL_DEFAULT_SENDER', ''),
         MAIL_USE_TLS=os.environ.get('MAIL_USE_TLS', 'true').lower() == 'true',
+        # 465 端口用 SMTP_SSL 套接字层（阿里云屏蔽 25 出站，163 邮箱必须走 465）
+        MAIL_USE_SSL=os.environ.get('MAIL_USE_SSL', 'false').lower() == 'true',
         # —— AI 模型通道（P4）——
         AI_API_KEY=os.environ.get('AI_API_KEY', ''),
         AI_BASE_URL=os.environ.get('AI_BASE_URL', 'https://open.bigmodel.cn/api/paas/v4'),
