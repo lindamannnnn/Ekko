@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# 课评系统 · 腾讯云服务器一键部署脚本
+# 课评系统 · 云服务器一键部署脚本（腾讯云 / 阿里云通用）
 #
 # 用法（在服务器上以 root 执行）：
 #   bash setup-server.sh
 #
-# 做的事：装 Docker → 配腾讯云镜像加速 → 拉代码 → 生成随机密钥 → 起服务
-# 适用：Ubuntu 22.04 / 24.04、Debian 12（腾讯云轻量应用服务器常见镜像）
+# 做的事：装 Docker → 配国内镜像加速 → 拉代码 → 生成随机密钥 → 起服务
+# 适用：Ubuntu 22.04 / 24.04、Debian 12（腾讯云/阿里云轻量应用服务器常见镜像）
 #
 set -euo pipefail
 
@@ -49,15 +49,11 @@ step "1/7 安装 Docker"
 if command -v docker >/dev/null 2>&1; then
   c_green "  ✓ Docker 已安装：$(docker --version)"
 else
-  echo "  正在安装（走腾讯云内网源，很快）..."
+  echo "  正在通过系统 apt 源安装 docker.io（腾讯云/阿里云通用）..."
   apt-get update -qq
-  apt-get install -y -qq ca-certificates curl gnupg lsb-release >/dev/null
-
-  # 腾讯云内网 apt 源装 docker.io，比官方源稳定得多
-  apt-get install -y -qq docker.io docker-compose-v2 >/dev/null 2>&1 || {
-    c_yellow "  内网源不可用，改用官方脚本..."
-    curl -fsSL https://get.docker.com | sh
-  }
+  apt-get install -y -qq ca-certificates curl gnupg >/dev/null
+  apt-get install -y -qq docker.io docker-compose-v2 >/dev/null 2>&1 \
+    || die "docker.io 安装失败，请检查 apt 源是否可达"
   systemctl enable --now docker
   c_green "  ✓ Docker 安装完成"
 fi
@@ -80,15 +76,16 @@ if ! grep -q 'registry-mirrors' /etc/docker/daemon.json 2>/dev/null; then
   cat > /etc/docker/daemon.json <<'JSON'
 {
   "registry-mirrors": [
-    "https://mirror.ccs.tencentyun.com",
-    "https://docker.m.daocloud.io"
+    "https://docker.m.daocloud.io",
+    "https://hub.rat.dev"
   ],
+  "dns": ["223.5.5.5", "119.29.29.29", "8.8.8.8"],
   "log-driver": "json-file",
   "log-opts": { "max-size": "10m", "max-file": "3" }
 }
 JSON
   systemctl restart docker
-  c_green "  ✓ 已配置腾讯云内网镜像源（mirror.ccs.tencentyun.com）"
+  c_green "  ✓ 已配置国内镜像加速（daocloud / rat.dev），拉取 python 镜像更快"
 else
   c_green "  ✓ 镜像加速已配置"
 fi
