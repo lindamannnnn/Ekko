@@ -97,21 +97,44 @@ fi
 step "3/7 获取代码"
 apt-get install -y -qq git >/dev/null 2>&1 || true
 
-if [ -d "$APP_DIR/.git" ]; then
-  echo "  已存在，拉取最新..."
-  cd "$APP_DIR" && git pull --ff-only || c_yellow "  ⚠ 拉取失败，沿用本地版本"
+if [ -f "$APP_DIR/docker-compose.yml" ]; then
+  # 场景一：代码已在本地（scp 上传解压 / 之前部署过）
+  if [ -d "$APP_DIR/.git" ]; then
+    echo "  检测到 git 仓库，尝试拉取最新..."
+    cd "$APP_DIR" && git pull --ff-only 2>/dev/null && c_green "  ✓ 已更新" \
+      || c_yellow "  ⚠ 拉取失败（私有仓库需凭据），沿用当前版本"
+  else
+    c_green "  ✓ 检测到已上传的代码，跳过下载"
+  fi
+elif [ -n "${GIT_TOKEN:-}" ]; then
+  # 场景二：提供了 token，克隆私有仓库
+  echo "  使用 token 克隆私有仓库..."
+  AUTH_URL=$(echo "$REPO_URL" | sed "s#https://#https://${GIT_TOKEN}@#")
+  git clone --depth 1 "$AUTH_URL" "$APP_DIR" || die "克隆失败，请检查 token 是否有效、是否有 repo 读权限"
+  # 把 token 从 remote 里洗掉，避免明文留在 .git/config
+  cd "$APP_DIR" && git remote set-url origin "$REPO_URL"
+  c_green "  ✓ 克隆完成（token 已从配置中清除）"
 else
-  echo "  从 $REPO_URL 克隆..."
+  # 场景三：尝试公开克隆
+  echo "  尝试克隆 $REPO_URL ..."
   if ! git clone --depth 1 "$REPO_URL" "$APP_DIR" 2>/dev/null; then
-    c_yellow "  ⚠ GitHub 直连失败（国内服务器常见），尝试镜像加速..."
-    MIRROR="https://ghfast.top/${REPO_URL}"
-    git clone --depth 1 "$MIRROR" "$APP_DIR" 2>/dev/null || die \
-"代码拉取失败。请二选一：
-  A) 本地打包上传：
-     本地执行  tar --exclude=.venv --exclude=.git -czf ekko.tar.gz class-review-system
-     再执行    scp ekko.tar.gz root@服务器IP:/opt/
-     服务器上  mkdir -p $APP_DIR && tar xzf /opt/ekko.tar.gz -C $APP_DIR --strip-components=1
-  B) 把仓库同步一份到 Gitee，然后 REPO_URL=你的gitee地址 bash $0"
+    die "代码获取失败。该仓库是私有的，请三选一：
+
+  【方案A · 推荐】本地打包上传（最简单，不依赖 GitHub）
+     在你自己电脑的项目目录执行：
+       git archive --format=tar.gz -o ekko.tar.gz HEAD
+       scp ekko.tar.gz root@本机IP:/tmp/
+     然后在服务器执行：
+       mkdir -p $APP_DIR && tar xzf /tmp/ekko.tar.gz -C $APP_DIR
+       bash $APP_DIR/deploy/setup-server.sh
+
+  【方案B】用 GitHub Token（后续 git pull 更新方便）
+     去 https://github.com/settings/tokens 生成 classic token，勾选 repo 权限，然后：
+       GIT_TOKEN=ghp_你的token bash \$0
+
+  【方案C】把仓库改为 Public
+     仓库 Settings → 最下方 Danger Zone → Change visibility
+     （注意：代码会公开可见，商业项目慎选）"
   fi
 fi
 cd "$APP_DIR"
