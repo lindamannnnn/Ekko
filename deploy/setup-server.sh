@@ -150,10 +150,16 @@ else
   ADMIN_GATE_KEY=$(openssl rand -hex 16)     # 后台第二道门密钥
   ADMIN_PASSWORD=$(openssl rand -base64 12 | tr -d '/+=' | head -c 14)
 
-  echo
-  c_yellow "  需要你的大模型 API Key（智谱 GLM 免费额度够用：https://open.bigmodel.cn）"
-  read -rp "  请粘贴 AI_API_KEY（留空则稍后手动填 .env）: " AI_API_KEY
-  read -rp "  管理员登录邮箱 [admin@local.dev]: " ADMIN_EMAIL
+  if [ -z "${AI_API_KEY:-}" ]; then
+    echo
+    c_yellow "  需要你的大模型 API Key（智谱 GLM 免费额度够用：https://open.bigmodel.cn）"
+    read -rp "  请粘贴 AI_API_KEY（留空则稍后手动填 .env）: " AI_API_KEY || true
+  else
+    echo "  使用传入的 AI_API_KEY 环境变量（非交互部署）"
+  fi
+  if [ -z "${ADMIN_EMAIL:-}" ]; then
+    read -rp "  管理员登录邮箱 [admin@local.dev]: " ADMIN_EMAIL || true
+  fi
   ADMIN_EMAIL=${ADMIN_EMAIL:-admin@local.dev}
 
   cat > .env <<ENV
