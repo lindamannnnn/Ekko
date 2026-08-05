@@ -60,7 +60,7 @@
           <td>
             <div style="display:flex;align-items:center;gap:10px;">
               <div class="user-avatar" style="width:32px;height:32px;font-size:11px;">{{ (u.display_name or 'U')[0] }}</div>
-              <a href="/admin/user/{{ u.id }}" style="font-weight:600;font-size:14px;color:var(--text);text-decoration:none;">{{ u.display_name or '未设置' }}</a>
+              <a href="{{ ADMIN_PREFIX }}/user/{{ u.id }}" style="font-weight:600;font-size:14px;color:var(--text);text-decoration:none;">{{ u.display_name or '未设置' }}</a>
             </div>
           </td>
           <td style="font-family:monospace;font-size:13px;color:var(--text-2);">{{ u.email }}</td>
@@ -81,7 +81,7 @@
             {{ u.last_login_at.strftime('%Y-%m-%d %H:%M') if u.last_login_at else '从未' }}
           </td>
           <td>
-            <form method="POST" action="/admin/users/{{ u.id }}/delete"
+            <form method="POST" action="{{ ADMIN_PREFIX }}/users/{{ u.id }}/delete"
                   onsubmit="return confirm('确定删除账号 {{ u.email }} 吗？\n该账号下的班级、学生、课评等全部数据将一并删除，且不可恢复。');"
                   style="display:inline;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">

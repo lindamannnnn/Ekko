@@ -45,3 +45,65 @@ docker compose exec web flask seed
 - [ ] 登录限流在多实例下换 **Redis** 共享计数。
 - [ ] （可选）SMTP `MAIL_*` 已配置，关闭邮件 dev 模式（否则只打印链接不真发信）。
 - [ ] 68 个本地改动提交入库（含旧系统清理），保留可追溯历史。
+
+---
+
+## 部署补充（2026-08-05 上线准备）
+
+### 1. AI 代理已修复（重要）
+`src/ai/llm_client.py` 现默认**直连**大模型，不继承系统 `HTTP(S)_PROXY`，避免开发机/部署机的代理环境变量导致 AI 调用 `ProxyError 10061`。仅在需经代理访问大模型时，在 `.env` 设 `AI_PROXY=http://host:port`。`.env.example` 已增加 `AI_PROXY` 项（默认留空=直连）。
+
+### 2. 后台门禁必须在服务器设随机值
+`.env` 必须包含 `ADMIN_EMAIL` / `ADMIN_PASSWORD` / `ADMIN_PATH` / `ADMIN_GATE_KEY`（`.env.example` 已补充）。**上线务必把 `ADMIN_PATH` 和 `ADMIN_GATE_KEY` 改为服务器专属随机串**，不要使用默认值，否则后台入口可被轻易猜到。
+
+### 3. Docker 部署修正
+- `Dockerfile` 已改用 `gunicorn -w 4 -k gthread -b 0.0.0.0:5000 run:app`（替代 `python run.py` 开发服务器）。
+- `docker-compose.yml` 已补全环境变量（`ADMIN_*` / `MAIL_*` / `DATABASE_URL` / `AI_PROXY`），并加健康检查。
+- 用法：
+  ```bash
+  cp .env.example .env   # 填入真实值（SECRET_KEY/AI_API_KEY/ADMIN_* 必填）
+  docker compose up -d --build
+  docker compose exec web flask db upgrade
+  docker compose exec web flask seed
+  ```
+  容器仅暴露 5000，生产请在宿主机前置 nginx 反代 + HTTPS（见下）。
+
+### 4. 传统服务器部署（gunicorn + nginx + systemd，非 Docker）
+1. 服务器装 Python 3.13，建 venv，装依赖：`pip install -r requirements.txt gunicorn`
+2. 放 `.env`（SECRET_KEY 用 `python -c "import secrets;print(secrets.token_hex(32))"` 生成；AI_API_KEY/ADMIN_* 必填）
+3. 初始化：`flask db upgrade && flask seed`
+4. `/etc/systemd/system/ekko.service`：
+   ```
+   [Unit]
+   Description=Ekko 课评系统
+   After=network.target
+   [Service]
+   User=www-data
+   WorkingDirectory=/opt/ekko
+   Environment=FLASK_APP=app:create_app
+   ExecStart=/opt/ekko/venv/bin/gunicorn -w 4 -k gthread -b 127.0.0.1:5000 run:app
+   Restart=always
+   [Install]
+   WantedBy=multi-user.target
+   ```
+5. nginx 反代 + HTTPS（certbot）：
+   ```
+   server {
+     listen 80; server_name your.domain.com;
+     location /static { alias /opt/ekko/static; }
+     location / {
+       proxy_pass http://127.0.0.1:5000;
+       proxy_set_header Host $host;
+       proxy_set_header X-Real-IP $remote_addr;
+       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+       proxy_set_header X-Forwarded-Proto $scheme;
+     }
+   }
+   ```
+   然后 `certbot --nginx -d your.domain.com` 开启 HTTPS（强制 443 + HSTS）。
+6. 数据库备份：定时 `cp instance/app.db instance/app.db.bak` + WAL 归档。
+
+### 5. 多用户并发注意
+- AI 调用为同步阻塞（最长 120s），gunicorn 用 `-k gthread --threads 4` 提升单 worker 并发；若量大可加 worker 数或换异步队列。
+- 智谱免费 key 有 QPS 限制，多用户高频调用可能触发限流，必要时升级配额或多 key 轮询（代码已支持 channel.py 多 key）。
+- SQLite 多用户写有锁，建议监控；量大迁 Postgres（`DATABASE_URL` 切换）。

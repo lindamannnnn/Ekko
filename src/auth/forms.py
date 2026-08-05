@@ -38,7 +38,9 @@ class RegistrationForm(FlaskForm):
 
 
 class LoginForm(FlaskForm):
-    email = StringField('邮箱', validators=[DataRequired(), Email(message='邮箱格式不正确')])
+    # 登录允许「账号或邮箱」：去掉 Email 格式限制，纯用户名（如 seyououat520）也能登。
+    # 后端会在查询时自动把不含 @ 的输入补成 <输入>@local.dev 以兼容超管账号。
+    email = StringField('账号或邮箱', validators=[DataRequired(message='请输入账号或邮箱')])
     password = PasswordField('密码', validators=[DataRequired()])
     remember = BooleanField('记住我')
     submit = SubmitField('登录')

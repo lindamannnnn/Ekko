@@ -106,6 +106,10 @@ def create_app(config: dict | None = None) -> Flask:
     from cards import card_bp
     from reports import reports_bp
     from admin import admin_bp
+    # 后台入口随机化：用 ADMIN_PATH 作为 url_prefix（IP 无关，防止后台被扫到）
+    _admin_path = os.environ.get('ADMIN_PATH', 'admin').strip('/')
+    admin_bp.url_prefix = '/' + _admin_path
+    app.jinja_env.globals['ADMIN_PREFIX'] = '/' + _admin_path
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(classes_bp)

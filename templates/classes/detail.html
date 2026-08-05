@@ -195,23 +195,6 @@ body > .container {
                     font-size:11px;color:var(--text-secondary);line-height:1.55;
                     max-height:120px;overflow-y:auto;padding:8px;background:rgba(0,0,0,.2);border-radius:8px
                 "></div>
-                <!-- 上传后重生成提示横幅（仅当本节课存在草稿课评时显示） -->
-                <div id="excellent-regen-banner" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:8px">
-                    <div style="font-size:11px;color:var(--text);line-height:1.55;margin-bottom:8px">
-                        💡 本节课已有 <strong id="excellent-regen-count" style="color:var(--accent)">0</strong> 个草稿课评未使用新风格。
-                    </div>
-                    <div style="display:flex;gap:6px">
-                        <button id="btn-regen-all-excellent" style="
-                            flex:1;font-size:11px;padding:6px 12px;background:var(--accent);
-                            border:none;border-radius:6px;color:#fff;cursor:pointer;font-weight:600
-                        ">🚀 一键用新风格重生成</button>
-                        <button id="btn-dismiss-regen" style="
-                            font-size:11px;padding:6px 12px;background:transparent;border:1px solid var(--border);
-                            border-radius:6px;color:var(--text-3);cursor:pointer
-                        ">稍后</button>
-                    </div>
-                    <div id="excellent-regen-progress" style="display:none;margin-top:6px;font-size:11px;color:var(--text-2)"></div>
-                </div>
             </div>
             <!-- 粘贴文本框（默认隐藏，点击"或粘贴文本"时显示） -->
             <div id="excellent-paste-box" style="display:none;margin-top:8px">
@@ -777,8 +760,6 @@ body > .container {
       const data = await resp.json();
       if (data.ok && data.content) {
         showExcFilled(data.content);
-        // 若当前 lesson 有草稿，显示重生成横幅
-        maybeAutoShowRegenBanner();
       } else {
         showExcEmpty();
       }
@@ -796,18 +777,6 @@ body > .container {
     if (excFilled) excFilled.style.display = '';
     if (excPreview) excPreview.textContent = content.substring(0, 500) + (content.length > 500 ? '...' : '');
     if (excPasteBox) excPasteBox.style.display = 'none';
-  }
-
-  // 页面打开时，若已加载优秀范例 + 当前 lesson 有草稿，自动显示一键重生成横幅
-  function maybeAutoShowRegenBanner() {
-    if (!selectedLessonId) return;
-    fetch(`/reviews/${CLASS_ID}/${selectedLessonId}/status`)
-      .then(r => r.json())
-      .then(reviews => {
-        const drafts = (reviews || []).filter(r => r.status === 'draft' && r.id);
-        if (drafts.length > 0) showRegenBanner(drafts.length);
-      })
-      .catch(() => {});
   }
 
   // 文件选择
@@ -876,74 +845,9 @@ body > .container {
       const data = await resp.json();
       if (data.ok) {
         showExcFilled(content);
-        // 若本节课有草稿课评，显示一键重生成横幅
-        if (data.draft_count && data.draft_count > 0 && selectedLessonId) {
-          showRegenBanner(data.draft_count);
-        }
       }
       else { alert('保存失败: ' + (data.error || '')); }
     } catch(e) { alert('网络错误'); }
-  }
-
-  // ---- 上传优秀范例后的"一键重生成"横幅 ----
-  const regenBanner = $('#excellent-regen-banner');
-  const regenCountEl = $('#excellent-regen-count');
-  const regenProgress = $('#excellent-regen-progress');
-  function showRegenBanner(count) {
-    if (regenCountEl) regenCountEl.textContent = count;
-    if (regenBanner) regenBanner.style.display = 'block';
-  }
-  function hideRegenBanner() {
-    if (regenBanner) regenBanner.style.display = 'none';
-  }
-  const dismissRegenBtn = $('#btn-dismiss-regen');
-  if (dismissRegenBtn) {
-    dismissRegenBtn.addEventListener('click', function() { hideRegenBanner(); });
-  }
-  const regenAllBtn = $('#btn-regen-all-excellent');
-  if (regenAllBtn) {
-    regenAllBtn.addEventListener('click', async function() {
-      if (!selectedLessonId) { alert('请先选择课次'); return; }
-      regenAllBtn.disabled = true;
-      regenAllBtn.textContent = '重生成中...';
-      if (regenProgress) {
-        regenProgress.style.display = 'block';
-        regenProgress.textContent = '正在查询草稿...';
-      }
-      try {
-        // 取出当前 lesson 的所有草稿 review
-        const statusResp = await fetch(`/reviews/${CLASS_ID}/${selectedLessonId}/status`);
-        const reviews = await statusResp.json();
-        const drafts = reviews.filter(r => r.status === 'draft' && r.id);
-        if (drafts.length === 0) {
-          if (regenProgress) regenProgress.textContent = '没有可重生成的草稿';
-          regenAllBtn.disabled = false;
-          regenAllBtn.textContent = '🚀 一键用新风格重生成';
-          return;
-        }
-        // 串行触发重生成（避免并发限速）
-        let okCount = 0, failCount = 0;
-        for (let i = 0; i < drafts.length; i++) {
-          const d = drafts[i];
-          if (regenProgress) regenProgress.textContent = `正在重生成 (${i+1}/${drafts.length})...`;
-          try {
-            const r = await fetch(`/reviews/${d.id}/generate`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
-            if (r.ok) okCount++; else failCount++;
-          } catch (e) { failCount++; }
-        }
-        if (regenProgress) regenProgress.textContent = `完成：成功 ${okCount} 个，失败 ${failCount} 个`;
-        regenAllBtn.disabled = false;
-        regenAllBtn.textContent = '🚀 一键用新风格重生成';
-        // 自动刷新当前选中学生显示
-        if (typeof loadReview === 'function' && selectedStudentId) {
-          setTimeout(() => loadReview(), 500);
-        }
-      } catch (e) {
-        if (regenProgress) regenProgress.textContent = '网络错误：' + e.message;
-        regenAllBtn.disabled = false;
-        regenAllBtn.textContent = '🚀 一键用新风格重生成';
-      }
-    });
   }
 
   // 页面加载时即加载优秀课评（只需一次，不随学生切换重新加载）

@@ -73,7 +73,7 @@
               {% else %}
                 <span style="color:var(--text-3);font-size:18px;">📎</span>
               {% endif %}
-              <a href="/admin/courseware/{{ r.cw.id }}" style="font-weight:500;color:var(--text);text-decoration:none;">{{ r.cw.source_filename or '（无文件名）' }}</a>
+              <a href="{{ ADMIN_PREFIX }}/courseware/{{ r.cw.id }}" style="font-weight:500;color:var(--text);text-decoration:none;">{{ r.cw.source_filename or '（无文件名）' }}</a>
             </div>
           </td>
           <td><span class="badge badge-gray">{{ (r.cw.ext or '—').upper() }}</span></td>

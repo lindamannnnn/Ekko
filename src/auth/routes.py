@@ -128,23 +128,44 @@ def verify_email(token):
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
+    # 已撞限流：直接给友好提示，不再累加、也不硬挡
     if request.method == 'POST':
         from security.ratelimit import check_rate_limit
-        check_rate_limit('auth.login')
+        if check_rate_limit('auth.login'):
+            flash('登录尝试过于频繁，请 5 分钟后再试', 'danger')
+            # 用 redirect 而非 render：避免浏览器刷新时弹出"重新提交表单"提示
+            return redirect(url_for('auth.login'))
     form = LoginForm()
     if form.validate_on_submit():
-        email = form.email.data.strip().lower()
-        user = User.query.filter_by(email=email).first()
+        raw = form.email.data.strip()
+        email = raw.lower()
+        # 排除软删除账号：已注销/脏数据账号不得登录
+        user = User.query.filter_by(email=email).filter(User.deleted_at.is_(None)).first()
+        # 兼容纯用户名登录（如 seyououat520）：输入不含 @ 时自动补 @local.dev 再查一次
+        if not user and '@' not in raw:
+            user = User.query.filter_by(email=(raw.lower() + '@local.dev')).filter(User.deleted_at.is_(None)).first()
         if user and PasswordProvider.check_password(user, form.password.data):
             login_user(user, remember=bool(form.remember.data))
             user.last_login_at = datetime.datetime.utcnow()
             db.session.commit()
+            from security.ratelimit import reset_rate_limit
+            reset_rate_limit('auth.login')
             flash('登录成功', 'success')
             next_ = request.args.get('next')
             if next_ and _is_safe_redirect_target(next_):
                 return redirect(next_)
             return redirect(url_for('main.index'))
+        from security.ratelimit import hit_rate_limit
+        hit_rate_limit('auth.login')
         flash('邮箱或密码不正确', 'danger')
+        # 失败用 redirect 而非 render：避免浏览器刷新时弹出"重新提交表单"提示
+        return redirect(url_for('auth.login'))
+    elif request.method == 'POST':
+        # 表单校验失败（如邮箱格式错）同样计入失败
+        from security.ratelimit import hit_rate_limit
+        hit_rate_limit('auth.login')
+        flash('邮箱或密码不正确', 'danger')
+        return redirect(url_for('auth.login'))
     return render_template('auth/login.html', form=form, providers=PROVIDER_CARDS)
 
 

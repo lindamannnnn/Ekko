@@ -7,7 +7,9 @@ COPY . /app
 RUN pip install --no-cache-dir \
     Flask Flask-SQLAlchemy Flask-Login Flask-WTF Flask-Migrate \
     SQLAlchemy alembic cryptography python-dotenv requests \
-    python-pptx python-docx pdfplumber openpyxl reportlab email-validator
+    python-pptx python-docx pdfplumber openpyxl reportlab email-validator \
+    gunicorn
 
 EXPOSE 5000
-CMD ["python", "run.py"]
+# 生产用 gunicorn 多 worker（gthread 支持 AI 同步阻塞调用并发）；debug 已在代码关闭
+CMD ["gunicorn", "-w", "4", "-k", "gthread", "--threads", "4", "-b", "0.0.0.0:5000", "run:app"]

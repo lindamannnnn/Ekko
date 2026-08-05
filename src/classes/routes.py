@@ -358,8 +358,6 @@ def excellent_review(class_id):
         content = (data.get("content") or "").strip()
         if not content:
             return jsonify({"ok": False, "error": "内容不能为空"}), 400
-        # 可选：传入 lesson_id 用于统计当前课次的草稿数（前端"一键重生成"用）
-        lesson_id = data.get("lesson_id")
         # 关键修复：SQLAlchemy 的 JSON 字段在 dict in-place 变更时不会自动检测为 dirty。
         # 直接拿原 dict 引用改 + 重新赋同一引用 = commit 不会写库（用户看到 200 但 DB 不动）。
         # 修复：用 copy() 强制产生新对象，再赋值给 ORM 字段，SQLAlchemy 才会写。
@@ -369,14 +367,7 @@ def excellent_review(class_id):
         klass.extra_data = new_extra
         flag_modified(klass, "extra_data")
         db.session.commit()
-        # 统计当前 lesson 的草稿 review 数（仅属于本班+当前用户）
-        draft_count = 0
-        if lesson_id:
-            draft_count = Review.query.filter_by(
-                class_id=class_id, lesson_id=lesson_id, user_id=current_user.id,
-                status='draft',
-            ).filter(Review.deleted_at.is_(None)).count()
-        return jsonify({"ok": True, "draft_count": draft_count})
+        return jsonify({"ok": True})
 
     elif request.method == "DELETE":
         # 同样修：dict 引用问题

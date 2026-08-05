@@ -15,7 +15,7 @@
         <div style="font-size:13px;color:var(--text-3);font-family:monospace;">{{ u.email }}</div>
       </div>
     </div>
-    <a href="/admin/users" class="section-action">← 返回账号列表</a>
+    <a href="{{ ADMIN_PREFIX }}/users" class="section-action">← 返回账号列表</a>
   </div>
 </div>
 
@@ -59,7 +59,7 @@
       <tbody>
         {% for c in cls_list %}
         <tr>
-          <td style="font-weight:600;"><a href="/admin/class/{{ c.id }}" style="color:var(--text);text-decoration:none;">{{ c.name }} ↗</a></td>
+          <td style="font-weight:600;"><a href="{{ ADMIN_PREFIX }}/class/{{ c.id }}" style="color:var(--text);text-decoration:none;">{{ c.name }} ↗</a></td>
           <td><span class="badge badge-accent">{{ c.type_name_custom or c.type_code or '—' }}</span></td>
           <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);">{% if c.dimensions %}{{ c.dimensions | join('、') }}{% else %}<span style="color:var(--text-3);">—</span>{% endif %}</td>
           <td>{{ c.review_term or '—' }}</td>

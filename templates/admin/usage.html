@@ -10,7 +10,7 @@
 <div class="range-pills">
   <span style="font-size:13px;color:var(--text-2);font-weight:500;">统计区间</span>
   {% for d, label in [(7,'近 7 天'), (14,'近 14 天'), (30,'近 30 天')] %}
-  <a href="/admin/usage?days={{ d }}" class="range-pill {% if days == d %}active{% endif %}">{{ label }}</a>
+  <a href="{{ ADMIN_PREFIX }}/usage?days={{ d }}" class="range-pill {% if days == d %}active{% endif %}">{{ label }}</a>
   {% endfor %}
 </div>
 
@@ -104,7 +104,7 @@
     <div class="card-body">
       <div class="section-header">
         <span class="section-title">教师用量排行（近 {{ days }} 天）</span>
-        <a href="/admin/users" class="section-action">账号管理 →</a>
+        <a href="{{ ADMIN_PREFIX }}/users" class="section-action">账号管理 →</a>
       </div>
       {% if usage.ranking %}
       <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;max-height:340px;overflow-y:auto;">
@@ -113,7 +113,7 @@
         {% set pct = (r.gen / top_gen * 100)|round(1) if top_gen > 0 else 0 %}
         <div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
-            <a href="/admin/user/{{ r.user_id }}" style="font-size:13px;color:var(--text);text-decoration:none;font-weight:500;">
+            <a href="{{ ADMIN_PREFIX }}/user/{{ r.user_id }}" style="font-size:13px;color:var(--text);text-decoration:none;font-weight:500;">
               {{ loop.index }}. {{ r.name }}
               {% if r.over_quota %}<span style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(239,68,68,.15);color:#ef4444;font-weight:700;">已达配额</span>{% endif %}
             </a>

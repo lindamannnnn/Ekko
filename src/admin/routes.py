@@ -1,8 +1,10 @@
 """平台总后台：独立登录 + 只读总览（与教师端完全隔离）。"""
 import os
 from datetime import date, timedelta
-from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, abort, current_app, session
 from flask_login import current_user, login_user, logout_user
+from flask_wtf import FlaskForm
+from wtforms import PasswordField, SubmitField
 from werkzeug.security import check_password_hash
 from auth.decorators import admin_required
 from sqlalchemy import func
@@ -13,6 +15,36 @@ from models.class_student import Klass, Student, Enrollment
 from models.lesson import Lesson, Courseware, Review
 
 admin_bp = Blueprint('admin_bp', __name__)
+
+# ── 后台网关（第二道门，IP 无关）──────────────────────────────────────────
+# 进入任何后台路由前必须先输入管理密钥，密钥错误直接挡在门外。
+ADMIN_GATE_KEY = os.environ.get('ADMIN_GATE_KEY', '')
+
+
+class _GateForm(FlaskForm):
+    key = PasswordField('管理密钥')
+    submit = SubmitField('进入后台')
+
+
+@admin_bp.before_request
+def _admin_gate():
+    """除网关自身、登录页、登出外，所有后台请求都需先过管理密钥。"""
+    if request.endpoint in ('admin_bp.gate', 'admin_bp.admin_login', 'admin_bp.admin_logout'):
+        return
+    if not session.get('admin_gate_ok'):
+        return redirect(url_for('admin_bp.gate'))
+
+
+@admin_bp.route('/_gate', methods=['GET', 'POST'])
+def gate():
+    """管理密钥输入页：密钥正确则在 session 打标，放行后续后台请求。"""
+    form = _GateForm()
+    if form.validate_on_submit():
+        if form.key.data == ADMIN_GATE_KEY:
+            session['admin_gate_ok'] = True
+            return redirect(url_for('admin_bp.admin_login'))
+        flash('管理密钥错误', 'danger')
+    return render_template('admin/gate.html', form=form)
 
 
 # ── AI 用量聚合（dashboard 与 usage 页共用）─────────────────────────────────
@@ -108,7 +140,7 @@ def _usage_stats(days=7):
 
 # ── 独立后台登录（不共用 /auth/login）─────────────────────────────────────
 
-@admin_bp.route('/admin/login', methods=['GET', 'POST'])
+@admin_bp.route('/login', methods=['GET', 'POST'])
 def admin_login():
     """后台独立登录页——只接受超管账号，普通教师一律拒绝。"""
     # 已登录超管直接进总览
@@ -116,31 +148,43 @@ def admin_login():
         return redirect(url_for('admin_bp.dashboard'))
 
     if request.method == 'POST':
-        from security.ratelimit import check_rate_limit
-        check_rate_limit('admin.login')
+        from security.ratelimit import check_rate_limit, hit_rate_limit, reset_rate_limit
+        if check_rate_limit('admin.login'):
+            flash('登录尝试过于频繁，请 5 分钟后再试', 'danger')
+            # 用 redirect 而非 render：避免浏览器刷新时弹出"重新提交表单"提示
+            return redirect(url_for('admin_bp.admin_login'))
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
-        user = User.query.filter_by(email=email).first()
+        # 排除软删除账号：已注销账号不得进入后台
+        user = User.query.filter_by(email=email).filter(User.deleted_at.is_(None)).first()
+        # 兼容纯用户名（如 seyououat520）：不含 @ 时自动补 @local.dev 再查
+        if not user and '@' not in email:
+            user = User.query.filter_by(email=(email.lower() + '@local.dev')).filter(User.deleted_at.is_(None)).first()
         if user and check_password_hash(user.password_hash, password):
             if getattr(user, 'is_superuser', False):
                 login_user(user)
+                reset_rate_limit('admin.login')
                 return redirect(url_for('admin_bp.dashboard'))
             else:
+                hit_rate_limit('admin.login')
                 flash('该账号无后台管理权限', 'danger')
+                return redirect(url_for('admin_bp.admin_login'))
         else:
+            hit_rate_limit('admin.login')
             flash('邮箱或密码错误', 'danger')
+            return redirect(url_for('admin_bp.admin_login'))
 
     return render_template('admin/login.html')
 
 
-@admin_bp.route('/admin/logout')
+@admin_bp.route('/logout')
 def admin_logout():
     """后台登出。"""
     logout_user()
     return redirect(url_for('admin_bp.admin_login'))
 
 
-@admin_bp.route('/admin')
+@admin_bp.route('/')
 @admin_required
 def dashboard():
     # 跨租户聚合：所有老师的数据在此一览（不作 user_id 过滤）
@@ -185,7 +229,7 @@ def dashboard():
     )
 
 
-@admin_bp.route('/admin/usage')
+@admin_bp.route('/usage')
 @admin_required
 def usage():
     """AI 用量看板：生成量趋势、配额水位、按教师排行、失败日志。"""
@@ -226,7 +270,7 @@ def usage():
     )
 
 
-@admin_bp.route('/admin/users')
+@admin_bp.route('/users')
 @admin_required
 def users():
     """所有账号（跨租户全量）。"""
@@ -241,7 +285,7 @@ def users():
     return render_template('admin/users.html', users=users, stat=stat)
 
 
-@admin_bp.route('/admin/users/<uid>/delete', methods=['POST'])
+@admin_bp.route('/users/<uid>/delete', methods=['POST'])
 @admin_required
 def delete_user(uid):
     """删除账号（级联清理其名下全部租户数据）。user_id 非外键，需手动清理。"""
@@ -276,7 +320,7 @@ def delete_user(uid):
     return redirect(url_for('admin_bp.users'))
 
 
-@admin_bp.route('/admin/coursewares')
+@admin_bp.route('/coursewares')
 @admin_required
 def coursewares():
     """所有上传的课件（带时间 + 上传人 + 关联班级/课次）。"""
@@ -301,7 +345,7 @@ def coursewares():
     return render_template('admin/coursewares.html', rows=rows)
 
 
-@admin_bp.route('/admin/reviews')
+@admin_bp.route('/reviews')
 @admin_required
 def reviews():
     """所有课评（跨租户全量，按状态分布）。"""
@@ -322,7 +366,7 @@ def reviews():
     return render_template('admin/reviews.html', rows=rows)
 
 
-@admin_bp.route('/admin/review/<rid>')
+@admin_bp.route('/review/<rid>')
 @admin_required
 def review_detail(rid):
     """单份课评的完整内容（可下钻）。"""
@@ -340,7 +384,7 @@ def review_detail(rid):
     )
 
 
-@admin_bp.route('/admin/courseware/<cid>')
+@admin_bp.route('/courseware/<cid>')
 @admin_required
 def courseware_detail(cid):
     """单个课件的完整信息（可下钻）。"""
@@ -360,7 +404,7 @@ def courseware_detail(cid):
     )
 
 
-@admin_bp.route('/admin/classes')
+@admin_bp.route('/classes')
 @admin_required
 def classes():
     """所有班级列表（与 class_detail 下钻区分）。"""
@@ -373,7 +417,7 @@ def classes():
     return render_template('admin/classes.html', ks=ks, stu_count=stu_count)
 
 
-@admin_bp.route('/admin/class/<kid>')
+@admin_bp.route('/class/<kid>')
 @admin_required
 def class_detail(kid):
     """单个班级 + 在册学生名单（可下钻）。"""
@@ -389,7 +433,7 @@ def class_detail(kid):
     return render_template('admin/class_detail.html', k=k, members=members)
 
 
-@admin_bp.route('/admin/user/<uid>')
+@admin_bp.route('/user/<uid>')
 @admin_required
 def user_detail(uid):
     """单个账号 + 名下班级/学生（可下钻）。"""

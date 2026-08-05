@@ -61,9 +61,9 @@
       <tbody>
         {% for r in rows %}
         <tr>
-          <td style="font-weight:600;"><a href="/admin/review/{{ r.rv.id }}" style="color:var(--text);text-decoration:none;">{{ r.class_name }}</a></td>
+          <td style="font-weight:600;"><a href="{{ ADMIN_PREFIX }}/review/{{ r.rv.id }}" style="color:var(--text);text-decoration:none;">{{ r.class_name }}</a></td>
           <td>{{ r.student_name }}</td>
-          <td style="color:var(--text-2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="/admin/review/{{ r.rv.id }}" style="color:var(--text-2);text-decoration:none;">{{ r.lesson_title }}</a></td>
+          <td style="color:var(--text-2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="{{ ADMIN_PREFIX }}/review/{{ r.rv.id }}" style="color:var(--text-2);text-decoration:none;">{{ r.lesson_title }}</a></td>
           <td>
             {% set status_cfg = {'confirmed':('已确认','badge-green'),'pending':('待生成','badge-yellow'),'generating':('生成中','badge-blue'),'draft':('草稿','badge-purple'),'failed':('失败','badge-red'),'leave':('请假','badge-gray')} %}
             {% set cfg = status_cfg.get(r.rv.status, (r.rv.status,'badge-gray')) %}

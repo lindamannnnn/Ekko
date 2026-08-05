@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>后台入口验证 · Ekko课评系统</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <style>
+    body { margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center;
+           background:var(--bg,#f4f5f7); font-family: system-ui, "PingFang SC", "Microsoft YaHei", sans-serif; }
+    .gate-card { width:360px; max-width:92vw; background:#fff; border-radius:14px; padding:32px;
+                 box-shadow:0 8px 30px rgba(0,0,0,.08); box-sizing:border-box; }
+    .gate-card h1 { font-size:18px; margin:0 0 6px; color:#1a1a1a; }
+    .gate-card p { color:#666; font-size:13px; margin:0 0 20px; line-height:1.6; }
+    .gate-card label { font-size:13px; color:#333; display:block; margin-bottom:6px; }
+    .gate-card input[type=password] { width:100%; box-sizing:border-box; padding:10px 12px;
+           border:1px solid #d9dce1; border-radius:8px; font-size:14px; margin-bottom:16px; }
+    .gate-card input[type=password]:focus { outline:none; border-color:#185fa5; }
+    .gate-card button { width:100%; padding:10px; border:0; border-radius:8px; background:#185fa5;
+           color:#fff; font-size:14px; cursor:pointer; }
+    .gate-card button:hover { background:#0c447c; }
+    .gate-flash { font-size:13px; padding:8px 12px; border-radius:8px; margin-bottom:16px; }
+    .gate-flash--danger { background:#fcebeb; color:#a32d2d; }
+    .gate-hint { margin-top:16px; font-size:12px; color:#999; line-height:1.6; }
+  </style>
+</head>
+<body>
+  <div class="gate-card">
+    <h1>平台总后台 · 入口验证</h1>
+    <p>请输入管理密钥以进入后台。密钥错误将无法访问任何后台页面。</p>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for cat, msg in messages %}
+          <div class="gate-flash gate-flash--{{ cat }}">{{ msg }}</div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+      {{ form.hidden_tag() }}
+      <label for="key">管理密钥</label>
+      {{ form.key(id="key", placeholder="管理密钥", autofocus=true) }}
+      {{ form.submit() }}
+    </form>
+
+    <div class="gate-hint">后台访问路径已随机化，且与 IP 无关——即使知道账号密码，没有密钥也无法进入。</div>
+  </div>
+</body>
+</html>
