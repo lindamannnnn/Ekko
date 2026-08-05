@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block h1 %}邮箱验证{% endblock %}
+{% block sub %}我们已向 {{ email }} 发送了 6 位验证码{% endblock %}
+{% block content %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <form method="post" action="{{ url_for('auth.register_verify') }}">
+    <div class="field">
+      <label for="code">邮箱验证码</label>
+      <input type="text" id="code" name="code" maxlength="6" placeholder="请输入 6 位数字" required autofocus>
+      <small class="hint">请查收发送至 {{ email }} 的邮件，把里面的 6 位验证码填到上方。</small>
+    </div>
+    <button class="btn" type="submit">验证并注册</button>
+  </form>
+  {% if dev_mode %}
+    <p class="hint">当前为 dev 模式，邮件未真正发送；控制台已打印验证码，可直接输入后点击「验证并注册」。</p>
+  {% endif %}
+{% endblock %}

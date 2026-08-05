@@ -1,12 +1,93 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
-  <h1>添加学生到 {{ klass.name }}</h1>
-  <form method="POST">
-    <label>学生姓名（每行 / 逗号分隔一个）
-      <textarea name="names" rows="8" placeholder="张三&#10;李四&#10;王五"></textarea>
-    </label>
-    <button type="submit">添加</button>
+
+<div class="page-header">
+  <div class="ph-left">
+    <h1 class="ph-title">添加学生到 {{ klass.name }}</h1>
+    <p class="ph-sub">每行一个学生，可同时添加多名</p>
+  </div>
+  <p class="ph-hint">💡 昵称为选填项：不填则课评中使用学生全名，填写后课评优先用昵称称呼。</p>
+</div>
+
+<div class="glass-card form-card">
+  <form method="POST" id="add-student-form">
+    <!-- 动态学生行容器 -->
+    <div id="student-rows">
+
+      <!-- 第一行（始终存在） -->
+      <div class="student-row" data-row="0">
+        <input type="text" name="name_0" class="form-input sr-name" placeholder="学生姓名" required autocomplete="off" autofocus />
+        <div class="sr-gender-wrap">
+          <select name="gender_0" class="form-input sr-gender">
+            <option value="男" selected>男</option>
+            <option value="女">女</option>
+            <option value="">未知</option>
+          </select>
+        </div>
+        <input type="text" name="nick_0" class="form-input sr-nick" placeholder="昵称（选填）" title="选填。留空则课评使用学生全名；填写后课评优先用昵称称呼" autocomplete="off" />
+        <button type="button" class="btn-row-remove" onclick="removeRow(this)" title="移除此行" style="display:none;">✕</button>
+      </div>
+
+    </div>
+
+    <!-- 操作栏 -->
+    <div class="form-actions-row">
+      <button type="button" class="btn-add-row" onclick="addRow()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        添加一行
+      </button>
+      <button type="submit" class="btn-gradient">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        确认添加全部
+      </button>
+    </div>
   </form>
 </div>
+
+<script>
+var rowCount = 1;
+
+function addRow() {
+  var container = document.getElementById('student-rows');
+  var idx = rowCount++;
+  var div = document.createElement('div');
+  div.className = 'student-row';
+  div.setAttribute('data-row', idx);
+  div.innerHTML =
+    '<input type="text" name="name_' + idx + '" class="form-input sr-name" placeholder="学生姓名" autocomplete="off" />' +
+    '<div class="sr-gender-wrap">' +
+      '<select name="gender_' + idx + '" class="form-input sr-gender">' +
+        '<option value="男" selected>男</option>' +
+        '<option value="女">女</option>' +
+        '<option value="">未知</option>' +
+      '</select>' +
+    '</div>' +
+    '<input type="text" name="nick_' + idx + '" class="form-input sr-nick" placeholder="昵称（选填）" title="选填。留空则课评使用学生全名；填写后课评优先用昵称称呼" autocomplete="off" />' +
+    '<button type="button" class="btn-row-remove" onclick="removeRow(this)" title="移除此行">✕</button>';
+  container.appendChild(div);
+
+  // 聚焦新行的姓名框
+  div.querySelector('.sr-name').focus();
+
+  // 所有行都显示删除按钮
+  updateRemoveButtons();
+}
+
+function removeRow(btn) {
+  var row = btn.closest('.student-row');
+  row.style.opacity = '0';
+  row.style.transform = 'translateX(20px)';
+  setTimeout(function() { row.remove(); updateRemoveButtons(); }, 180);
+}
+
+function updateRemoveButtons() {
+  var rows = document.querySelectorAll('.student-row');
+  var btns = document.querySelectorAll('.btn-row-remove');
+  // 只有多于1行时才显示删除按钮
+  btns.forEach(function(b) {
+    b.style.display = rows.length > 1 ? '' : 'none';
+  });
+}
+</script>
+
 {% endblock %}

@@ -1,0 +1,218 @@
+{% extends "admin/base.html" %}
+
+{% block title %}AI 用量{% endblock %}
+{% block page_title %}AI 用量看板{% endblock %}
+{% block breadcrumb %}平台总后台 / AI 用量{% endblock %}
+
+{% block page_content %}
+
+<!-- 时间范围切换 -->
+<div class="range-pills">
+  <span style="font-size:13px;color:var(--text-2);font-weight:500;">统计区间</span>
+  {% for d, label in [(7,'近 7 天'), (14,'近 14 天'), (30,'近 30 天')] %}
+  <a href="/admin/usage?days={{ d }}" class="range-pill {% if days == d %}active{% endif %}">{{ label }}</a>
+  {% endfor %}
+</div>
+
+<!-- Stats Row -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value blue">{{ usage.today_gen }}</div>
+      <div class="stat-label">今日生成次数</div>
+      <div class="stat-trend">全平台所有教师合计</div>
+    </div>
+    <div class="stat-icon blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value green">{{ usage.range_gen }}</div>
+      <div class="stat-label">近 {{ days }} 天生成量</div>
+      <div class="stat-trend">日均 {{ usage.avg_gen }} 次</div>
+    </div>
+    <div class="stat-icon green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><polyline points="7 14 11 10 15 13 21 6"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value orange">
+        {% if usage.range_tok >= 10000 %}{{ (usage.range_tok / 10000)|round(1) }}<span style="font-size:15px;">万</span>{% else %}{{ usage.range_tok }}{% endif %}
+      </div>
+      <div class="stat-label">Token 消耗（{{ days }} 天）</div>
+      <div class="stat-trend">今日 {{ usage.today_tok }}</div>
+    </div>
+    <div class="stat-icon orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value purple">{{ usage.active_users }}</div>
+      <div class="stat-label">活跃教师</div>
+      <div class="stat-trend">区间内有生成记录</div>
+    </div>
+    <div class="stat-icon purple">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value {% if fail_n > 0 %}red{% else %}cyan{% endif %}">{{ fail_n }}</div>
+      <div class="stat-label">失败调用</div>
+      <div class="stat-trend">最近 {{ log_total }} 条日志中 · 平均 {{ avg_latency }}ms</div>
+    </div>
+    <div class="stat-icon {% if fail_n > 0 %}red{% else %}cyan{% endif %}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- 趋势图 -->
+<div class="card section">
+  <div class="card-body">
+    <div class="section-header">
+      <span class="section-title">生成量趋势（近 {{ days }} 天）</span>
+      <span class="section-action" style="cursor:default;color:var(--text-3);">峰值 {{ usage.peak_gen }} 次/天</span>
+    </div>
+    {% if usage.peak_gen > 0 %}
+    <div class="bar-chart" style="height:180px;">
+      {% for t in usage.trend %}
+      {% set h = (t.gen / usage.peak_gen * 140)|round(0)|int if usage.peak_gen > 0 else 0 %}
+      <div class="bar-col" title="{{ t.full_date }}：{{ t.gen }} 次 / {{ t.tok }} tokens">
+        <span class="bar-value {% if t.is_today %}today{% endif %}">{{ t.gen if t.gen > 0 else '' }}</span>
+        <div class="bar-fill {% if t.is_today %}today{% endif %}" style="height:{{ [h, 3]|max }}px;"></div>
+        <span class="bar-label {% if t.is_today %}today{% endif %}" {% if days > 14 %}style="writing-mode:vertical-rl;"{% endif %}>{{ t.date }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state-lg" style="padding:48px 0;">
+      <p>近 {{ days }} 天暂无 AI 生成记录</p>
+      <p style="font-size:12px;color:var(--text-3);margin-top:6px;">教师在课评编辑器中生成课评后，用量会自动记录到这里</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- 排行 + 通道 -->
+<div class="info-row">
+  <!-- 按教师用量排行 -->
+  <div class="card section">
+    <div class="card-body">
+      <div class="section-header">
+        <span class="section-title">教师用量排行（近 {{ days }} 天）</span>
+        <a href="/admin/users" class="section-action">账号管理 →</a>
+      </div>
+      {% if usage.ranking %}
+      <div style="display:flex;flex-direction:column;gap:12px;margin-top:8px;max-height:340px;overflow-y:auto;">
+        {% set top_gen = usage.ranking[0].gen %}
+        {% for r in usage.ranking[:10] %}
+        {% set pct = (r.gen / top_gen * 100)|round(1) if top_gen > 0 else 0 %}
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+            <a href="/admin/user/{{ r.user_id }}" style="font-size:13px;color:var(--text);text-decoration:none;font-weight:500;">
+              {{ loop.index }}. {{ r.name }}
+              {% if r.over_quota %}<span style="margin-left:6px;font-size:10px;padding:1px 6px;border-radius:4px;background:rgba(239,68,68,.15);color:#ef4444;font-weight:700;">已达配额</span>{% endif %}
+            </a>
+            <span style="font-size:12px;color:var(--text-2);">
+              <strong style="color:var(--text);">{{ r.gen }}</strong> 次 ·
+              {% if r.tok >= 10000 %}{{ (r.tok / 10000)|round(1) }}万{% else %}{{ r.tok }}{% endif %} tok
+            </span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" style="width:{{ [pct, 2]|max }}%;background:{% if r.over_quota %}#ef4444{% else %}linear-gradient(90deg,#818cf8,#4f46e5){% endif %};"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:3px;">
+            今日 {{ r.today_gen }} / 配额 {{ usage.quota }}（{{ r.quota_pct }}%）
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state-lg" style="padding:24px 0;"><p>暂无用量数据</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 通道分布 + 配额说明 -->
+  <div class="card section">
+    <div class="card-body">
+      <div class="section-header">
+        <span class="section-title">通道与配额</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:4px;">
+        <!-- 通道分布 -->
+        <div class="glass-card" style="padding:18px;border-radius:var(--radius-sm);">
+          <div style="font-size:13px;color:var(--text-2);font-weight:500;margin-bottom:12px;">调用通道分布（近 {{ days }} 天）</div>
+          {% if usage.channel_dist %}
+            {% set ch_total = usage.channel_dist.values()|sum %}
+            {% set ch_map = {'platform':('平台免费通道','#3b82f6'), 'byok':('教师自带 Key','#10b981'), 'own':('教师自带 Key','#10b981')} %}
+            {% for ch, cnt in usage.channel_dist.items() %}
+            {% set info = ch_map.get(ch, (ch, '#6b7280')) %}
+            {% set p = (cnt / ch_total * 100)|round(1) if ch_total > 0 else 0 %}
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+              <span style="width:9px;height:9px;border-radius:50%;background:{{ info[1] }};flex-shrink:0;"></span>
+              <span style="font-size:12px;flex:1;color:var(--text-2);">{{ info[0] }}</span>
+              <span style="font-size:12px;font-weight:700;color:var(--text);">{{ cnt }}</span>
+              <span style="font-size:11px;color:var(--text-3);width:44px;text-align:right;">{{ p }}%</span>
+            </div>
+            {% endfor %}
+          {% else %}
+          <div style="font-size:12px;color:var(--text-3);">暂无调用记录</div>
+          {% endif %}
+        </div>
+
+        <!-- 配额说明 -->
+        <div class="glass-card" style="padding:18px;border-radius:var(--radius-sm);border-color:rgba(59,130,246,.2);">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:13px;color:var(--accent);font-weight:600;">单账号每日配额</span>
+            <span style="font-size:22px;font-weight:800;background:var(--gradient-accent);-webkit-background-clip:text;-webkit-text-fill-color:transparent;">{{ usage.quota }} <span style="font-size:12px;font-weight:400;color:var(--text-3);-webkit-text-fill-color:var(--text-3);background:none;">次/天</span></span>
+          </div>
+          <div style="font-size:11px;color:var(--text-3);margin-top:8px;line-height:1.6;">
+            仅对平台免费通道生效。教师配置自带 Key 后不受此限制。<br>
+            调整方式：环境变量 <code style="background:rgba(15,23,42,.6);padding:1px 6px;border-radius:4px;color:var(--accent);font-size:11px;">PLATFORM_QUOTA</code>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 最近调用日志 -->
+<div class="card section">
+  <div class="section-header">
+    <span class="section-title">最近调用日志（{{ log_total }} 条）</span>
+    {% if fail_n > 0 %}<span class="section-action" style="color:var(--danger);cursor:default;">{{ fail_n }} 条失败</span>{% endif %}
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>时间</th><th>教师</th><th>通道</th><th>Tokens</th><th>耗时</th><th>结果</th></tr></thead>
+      <tbody>
+        {% for row in log_rows %}
+        <tr>
+          <td style="white-space:nowrap;font-size:12px;color:var(--text-2);">{{ row.log.created_at.strftime('%m-%d %H:%M:%S') if row.log.created_at else '-' }}</td>
+          <td>{{ row.user_name }}</td>
+          <td><span class="badge badge-accent" style="font-size:11px;padding:2px 8px;">{{ row.log.channel or 'platform' }}</span></td>
+          <td>{{ row.log.tokens or '-' }}</td>
+          <td style="color:{% if row.log.latency_ms and row.log.latency_ms > 8000 %}#f59e0b{% else %}inherit{% endif %};">{{ row.log.latency_ms ~ 'ms' if row.log.latency_ms else '-' }}</td>
+          <td>
+            {% if row.log.error %}
+              <span class="badge badge-red" style="font-size:11px;" title="{{ row.log.error }}">失败</span>
+              <span style="font-size:11px;color:var(--text-3);margin-left:6px;">{{ row.log.error[:40] }}</span>
+            {% else %}
+              <span class="badge badge-green" style="font-size:11px;">成功</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center;color:var(--text-3);padding:32px 0;">暂无调用日志</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

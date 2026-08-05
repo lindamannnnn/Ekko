@@ -37,15 +37,23 @@
     const data = await r.json();
     data.forEach((d) => {
       state[d.id] = { ...(state[d.id] || {}), ...d, student_id: d.student_id,
+                      perf_tags: d.perf_tags || [], perf_note: d.perf_note || '',
                       _name: (CONF.students && CONF.students[d.student_id]) || '' };
     });
     render();
     updateProgress();
   }
 
+  function escapeHtml(s) {
+    return (s || '').replace(/[&<>"']/g, (c) => (
+      { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+    ));
+  }
+
   function render() {
     const wrap = $('#review-list');
     wrap.innerHTML = '';
+    const tags = CONF.quick_tags || [];
     Object.values(state).forEach((rev) => {
       const score = rev.score || {};
       const scoreHtml = rev.score
@@ -55,17 +63,25 @@
         : '';
       const errHtml = rev.status === 'failed' && rev.error_msg
         ? `<div class="err">${rev.error_msg}</div>` : '';
+      const sel = rev.perf_tags || [];
+      const chips = tags.length
+        ? `<div class="rc-tags">${tags.map((t) =>
+            `<span class="tag chip ${sel.includes(t) ? 'on' : ''}" data-tag="${escapeHtml(t)}">${escapeHtml(t)}</span>`
+          ).join('')}</div>`
+        : '';
       const card = document.createElement('div');
       card.className = 'review-card';
       card.dataset.rid = rev.id;
       card.innerHTML = `
         <div class="rc-head">
-          <span class="rc-name">${rev._name || ''}</span>
+          <span class="rc-name">${escapeHtml(rev._name || '')}</span>
           ${statusBadge(rev.status)}
         </div>
         ${scoreHtml}
         ${errHtml}
-        <textarea class="rc-text" data-rid="${rev.id}">${rev.content || ''}</textarea>
+        ${chips}
+        <textarea class="rc-note" data-rid="${rev.id}" placeholder="本节课一句话评语（选填）">${escapeHtml(rev.perf_note || '')}</textarea>
+        <textarea class="rc-text" data-rid="${rev.id}">${escapeHtml(rev.content || '')}</textarea>
         <div class="rc-actions">
           <button class="btn-mini" data-act="generate" data-rid="${rev.id}">生成</button>
           <button class="btn-mini" data-act="confirm" data-rid="${rev.id}">确认</button>
@@ -86,6 +102,42 @@
         if (saveTimer[rid]) clearTimeout(saveTimer[rid]);
         saveTimer[rid] = setTimeout(() => save(rid, ta.value), 800);
       });
+    });
+    $$('.rc-note').forEach((ta) => {
+      ta.addEventListener('input', () => {
+        const rid = ta.dataset.rid;
+        if (saveTimer['n' + rid]) clearTimeout(saveTimer['n' + rid]);
+        saveTimer['n' + rid] = setTimeout(() => saveNote(rid, ta.value), 800);
+      });
+    });
+  }
+
+  async function saveNote(rid, note) {
+    await fetch(api.save(rid), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `teacher_comment=${encodeURIComponent(note)}`,
+    });
+  }
+
+  async function toggleTag(rid, tag) {
+    const rev = state[rid];
+    if (!rev) return;
+    rev.perf_tags = rev.perf_tags || [];
+    const i = rev.perf_tags.indexOf(tag);
+    if (i >= 0) rev.perf_tags.splice(i, 1);
+    else rev.perf_tags.push(tag);
+    // 更新 UI 高亮
+    const card = $(`.review-card[data-rid="${rid}"]`);
+    if (card) {
+      card.querySelectorAll('.rc-tags .chip').forEach((c) => {
+        c.classList.toggle('on', rev.perf_tags.includes(c.dataset.tag));
+      });
+    }
+    await fetch(api.save(rid), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `perf_tags=${encodeURIComponent(JSON.stringify(rev.perf_tags))}`,
     });
   }
 
@@ -108,6 +160,7 @@
         state[rid] = { ...state[rid], status: data.status, content: data.content || state[rid].content, score: data.score };
       } else {
         state[rid] = { ...state[rid], status: data.status || 'failed', error_msg: data.error };
+        if (data.error) flash(data.error);
       }
     } catch (e) {
       state[rid] = { ...state[rid], status: 'failed', error_msg: String(e) };
@@ -190,29 +243,35 @@
     if (!btn) return;
     const act = btn.dataset.act, rid = btn.dataset.rid;
     if (act === 'copy') return copy(rid);
-    act(act, rid);
+    doAct(act, rid);
   });
+
+  async function doAct(action, rid) {
+    if (!action) return;
+    if (action === 'generate') return generateOne(rid);
+    const map = {
+      confirm: api.confirm, leave: api.leave, revert: api.revert,
+    };
+    if (!map[action]) return;
+    const r = await fetch(map[action](rid), { method: 'POST' });
+    const data = await r.json();
+    if (data.ok) {
+      state[rid] = { ...(state[rid] || {}), status: data.status, content: data.content || (state[rid] && state[rid].content) };
+      render(); updateProgress();
+    }
+  }
   const genBtn = document.getElementById('gen-all');
   if (genBtn) genBtn.addEventListener('click', generateAll);
   const dedupBtn = document.getElementById('dedup-btn');
   if (dedupBtn) dedupBtn.addEventListener('click', runDedup);
 
-  // 快捷标签：追加到当前聚焦的文本框
-  const tagBar = document.getElementById('tag-bar');
-  if (tagBar) {
-    tagBar.addEventListener('click', (e) => {
-      const tag = e.target.closest('.tag');
-      if (!tag) return;
-      const ta = document.activeElement;
-      if (ta && ta.classList.contains('rc-text')) {
-        const sep = ta.value && !ta.value.endsWith('，') && !ta.value.endsWith('、') ? '，' : '';
-        ta.value = ta.value + sep + tag.dataset.tag;
-        ta.dispatchEvent(new Event('input'));
-      } else {
-        flash('先点一下要填写的课评框，再点标签');
-      }
-    });
-  }
+  // 每张卡片内的快捷标签：点选 = 选中/取消，落库到该生 review.perf_tags
+  document.addEventListener('click', (e) => {
+    const chip = e.target.closest('.rc-tags .chip');
+    if (!chip) return;
+    const card = chip.closest('.review-card');
+    if (card) toggleTag(card.dataset.rid, chip.dataset.tag);
+  });
 
   loadStatus();
 })();

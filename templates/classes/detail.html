@@ -1,16 +1,1353 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
-  <h1>{{ klass.name }}</h1>
-  <p class="muted">类型：{{ klass.type_code }}</p>
-  <h3>学生（{{ students|length }}）</h3>
-  <ul class="list">
-    {% for s in students %}<li>{{ s.name }}{% if s.preferred_name %}（{{ s.preferred_name }}）{% endif %}</li>{% endfor %}
-  </ul>
-  <a class="btn" href="{{ url_for('classes.add_students', class_id=klass.id) }}">+ 添加学生</a>
-  <form method="POST" action="{{ url_for('classes.archive', class_id=klass.id) }}" style="display:inline">
-    <button type="submit" onclick="return confirm('确认归档？')">归档班级</button>
-  </form>
-  <a class="btn" href="{{ url_for('lessons.new', class_id=klass.id) }}">+ 新建课次</a>
+
+<!-- 隐藏导航栏 + 突破容器宽度限制，还原 classreview.html 全屏效果 -->
+<style>
+/* 详情页专用：隐藏顶部导航 */
+body > nav.topnav { display: none !important; }
+/* 突破容器限制：全宽 */
+body > .container {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+</style>
+
+<header class="detail-header">
+    <a href="{{ url_for('classes.index') }}" class="back-btn">
+        <span>←</span>
+        <span>返回大厅</span>
+    </a>
+    <div class="detail-title">{{ klass.name }}</div>
+    <div class="detail-actions">
+        <a href="{{ url_for('classes.add_students', class_id=klass.id) }}" class="btn-secondary" style="text-decoration:none;padding:10px 24px;border-radius:10px;font-size:14px">添加学生</a>
+    </div>
+</header>
+
+<div class="detail-layout">
+    <!-- 左侧：学员列表 -->
+    <div class="panel panel-left">
+        <div class="panel-header">学员列表 ({{ students|length }})</div>
+        <div class="student-list" id="student-list">
+            {% for s in students %}
+            <div class="student-item{% if loop.first %} active{% endif %}"
+                 data-student-id="{{ s.id }}" data-student-name="{{ s.name }}">
+                <div class="student-avatar-sm" style="background: linear-gradient(135deg,
+                    {% if loop.index0 % 5 == 0 %}#6366f1,#8b5cf6
+                    {% elif loop.index0 % 5 == 1 %}#f59e0b,#ef4444
+                    {% elif loop.index0 % 5 == 2 %}#10b981,#06b6d4
+                    {% elif loop.index0 % 5 == 3 %}#8b5cf6,#ec4899
+                    {% else %}#6366f1,#3b82f6{% endif %})">{{ s.name[0] }}</div>
+                <div class="student-info">
+                    <div class="student-name">{{ s.name }}</div>
+                    <div class="student-status">
+                        <span class="status-dot pending"></span>
+                        待评价
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px">
+                <p style="margin-bottom:10px">暂无学生</p>
+                <a href="{{ url_for('classes.add_students', class_id=klass.id) }}" style="color:var(--accent);text-decoration:none;font-weight:600">添加第一个学生</a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- 中间：课评编辑 -->
+    <div class="panel panel-center">
+        <div class="glass-card" style="padding: 18px 20px; display:flex; flex-direction:column; min-width:0; box-sizing:border-box">
+            {% if students %}
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <div>
+                    <h2 id="edit-student-name" style="font-size:20px;margin-bottom:4px">{{ students[0].name }} - 课评</h2>
+                    <p id="lesson-info" style="color:var(--text-secondary);font-size:14px">
+                        {{ klass.name }} · {{ today_str or '今日课堂' }}
+                    </p>
+                </div>
+                <div class="date-selector">
+                    <button class="date-btn active" data-range="week">本周</button>
+                    <button class="date-btn" data-range="last-week">上周</button>
+                    <button class="date-btn" data-range="custom">自定义</button>
+                </div>
+            </div>
+
+            <!-- 课程内容上传/粘贴区（始终显示，是 AI 生成课评的核心数据源） -->
+            <div id="score-area" style="margin-bottom:20px">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+                    <span style="font-size:15px">📋</span>
+                    <span style="font-size:14px;font-weight:600;color:var(--text)">课程内容</span>
+                    <span style="font-size:12px;color:var(--text-3)">粘贴或上传本节课内容，AI 将基于此生成课评</span>
+                </div>
+                <textarea id="course-content-input"
+                          placeholder="在此粘贴课程内容（支持直接粘贴文本）...&#10;&#10;或点击下方按钮上传文件（txt / docx / pptx / pdf），将自动转换为 Markdown 格式。"
+                          style="width:100%;min-height:120px;background:rgba(30,41,59,.6);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:14px;line-height:1.65;resize:vertical;outline:none;font-family:inherit;transition:border-color .3s;box-sizing:border-box"></textarea>
+                <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
+                    <label class="btn-secondary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;font-size:12px;text-decoration:none">
+                        📎 上传文件
+                        <input type="file" id="course-file-input" accept=".txt,.docx,.doc,.pptx,.pdf" style="display:none">
+                    </label>
+                    <button id="btn-save-course" class="btn-secondary" style="padding:6px 14px;font-size:12px;cursor:pointer">💾 保存课程内容</button>
+                    <span id="file-name-hint" style="color:var(--text-3);font-size:12px"></span>
+                </div>
+                <div id="upload-status" style="margin-top:6px;font-size:12px;color:var(--text-3)"></div>
+            </div>
+
+            <!-- 快捷标签 -->
+            <div style="margin-bottom:16px">
+                <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">快捷评语</div>
+                <div class="quick-tags" id="tag-bar">
+                    <span class="tag active" data-tag="逻辑清晰">逻辑清晰</span>
+                    <span class="tag" data-tag="积极互动">积极互动</span>
+                    <span class="tag" data-tag="需加强练习">需加强练习</span>
+                    <span class="tag" data-tag="表现优异">表现优异</span>
+                    <span class="tag" data-tag="注意力集中">注意力集中</span>
+                    <span class="tag" data-tag="乐于助人">乐于助人</span>
+                    <span class="tag" data-tag="创意十足">创意十足</span>
+                    <span class="tag" data-tag="+ 自定义">+ 自定义</span>
+                </div>
+            </div>
+
+            <!-- 教师一句话评语 -->
+            <div style="margin-bottom:16px">
+                <div style="font-size:13px;color:var(--text-secondary);margin-bottom:8px">✨ 教师对本节课的一句话评语</div>
+                <input type="text" id="teacher-comment"
+                       placeholder="输入对本节课的一句话总结..."
+                       style="width:100%;padding:12px 16px;background:rgba(30,41,59,.6);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border-color .3s;box-sizing:border-box">
+            </div>
+
+            <!-- AI处理后的课评（可编辑） -->
+            <div style="margin-bottom:12px; display:flex; flex-direction:column; flex-shrink:0">
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;flex-wrap:wrap;flex-shrink:0">
+                    <button class="btn-primary" id="btn-ai-generate"
+                            style="padding:10px 28px;font-size:15px;font-weight:600;cursor:pointer;border-radius:8px;flex-shrink:0">
+                        🤖 AI 生成课评
+                    </button>
+                    <div style="font-size:13px;color:var(--text-secondary);white-space:normal">
+                        基于上方课程内容 + 学生标签自动生成（教师评语可选）
+                    </div>
+                </div>
+                <textarea id="ai-review-content" class="review-textarea" wrap="hard"
+                          placeholder="点击「AI 生成课评」按钮，AI 将根据课程内容和学生表现自动生成课评...&#10;&#10;（教师评语可选）生成后可直接在此修改编辑。"
+                          style="min-height:160px"></textarea>
+            </div>
+
+            <div class="textarea-footer" style="display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;flex-shrink:0">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                    <span id="save-status">未保存</span>
+                    <button class="btn-primary" id="btn-save-review" style="padding:8px 24px;font-size:14px;border-radius:8px">💾 保存评语</button>
+                </div>
+                <span id="word-count">0 字</span>
+            </div>
+            {% else %}
+            <div style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center">
+                <div>
+                    <div style="font-size:48px;margin-bottom:16px;opacity:.3">📝</div>
+                    <h3 style="font-size:18px;color:var(--text-secondary);margin-bottom:8px">暂无学生</h3>
+                    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:20px">请先添加学生后再开始写课评</p>
+                    <a href="{{ url_for('classes.add_students', class_id=klass.id) }}" class="btn-primary" style="text-decoration:none;display:inline-block">添加第一个学生</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- 右侧：历史课评 -->
+    <div class="panel panel-right">
+        <div class="panel-header">历史课评</div>
+
+        <!-- 优秀历史课评上传区（占右侧约1/3高度） -->
+        <div id="excellent-review-area" style="margin-bottom:16px">
+            <div id="excellent-review-empty" style="
+                background:rgba(59,130,246,.06);border:1px dashed rgba(59,130,246,.3);border-radius:12px;
+                padding:16px;cursor:pointer;transition:all .3s;display:flex;flex-direction:column;gap:10px;
+            ">
+                <div style="display:flex;align-items:center;gap:8px">
+                    <span style="font-size:18px">📋</span>
+                    <span style="font-size:13px;font-weight:600;color:var(--accent)">上传优秀历史课评</span>
+                </div>
+                <div style="font-size:11px;color:var(--text-3);line-height:1.6">
+                    上传后 AI 生成课评时将<strong style="color:var(--accent)">优先结合</strong>历史优秀课评风格与本节课具体表现<br>
+                    未上传则按通用模板生成
+                </div>
+                <div style="display:flex;gap:8px;margin-top:4px">
+                    <span style="font-size:11px;padding:4px 10px;background:rgba(59,130,246,.1);border-radius:6px;color:var(--text-secondary)">📎 选择文件</span>
+                    <span style="font-size:11px;padding:4px 10px;background:rgba(59,130,246,.1);border-radius:6px;color:var(--text-secondary)">✏️ 或粘贴文本</span>
+                </div>
+                <input type="file" id="excellent-file-input" accept=".txt,.docx,.md" style="display:none">
+            </div>
+            <div id="excellent-review-filled" style="
+                display:none;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:14px
+            ">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                    <div style="display:flex;align-items:center;gap:6px">
+                        <span style="font-size:14px">✅</span>
+                        <span style="font-size:12px;font-weight:600;color:var(--success)">已加载优秀课评范例</span>
+                    </div>
+                    <button id="btn-remove-excellent" style="
+                        font-size:11px;padding:3px 10px;background:transparent;border:1px solid var(--border);
+                        border-radius:6px;color:var(--text-3);cursor:pointer;transition:all .2s
+                    ">移除</button>
+                </div>
+                <div id="excellent-preview" style="
+                    font-size:11px;color:var(--text-secondary);line-height:1.55;
+                    max-height:120px;overflow-y:auto;padding:8px;background:rgba(0,0,0,.2);border-radius:8px
+                "></div>
+                <!-- 上传后重生成提示横幅（仅当本节课存在草稿课评时显示） -->
+                <div id="excellent-regen-banner" style="display:none;margin-top:10px;padding:10px 12px;background:rgba(99,102,241,.12);border:1px solid rgba(99,102,241,.3);border-radius:8px">
+                    <div style="font-size:11px;color:var(--text);line-height:1.55;margin-bottom:8px">
+                        💡 本节课已有 <strong id="excellent-regen-count" style="color:var(--accent)">0</strong> 个草稿课评未使用新风格。
+                    </div>
+                    <div style="display:flex;gap:6px">
+                        <button id="btn-regen-all-excellent" style="
+                            flex:1;font-size:11px;padding:6px 12px;background:var(--accent);
+                            border:none;border-radius:6px;color:#fff;cursor:pointer;font-weight:600
+                        ">🚀 一键用新风格重生成</button>
+                        <button id="btn-dismiss-regen" style="
+                            font-size:11px;padding:6px 12px;background:transparent;border:1px solid var(--border);
+                            border-radius:6px;color:var(--text-3);cursor:pointer
+                        ">稍后</button>
+                    </div>
+                    <div id="excellent-regen-progress" style="display:none;margin-top:6px;font-size:11px;color:var(--text-2)"></div>
+                </div>
+            </div>
+            <!-- 粘贴文本框（默认隐藏，点击"或粘贴文本"时显示） -->
+            <div id="excellent-paste-box" style="display:none;margin-top:8px">
+                <textarea id="excellent-paste-text" placeholder="在此粘贴优秀课评文本..." style="
+                    width:100%;min-height:80px;background:rgba(30,41,59,.6);border:1px solid var(--border);
+                    border-radius:10px;padding:12px;color:var(--text);font-size:12px;line-height:1.6;
+                    resize:vertical;outline:none;font-family:inherit;box-sizing:border-box
+                "></textarea>
+                <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:6px">
+                    <button id="btn-cancel-paste" style="
+                        font-size:11px;padding:5px 14px;background:transparent;border:1px solid var(--border);
+                        border-radius:6px;color:var(--text-3);cursor:pointer
+                    ">取消</button>
+                    <button id="btn-save-excellent" style="
+                        font-size:11px;padding:5px 14px;background:var(--accent);border:none;
+                        border-radius:6px;color:#fff;cursor:pointer;font-weight:600
+                    ">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="timeline" id="history-list">
+            <div style="text-align:center;padding:32px 16px;color:var(--text-secondary);font-size:13px">选择学生后显示历史课评</div>
+        </div>
+    </div>
 </div>
+
+<!-- ===== 直接复用 classreview.html 的全部 CSS ===== -->
+<style>
+/* ===== 班级详情页 - 复制自 classreview.html ===== */
+.detail-header {
+    background: rgba(10, 14, 26, 0.9);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 clamp(12px, 3vw, 40px);
+    height: 64px;
+    display: flex;
+    align-items: center;
+    gap: clamp(10px, 1.5vw, 24px);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-wrap: nowrap;
+    min-width: 0;
+}
+
+.back-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 10px;
+    transition: all 0.3s;
+    font-size: 14px;
+    text-decoration: none;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.back-btn:hover { background: rgba(59, 130, 246, 0.1); color: var(--text); }
+
+.detail-title {
+    font-size: clamp(15px, 1.8vw, 20px);
+    font-weight: 700;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.detail-actions { display: flex; gap: 10px; flex-shrink: 0; }
+.detail-actions .btn-secondary { padding: 10px 16px !important; font-size: 13px !important; white-space: nowrap; }
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--cyan));
+    color: white;
+    border: none;
+    padding: 12px 32px;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4); }
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 10px 24px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 14px;
+}
+.btn-secondary:hover {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.detail-layout {
+    display: flex;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: clamp(12px, 2vw, 24px) clamp(16px, 3vw, 40px);
+    gap: clamp(12px, 1.5vw, 24px);
+    height: calc(100vh - 60px);
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.panel { display: flex; flex-direction: column; gap: clamp(12px, 1.5vw, 20px); min-width: 0; }
+.panel-left { width: clamp(200px, 18vw, 280px); flex-shrink: 0; }
+.panel-center { flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
+.panel-right { width: clamp(200px, 20vw, 300px); flex-shrink: 0; }
+
+.panel-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.student-list { overflow-y: auto; max-height: calc(100vh - 200px); }
+
+.student-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s;
+    margin-bottom: 4px;
+}
+.student-item:hover { background: rgba(59, 130, 246, 0.1); }
+.student-item.active {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.student-avatar-sm {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 14px;
+    flex-shrink: 0;
+    color: #fff;
+}
+
+.student-info { flex: 1; min-width: 0; }
+.student-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
+.student-status { font-size: 12px; color: var(--text-secondary); }
+
+.status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 4px;
+}
+.status-dot.done { background: var(--success); }
+.status-dot.pending { background: var(--warning); }
+
+/* 快捷标签 */
+.quick-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+
+.tag {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 13px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s;
+}
+.tag:hover { border-color: var(--accent); color: var(--accent); background: rgba(59, 130, 246, 0.2); }
+.tag.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* 文本域 */
+.review-textarea {
+    width: 100%;
+    min-height: clamp(120px, 20vh, 220px);
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: clamp(10px, 1.5vw, 16px);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.85;
+    resize: vertical;
+    outline: none;
+    transition: all 0.3s;
+    font-family: inherit;
+    box-sizing: border-box;
+    /* 关键：保留 \n\n 让段落空行显示出来，否则浏览器会把多换行折叠 */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+.review-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+
+.textarea-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 时间轴 */
+.timeline { overflow-y: auto; max-height: calc(100vh - 200px); }
+
+.timeline-item {
+    position: relative;
+    padding-left: 24px;
+    padding-bottom: 24px;
+    border-left: 2px solid var(--border);
+}
+.timeline-item:last-child { border-left: 2px solid transparent; }
+
+.timeline-dot {
+    position: absolute;
+    left: -5px; top: 4px;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.timeline-date { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+
+.timeline-content {
+    background: rgba(30, 41, 59, 0.4);
+    padding: 12px;
+    padding-right: 36px;  /* 给右上角删除键留位 */
+    border-radius: 10px;
+    font-size: 13px;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+}
+.timeline-content:hover {
+    background: rgba(30, 41, 59, 0.7);
+    transform: translateX(2px);
+}
+.timeline-content .more-hint {
+    color: var(--accent);
+    font-size: 11px;
+    margin-left: 4px;
+    opacity: .7;
+}
+.timeline-delete {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity .15s, background .15s, color .15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    z-index: 2;
+}
+.timeline-content:hover .timeline-delete { opacity: 1; }
+.timeline-delete:hover {
+    background: rgba(239, 68, 68, 0.9);
+    color: #fff;
+}
+
+/* ===== 历史课评详情 modal ===== */
+.history-modal-mask {
+    position: fixed; inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    animation: fadeIn .2s ease;
+}
+.history-modal-mask.show { display: flex; }
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.history-modal {
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    animation: slideUp .25s ease;
+}
+
+@keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.history-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 24px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.history-modal-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.history-modal-title .timeline-dot { position: static; box-shadow: none; }
+.history-modal-close {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: rgba(30, 41, 59, 0.6);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    transition: all .2s;
+}
+.history-modal-close:hover { background: rgba(30, 41, 59, 0.9); color: var(--text); }
+.history-modal-meta {
+    padding: 12px 24px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: rgba(15, 23, 42, 0.4);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.history-modal-meta .meta-item { display: inline-flex; align-items: center; gap: 4px; }
+.history-modal-body {
+    padding: 20px 24px;
+    overflow-y: auto;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.85;
+    white-space: pre-wrap;
+    word-break: break-word;
+    flex: 1;
+    min-height: 0;
+}
+.history-modal-footer {
+    padding: 12px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* 日期选择 */
+.date-selector { display: flex; gap: 8px; margin-bottom: 20px; }
+
+.date-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s;
+}
+.date-btn:hover { border-color: var(--accent); color: var(--text); }
+.date-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+/* glass-card */
+.glass-card {
+    background: rgba(17, 24, 39, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+}
+/* 中间栏的 glass-card：可滚动 */
+.panel-center > .glass-card {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* select focus（预留：未来若加回课次选择器时复用） */
+#lesson-select-center:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+#lesson-select-center:hover { border-color: rgba(59, 130, 246, 0.5); }
+/* 注：当前版本已去除课次选择器 UI，以上样式为无副作用的预留。*/
+
+/* 课程上传区 */
+#course-upload-area { margin-bottom: 4px; }
+#course-content-input:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(59,130,246,.2) !important; }
+
+/* 响应式 */
+@media (max-width: 1280px) {
+    .panel-left { width: 200px; }
+    .panel-right { width: 220px; }
+    .detail-layout { gap: 14px; padding: 12px 18px; }
+}
+@media (max-width: 1100px) {
+    .panel-right { display: none; }
+    .detail-layout { gap: 14px; }
+}
+@media (max-width: 900px) {
+    .panel-left { width: 180px; }
+    .detail-layout { gap: 12px; padding: 12px 14px; }
+}
+@media (max-width: 768px) {
+    .detail-layout { flex-direction: column; height: auto; padding: 12px; gap: 12px; }
+    .panel-left, .panel-right { width: 100%; display: block; }
+    .panel-left { order: 2; }
+    .panel-center { order: 1; }
+    .panel-right { order: 3; display: block; }
+}
+@media (max-width: 480px) {
+    .detail-header { padding: 0 12px; height: 56px; gap: 8px; }
+    .detail-actions .btn-secondary { padding: 8px 12px !important; font-size: 12px !important; }
+    .detail-title { font-size: 16px; }
+}
+</style>
+
+<script>
+(function() {
+  'use strict';
+  const CLASS_ID = '{{ klass.id }}';
+  // selectedLessonId 现在是可选状态：有就带上，没有就由后端自动 fallback 到最近课次或自建今日课次
+  let selectedLessonId = {{ selected_lesson_id|tojson }};
+  let selectedStudentId = null;
+
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+
+  // ---- 课程内容上传/粘贴（始终可用，AI 生成课评的核心数据源） ----
+  const courseInput = $('#course-content-input');
+  const fileInput = $('#course-file-input');
+  const fileHint = $('#file-name-hint');
+  const uploadStatus = $('#upload-status');
+
+  if (fileInput) {
+    fileInput.addEventListener('change', async function() {
+      const file = this.files[0];
+      if (!file) return;
+      fileHint.textContent = '⏳ 正在解析: ' + file.name + '...';
+      uploadStatus.textContent = '';
+      const fd = new FormData();
+      fd.append('file', file);
+      try {
+        const resp = await fetch('/classes/{{ klass.id }}/upload_course', { method:'POST', body:fd });
+        const data = await resp.json();
+        if (data.ok) {
+          if (courseInput) courseInput.value = data.markdown;
+          fileHint.textContent = '✅ ' + data.filename + ' (' + (data.raw_length || 0) + ' 字 → Markdown)';
+          uploadStatus.textContent = '✅ 已保存到班级';
+          uploadStatus.style.color = 'var(--success)';
+        } else {
+          fileHint.textContent = '❌ ' + (data.error || '上传失败');
+          uploadStatus.style.color = 'var(--danger)';
+        }
+      } catch(e) {
+        fileHint.textContent = '❌ 网络错误';
+        uploadStatus.style.color = 'var(--danger)';
+      }
+      this.value = '';
+    });
+  }
+
+  // 文本框 focus 样式
+  if (courseInput) {
+    courseInput.addEventListener('focus', function() { this.style.borderColor = 'var(--accent)'; this.style.boxShadow = '0 0 0 3px rgba(59,130,246,.2)'; });
+    courseInput.addEventListener('blur', function() { this.style.borderColor = 'var(--border)'; this.style.boxShadow = 'none'; });
+  }
+
+  // 手动保存课程内容（粘贴后点这个才会写入班级共享区）
+  const saveCourseBtn = $('#btn-save-course');
+  if (saveCourseBtn && courseInput) {
+    saveCourseBtn.addEventListener('click', async function() {
+      const text = courseInput.value.trim();
+      if (!text) { alert('课程内容不能为空'); return; }
+      this.textContent = '保存中...'; this.disabled = true;
+      try {
+        const resp = await fetch('/classes/{{ klass.id }}/upload_course', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({ text: text }),
+        });
+        const data = await resp.json();
+        if (data.ok) {
+          uploadStatus.textContent = '✅ 已保存到班级，AI 可基于此生成课评';
+          uploadStatus.style.color = 'var(--success)';
+          this.textContent = '✓ 已保存';
+          setTimeout(() => { this.textContent = '💾 保存课程内容'; this.disabled = false; }, 1800);
+        } else {
+          alert('保存失败: ' + (data.error || ''));
+          this.textContent = '💾 保存课程内容'; this.disabled = false;
+        }
+      } catch(e) {
+        alert('网络错误');
+        this.textContent = '💾 保存课程内容'; this.disabled = false;
+      }
+    });
+  }
+
+  // 页面加载时自动读取班级级已保存的课程内容
+  (async function() {
+    try {
+      const resp = await fetch('/classes/{{ klass.id }}/upload_course');
+      const data = await resp.json();
+      if (data.ok && data.content && courseInput) {
+        courseInput.value = data.content;
+        if (fileHint) fileHint.textContent = '✅ 已加载之前保存的课程内容';
+      }
+    } catch(e) {}
+  })();
+
+  // ---- 优秀历史课评上传区（班级维度，全班共享） ----
+  const excEmpty = $('#excellent-review-empty');
+  const excFilled = $('#excellent-review-filled');
+  const excPreview = $('#excellent-preview');
+  const excPasteBox = $('#excellent-paste-box');
+  const excPasteText = $('#excellent-paste-text');
+  const excFileInput = $('#excellent-file-input');
+
+  // 加载已保存的优秀课评（班级级别，无需 studentId）
+  async function loadExcellentReview() {
+    try {
+      const resp = await fetch('/classes/' + CLASS_ID + '/excellent_review');
+      const data = await resp.json();
+      if (data.ok && data.content) {
+        showExcFilled(data.content);
+        // 若当前 lesson 有草稿，显示重生成横幅
+        maybeAutoShowRegenBanner();
+      } else {
+        showExcEmpty();
+      }
+    } catch(e) { showExcEmpty(); }
+  }
+
+  function showExcEmpty() {
+    if (excEmpty) excEmpty.style.display = '';
+    if (excFilled) excFilled.style.display = 'none';
+    if (excPasteBox) excPasteBox.style.display = 'none';
+  }
+
+  function showExcFilled(content) {
+    if (excEmpty) excEmpty.style.display = 'none';
+    if (excFilled) excFilled.style.display = '';
+    if (excPreview) excPreview.textContent = content.substring(0, 500) + (content.length > 500 ? '...' : '');
+    if (excPasteBox) excPasteBox.style.display = 'none';
+  }
+
+  // 页面打开时，若已加载优秀范例 + 当前 lesson 有草稿，自动显示一键重生成横幅
+  function maybeAutoShowRegenBanner() {
+    if (!selectedLessonId) return;
+    fetch(`/reviews/${CLASS_ID}/${selectedLessonId}/status`)
+      .then(r => r.json())
+      .then(reviews => {
+        const drafts = (reviews || []).filter(r => r.status === 'draft' && r.id);
+        if (drafts.length > 0) showRegenBanner(drafts.length);
+      })
+      .catch(() => {});
+  }
+
+  // 文件选择
+  if (excFileInput) {
+    excFileInput.addEventListener('change', async function() {
+      const file = this.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        await saveExcellentReview(text);
+        this.value = '';
+      } catch(e) { alert('文件读取失败'); }
+    });
+  }
+
+  // 点击"或粘贴文本"
+  if (excEmpty) {
+    excEmpty.addEventListener('click', function(e) {
+      const tgt = e.target.textContent;
+      if (tgt.includes('选择文件')) { excFileInput.click(); return; }
+      if (tgt.includes('粘贴文本')) {
+        if (excPasteBox) { excPasteBox.style.display = ''; if (excPasteText) excPasteText.value = ''; excPasteText.focus(); }
+        return;
+      }
+      excFileInput.click();
+    });
+  }
+
+  // 取消粘贴
+  const cancelPasteBtn = $('#btn-cancel-paste');
+  if (cancelPasteBtn) { cancelPasteBtn.addEventListener('click', function(e) { e.stopPropagation(); if (excPasteBox) excPasteBox.style.display = 'none'; }); }
+
+  // 保存（文件解析或粘贴文本）
+  const saveExcBtn = $('#btn-save-excellent');
+  if (saveExcBtn) {
+    saveExcBtn.addEventListener('click', async function(e) {
+      e.stopPropagation();
+      const text = excPasteText ? excPasteText.value.trim() : '';
+      if (!text) { alert('请输入或粘贴课评内容'); return; }
+      this.textContent = '保存中...'; this.disabled = true;
+      await saveExcellentReview(text);
+      this.textContent = '保存'; this.disabled = false;
+    });
+  }
+
+  // 移除
+  const removeExcBtn = $('#btn-remove-excellent');
+  if (removeExcBtn) {
+    removeExcBtn.addEventListener('click', async function(e) {
+      e.stopPropagation();
+      if (!confirm('确定移除优秀历史课评？全班同学将不再使用此范例')) return;
+      try {
+        await fetch('/classes/' + CLASS_ID + '/excellent_review', { method:'DELETE' });
+        showExcEmpty();
+      } catch(e) {}
+    });
+  }
+
+  async function saveExcellentReview(content) {
+    try {
+      const resp = await fetch('/classes/' + CLASS_ID + '/excellent_review', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ content: content, lesson_id: selectedLessonId || null }),
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        showExcFilled(content);
+        // 若本节课有草稿课评，显示一键重生成横幅
+        if (data.draft_count && data.draft_count > 0 && selectedLessonId) {
+          showRegenBanner(data.draft_count);
+        }
+      }
+      else { alert('保存失败: ' + (data.error || '')); }
+    } catch(e) { alert('网络错误'); }
+  }
+
+  // ---- 上传优秀范例后的"一键重生成"横幅 ----
+  const regenBanner = $('#excellent-regen-banner');
+  const regenCountEl = $('#excellent-regen-count');
+  const regenProgress = $('#excellent-regen-progress');
+  function showRegenBanner(count) {
+    if (regenCountEl) regenCountEl.textContent = count;
+    if (regenBanner) regenBanner.style.display = 'block';
+  }
+  function hideRegenBanner() {
+    if (regenBanner) regenBanner.style.display = 'none';
+  }
+  const dismissRegenBtn = $('#btn-dismiss-regen');
+  if (dismissRegenBtn) {
+    dismissRegenBtn.addEventListener('click', function() { hideRegenBanner(); });
+  }
+  const regenAllBtn = $('#btn-regen-all-excellent');
+  if (regenAllBtn) {
+    regenAllBtn.addEventListener('click', async function() {
+      if (!selectedLessonId) { alert('请先选择课次'); return; }
+      regenAllBtn.disabled = true;
+      regenAllBtn.textContent = '重生成中...';
+      if (regenProgress) {
+        regenProgress.style.display = 'block';
+        regenProgress.textContent = '正在查询草稿...';
+      }
+      try {
+        // 取出当前 lesson 的所有草稿 review
+        const statusResp = await fetch(`/reviews/${CLASS_ID}/${selectedLessonId}/status`);
+        const reviews = await statusResp.json();
+        const drafts = reviews.filter(r => r.status === 'draft' && r.id);
+        if (drafts.length === 0) {
+          if (regenProgress) regenProgress.textContent = '没有可重生成的草稿';
+          regenAllBtn.disabled = false;
+          regenAllBtn.textContent = '🚀 一键用新风格重生成';
+          return;
+        }
+        // 串行触发重生成（避免并发限速）
+        let okCount = 0, failCount = 0;
+        for (let i = 0; i < drafts.length; i++) {
+          const d = drafts[i];
+          if (regenProgress) regenProgress.textContent = `正在重生成 (${i+1}/${drafts.length})...`;
+          try {
+            const r = await fetch(`/reviews/${d.id}/generate`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}' });
+            if (r.ok) okCount++; else failCount++;
+          } catch (e) { failCount++; }
+        }
+        if (regenProgress) regenProgress.textContent = `完成：成功 ${okCount} 个，失败 ${failCount} 个`;
+        regenAllBtn.disabled = false;
+        regenAllBtn.textContent = '🚀 一键用新风格重生成';
+        // 自动刷新当前选中学生显示
+        if (typeof loadReview === 'function' && selectedStudentId) {
+          setTimeout(() => loadReview(), 500);
+        }
+      } catch (e) {
+        if (regenProgress) regenProgress.textContent = '网络错误：' + e.message;
+        regenAllBtn.disabled = false;
+        regenAllBtn.textContent = '🚀 一键用新风格重生成';
+      }
+    });
+  }
+
+  // 页面加载时即加载优秀课评（只需一次，不随学生切换重新加载）
+  loadExcellentReview();
+
+  // ---- 学员切换 ----
+  $$('.student-item').forEach(item => {
+    item.addEventListener('click', function() {
+      $$('.student-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+      selectedStudentId = this.dataset.studentId;
+      $('#edit-student-name').textContent = this.dataset.studentName + ' - 课评';
+
+      // 更新状态点
+      $$('.student-status').forEach(s => { s.innerHTML = '<span class="status-dot pending"></span>待评价'; });
+      const st = this.querySelector('.student-status');
+      if (st) st.innerHTML = '<span class="status-dot done"></span>本周已评';
+
+      loadReview(selectedStudentId);
+      loadHistory(selectedStudentId);
+    });
+  });
+
+  const firstItem = $('.student-item');
+  if (firstItem) {
+    selectedStudentId = firstItem.dataset.studentId;
+    loadReview(selectedStudentId);
+    loadHistory(selectedStudentId);
+  }
+
+  // 历史课评查询（按学生维度，不依赖 lesson_id；返回该生所有已生成的课评）
+  // 每条 timeline-item 整行可点 → 弹出 modal 显示完整课评（含复制 / 载入编辑区）
+  async function loadHistory(studentId) {
+    const container = $('#history-list');
+    if (!container || !studentId) return;
+    try {
+      const resp = await fetch(`/reviews/${CLASS_ID}/history/${studentId}`);
+      const data = await resp.json();
+      const revs = (data.reviews || []).filter(r => r.content);
+      if (revs.length > 0) {
+        const colors = ['var(--accent)', 'var(--cyan)', 'var(--success)', 'var(--warning)'];
+        container.innerHTML = revs.map((r, i) => {
+          const dateStr = r.updated_at ? new Date(r.updated_at).toLocaleDateString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\//g,'-') : '';
+          const fullContent = r.content || '';
+          const preview = fullContent.substring(0, 80);
+          const truncated = fullContent.length > 80;
+          const color = colors[i%4] || 'var(--accent)';
+          // 用 dataset 存完整 content / 元信息，data-* 配合 dataset API 安全转义
+          const itemHtml = '<div class="timeline-item" data-review-id="' + esc(r.id || r.review_id || '') + '">'
+            + '<div class="timeline-dot" style="background:' + color + '"></div>'
+            + '<div class="timeline-date">' + dateStr + (r.lesson_title ? ' · '+esc(r.lesson_title) : '') + '</div>'
+            + '<div class="timeline-content" data-content="' + esc(fullContent).replace(/"/g,'&quot;') + '" data-date="' + esc(dateStr) + '" data-lesson="' + esc(r.lesson_title || '') + '" data-color="' + color + '">'
+            +   esc(preview) + (truncated ? '<span class="more-hint">...</span>' : '')
+            +   '<button class="timeline-delete" data-review-id="' + esc(r.id || r.review_id || '') + '" title="删除该课评" aria-label="删除">×</button>'
+            + '</div></div>';
+          return itemHtml;
+        }).join('');
+        // 委托点击事件：点 .timeline-content 弹 modal（点删除按钮时不弹）
+        container.querySelectorAll('.timeline-content').forEach(el => {
+          el.addEventListener('click', function(e) {
+            if (e.target.closest('.timeline-delete')) return;
+            openHistoryModal(this);
+          });
+        });
+        // 删除按钮：阻止冒泡 → confirm → POST /reviews/<id>/delete → 移除 DOM
+        container.querySelectorAll('.timeline-delete').forEach(btn => {
+          btn.addEventListener('click', async function(e) {
+            e.stopPropagation();
+            e.preventDefault();
+            const rid = this.dataset.reviewId;
+            if (!rid) return;
+            if (!confirm('确定删除该条历史课评？删除后不可恢复。')) return;
+            try {
+              const resp = await fetch(`/reviews/${rid}/delete`, { method: 'POST' });
+              const data = await resp.json();
+              if (!resp.ok || !data.ok) throw new Error(data.error || '删除失败');
+              const item = this.closest('.timeline-item');
+              if (item) item.remove();
+              if (!container.querySelector('.timeline-item')) {
+                container.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--text-secondary);font-size:13px">暂无课评记录</div>';
+              }
+            } catch (err) {
+              alert('删除失败：' + (err.message || err));
+            }
+          });
+        });
+      } else {
+        container.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--text-secondary);font-size:13px">暂无课评记录</div>';
+      }
+    } catch(e) { container.innerHTML = '<div style="text-align:center;padding:32px 16px;color:var(--text-secondary);font-size:13px">加载失败</div>'; }
+  }
+
+  // 打开历史课评详情 modal
+  function openHistoryModal(contentEl) {
+    const fullContent = contentEl.dataset.content || '';
+    const dateStr = contentEl.dataset.date || '';
+    const lessonTitle = contentEl.dataset.lesson || '';
+    const color = contentEl.dataset.color || 'var(--accent)';
+
+    const dot = $('#hm-dot');
+    if (dot) dot.style.background = color;
+    const titleEl = $('#hm-title');
+    if (titleEl) titleEl.textContent = lessonTitle || '历史课评详情';
+    const meta = $('#hm-meta');
+    if (meta) {
+      meta.innerHTML = ''
+        + (dateStr ? '<span class="meta-item">📅 ' + esc(dateStr) + '</span>' : '')
+        + (lessonTitle ? '<span class="meta-item">📚 ' + esc(lessonTitle) + '</span>' : '')
+        + '<span class="meta-item">📝 ' + fullContent.length + ' 字</span>';
+    }
+    const body = $('#hm-body');
+    if (body) body.textContent = fullContent;
+
+    // 给"载入编辑区"按钮存当前 review content
+    const loadBtn = $('#hm-load-to-editor');
+    if (loadBtn) loadBtn.dataset.content = fullContent;
+
+    const mask = $('#history-modal-mask');
+    if (mask) mask.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeHistoryModal() {
+    const mask = $('#history-modal-mask');
+    if (mask) mask.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
+  // modal 关闭交互
+  document.addEventListener('DOMContentLoaded', function() {
+    const closeBtn = document.getElementById('hm-close');
+    const mask = document.getElementById('history-modal-mask');
+    if (closeBtn) closeBtn.addEventListener('click', closeHistoryModal);
+    if (mask) mask.addEventListener('click', function(e) { if (e.target === mask) closeHistoryModal(); });
+    // 复制全文
+    const copyBtn = document.getElementById('hm-copy');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async function() {
+        const text = ($('#hm-body') && $('#hm-body').textContent) || '';
+        try {
+          if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else {
+            // 降级：临时 textarea + execCommand
+            const ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.select();
+            document.execCommand('copy'); document.body.removeChild(ta);
+          }
+          const oldText = this.textContent;
+          this.textContent = '✓ 已复制';
+          setTimeout(() => { this.textContent = oldText; }, 1500);
+        } catch(e) { alert('复制失败：' + e.message); }
+      });
+    }
+    // 载入到编辑区
+    const loadBtn = document.getElementById('hm-load-to-editor');
+    if (loadBtn) {
+      loadBtn.addEventListener('click', function() {
+        const text = this.dataset.content || '';
+        if (aiReviewContent) {
+          setAiContent(text);
+          aiReviewContent.focus();
+        }
+        closeHistoryModal();
+      });
+    }
+    // ESC 关闭
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeHistoryModal();
+    });
+  });
+
+  // 加载当前学生在当前 lesson 的 review（用于回显教师评语/AI评语/已选标签）
+  async function loadReview(studentId) {
+    if (!selectedLessonId || !studentId) return;
+    try {
+      const resp = await fetch(`/reviews/${CLASS_ID}/${selectedLessonId}/status`);
+      const data = await resp.json();
+      const rev = data.find(r => r.student_id === studentId);
+      // 回填已选标签（多选）：从后端 perf_tags 还原 selectedTags + .active 高亮
+      selectedTags = (rev && Array.isArray(rev.perf_tags)) ? rev.perf_tags.slice() : [];
+      $$('#tag-bar .tag').forEach(tg => {
+        const t = tg.dataset.tag;
+        if (t && !t.startsWith('+')) {
+          tg.classList.toggle('active', selectedTags.includes(t));
+        }
+      });
+      if (teacherComment) teacherComment.value = rev && rev.teacher_comment ? rev.teacher_comment : '';
+      if (aiReviewContent && rev && rev.content) setAiContent(rev.content);
+      else if (aiReviewContent) aiReviewContent.value = '';
+      updateWordCount();
+    } catch(e) { console.error('加载课评失败', e); }
+  }
+
+  // 标签选择状态：教师本节课点选的快捷标签（多选），作为 AI 生成的事实锚点
+  // 注意：这里的状态独立于 textarea 文本——选标签不会改 AI 草稿框内容
+  let selectedTags = [];
+
+  // ---- 双框：教师一句话评语 + AI课评 ----
+  const teacherComment = $('#teacher-comment');
+  const aiReviewContent = $('#ai-review-content');
+
+  // 给 textarea 赋值时：
+  //   1) 把 \n\n 升级为 \n\n\n（3 个换行），抵消浏览器 textarea 对多换行的折叠
+  //   2) 兜底：若全文完全没有 \n\n，按中文段标识词强制插入 \n\n
+  //      （针对"模型一坨输出 0 换行 + 数据库里的旧草稿也无换行"的场景，
+  //        只补常见过渡词，不破坏正文内容）
+  function setAiContent(text) {
+    if (!aiReviewContent) return;
+    let v = text || '';
+    if (v && v.indexOf('\n\n') === -1 && v.length > 80) {
+      v = v.replace(
+        /([。！？])\s*(不过|然而|但是|接下来|建议|在后续|另外|同时|此外|亮点方面|亮点在于|可提升点|家庭巩固建议|结尾)/g,
+        '$1\n\n$2'
+      );
+      v = v.replace(
+        /(?<=[，。！？；：、])\s*(亮点方面|亮点在于|可提升点)/g,
+        '\n\n$1'
+      );
+    }
+    const expanded = v.replace(/\n{2,}/g, '\n\n');
+    aiReviewContent.value = expanded;
+    updateWordCount();
+    aiReviewContent.dispatchEvent(new Event('input'));
+  }
+
+  // 教师评语框事件
+  if (teacherComment) {
+    teacherComment.addEventListener('focus', function() { this.style.borderColor = 'var(--accent)'; this.style.boxShadow = '0 0 0 3px rgba(59,130,246,.2)'; });
+    teacherComment.addEventListener('blur', function() { this.style.borderColor = 'var(--border)'; this.style.boxShadow = 'none'; });
+    teacherComment.addEventListener('input', () => autoSave());
+  }
+
+  // AI课评框事件
+  if (aiReviewContent) {
+    aiReviewContent.addEventListener('input', () => { updateWordCount(); autoSave(); });
+  }
+  function updateWordCount() {
+    const el = $('#word-count');
+    if (el && aiReviewContent) el.textContent = aiReviewContent.value.length + ' 字';
+  }
+
+  let saveTimer = null;
+  function autoSave() {
+    if (!selectedStudentId || !selectedLessonId) return;
+    clearTimeout(saveTimer);
+    $('#save-status').textContent = '正在保存...';
+    saveTimer = setTimeout(async () => {
+      try {
+        const resp = await fetch(`/reviews/${CLASS_ID}/${selectedLessonId}/status`);
+        const data = await resp.json();
+        const rev = data.find(r => r.student_id === selectedStudentId);
+        if (rev) {
+          const body = 'content=' + encodeURIComponent(aiReviewContent ? aiReviewContent.value : '')
+                       + '&teacher_comment=' + encodeURIComponent(teacherComment ? teacherComment.value : '')
+                       + '&perf_tags=' + encodeURIComponent(JSON.stringify(selectedTags));
+          await fetch(`/reviews/${rev.id}/save`, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+          $('#save-status').textContent = '已自动保存于 ' + new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+        }
+      } catch(e) { $('#save-status').textContent = '保存失败'; }
+    }, 1200);
+  }
+
+  // 标签点击：多选 toggle，状态写入 selectedTags（不污染 AI 草稿 textarea）
+  // 选中后立刻 autoSave 落库，AI 生成时也会从后端 review.perf_tags 取，作为事实锚点注入 prompt
+  $$('#tag-bar .tag').forEach(tag => {
+    tag.addEventListener('click', () => {
+      const t = tag.dataset.tag;
+      if (!t || t.startsWith('+')) {
+        // + 自定义：弹窗输入新标签，临时加到末尾并选中
+        const v = (window.prompt('输入自定义标签（2-8 字）', '') || '').trim();
+        if (!v) return;
+        const span = document.createElement('span');
+        span.className = 'tag active';
+        span.dataset.tag = v;
+        span.textContent = v;
+        // 插入到"+ 自定义"前面
+        const plusBtn = $$('#tag-bar .tag').find(x => (x.dataset.tag || '').startsWith('+'));
+        const bar = $('#tag-bar');
+        if (plusBtn && bar) bar.insertBefore(span, plusBtn);
+        else if (bar) bar.appendChild(span);
+        span.addEventListener('click', arguments.callee);
+        if (!selectedTags.includes(v)) selectedTags.push(v);
+        autoSave();
+        return;
+      }
+      if (selectedTags.includes(t)) {
+        selectedTags = selectedTags.filter(x => x !== t);
+        tag.classList.remove('active');
+      } else {
+        selectedTags.push(t);
+        tag.classList.add('active');
+      }
+      autoSave();
+    });
+  });
+
+  // 日期切换
+  $$('.date-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      $$('.date-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
+  });
+
+  // 保存按钮（依赖 selectedLessonId → 找到 review 行后保存；无 lesson 时此按钮静默无效）
+  const saveBtn = $('#btn-save-review');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', async function() {
+      if (!aiReviewContent || !aiReviewContent.value.trim()) { alert('课评内容不能为空'); return; }
+      if (!selectedLessonId) { alert('请先点上方「AI 生成课评」生成内容（首次使用会顺便建立课次）'); return; }
+      this.textContent = '保存中...'; this.disabled = true;
+      try {
+        const resp = await fetch(`/reviews/${CLASS_ID}/${selectedLessonId}/status`);
+        const data = await resp.json();
+        const rev = data.find(r => r.student_id === selectedStudentId);
+        if (rev) {
+          const body = 'content=' + encodeURIComponent(aiReviewContent.value)
+                       + '&teacher_comment=' + encodeURIComponent(teacherComment ? teacherComment.value : '')
+                       + '&perf_tags=' + encodeURIComponent(JSON.stringify(selectedTags));
+          await fetch(`/reviews/${rev.id}/save`, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+          this.textContent = '已保存 ✓';
+          setTimeout(() => { this.textContent = '保存评语'; this.disabled = false; }, 2000);
+        }
+      } catch(e) { alert('保存失败'); this.textContent = '保存评语'; this.disabled = false; }
+    });
+  }
+
+  // AI生成按钮：永远可点，无 lesson 时由后端自动 fallback（最近课次 → 自建今日课次）
+  const aiGenBtn = $('#btn-ai-generate');
+  if (aiGenBtn) {
+    aiGenBtn.addEventListener('click', async function() {
+      if (!selectedStudentId) { alert('请先选择学生'); return; }
+      this.textContent = '⏳ 生成中...'; this.disabled = true;
+      // 优先用新端点（无 lesson_id，后端自动 fallback）；有 lesson 时仍用旧端点以减少意外副作用
+      const url = selectedLessonId
+        ? `/reviews/by-keys/${CLASS_ID}/${selectedLessonId}/${selectedStudentId}/generate`
+        : `/reviews/by-keys/${CLASS_ID}/${selectedStudentId}/generate`;
+      // 把"课程内容"textarea 当作数据源，跟随生成请求一起发到后端，
+      // 后端会写入 klass.extra_data._course_content 并作为本节课课件使用，
+      // 免去教师先点"保存课程内容"这个中间步骤。
+      const courseTextEl = document.getElementById('course-content-input');
+      const courseContent = courseTextEl ? (courseTextEl.value || '').trim() : '';
+      const teacherCmt = teacherComment ? (teacherComment.value || '').trim() : '';
+      try {
+        const genResp = await fetch(url, {
+          method:'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            course_content: courseContent,
+            teacher_comment: teacherCmt,
+            perf_tags: selectedTags,  // 关键修复：把已选标签作为事实锚点传给 AI
+          }),
+        });
+        const genData = await genResp.json();
+        if (genData.ok && genData.content) {
+          if (aiReviewContent) setAiContent(genData.content);
+          this.textContent = '✓ 已生成';
+          setTimeout(() => { this.textContent = '🤖 AI 生成课评'; this.disabled = false; }, 2000);
+          // 生成成功后回填 selectedLessonId，让后续 loadReview/saveBtn 走通
+          if (genData.lesson_id && !selectedLessonId) {
+            selectedLessonId = genData.lesson_id;
+            loadReview(selectedStudentId);
+            loadHistory(selectedStudentId);
+          }
+        } else {
+          const errMsg = genData.error || '未知错误';
+          if (/课次不存在|已删除/.test(errMsg)) {
+            alert('该课次已不存在，请刷新页面重新选择课次');
+          } else {
+            alert('AI生成失败: ' + errMsg);
+          }
+          this.textContent = '🤖 AI 生成课评'; this.disabled = false;
+        }
+      } catch(e) {
+        alert('网络错误: ' + (e && e.message || e));
+        this.textContent = '🤖 AI 生成课评'; this.disabled = false;
+      }
+    });
+  }
+
+  function esc(str) { const d = document.createElement('div'); d.textContent = str || ''; return d.innerHTML; }
+  updateWordCount();
+})();
+</script>
+
+<!-- 历史课评详情 modal -->
+<div class="history-modal-mask" id="history-modal-mask" role="dialog" aria-modal="true">
+    <div class="history-modal">
+        <div class="history-modal-header">
+            <div class="history-modal-title">
+                <span class="timeline-dot" id="hm-dot"></span>
+                <span id="hm-title">历史课评详情</span>
+            </div>
+            <button class="history-modal-close" id="hm-close" aria-label="关闭">×</button>
+        </div>
+        <div class="history-modal-meta" id="hm-meta"></div>
+        <div class="history-modal-body" id="hm-body"></div>
+        <div class="history-modal-footer">
+            <button class="btn-secondary" id="hm-copy" style="padding:8px 18px;font-size:13px">📋 复制全文</button>
+            <button class="btn-primary" id="hm-load-to-editor" style="padding:8px 18px;font-size:13px">✏️ 载入到编辑区</button>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

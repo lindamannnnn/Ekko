@@ -4,60 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>课评编辑器 · {{ klass.name }} · {{ lesson.title }}</title>
-  <style>
-    :root {
-      --bg:#f5f7fa; --card:#fff; --text:#1f2933; --muted:#6b7280; --border:#e5e7eb;
-      --primary:#2f6fed; --primary-dark:#1f56c4; --danger:#d64545; --success:#1f9d57;
-      --warning:#c97a16; --radius:12px; --shadow:0 6px 24px rgba(31,41,51,.08);
-    }
-    * { box-sizing:border-box; }
-    body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
-           background:var(--bg); color:var(--text); }
-    .topbar { display:flex; align-items:center; gap:16px; padding:16px 28px; background:var(--card);
-              border-bottom:1px solid var(--border); flex-wrap:wrap; }
-    .topbar h1 { font-size:18px; margin:0; }
-    .topbar .meta { color:var(--muted); font-size:14px; }
-    .toolbar { display:flex; align-items:center; gap:12px; padding:14px 28px; flex-wrap:wrap;
-               background:#fbfcfe; border-bottom:1px solid var(--border); }
-    .btn { background:var(--primary); color:#fff; border:none; padding:9px 18px; border-radius:8px;
-           font-size:14px; cursor:pointer; text-decoration:none; }
-    .btn:hover { background:var(--primary-dark); }
-    .btn:disabled { opacity:.55; cursor:not-allowed; }
-    .btn-ghost { background:#eef2ff; color:var(--primary-dark); }
-    .btn-ghost:hover { background:#e0e8ff; }
-    #progress { color:var(--muted); font-size:14px; }
-    #busy { color:var(--warning); font-size:14px; }
-    #flash { position:fixed; top:18px; right:18px; background:var(--success); color:#fff;
-             padding:8px 14px; border-radius:8px; opacity:0; transition:opacity .3s; font-size:14px; }
-    .tags { padding:10px 28px 0; }
-    .tag { display:inline-block; background:#fff; border:1px solid var(--border); color:var(--text);
-           padding:5px 10px; border-radius:16px; font-size:12px; margin:0 6px 6px 0; cursor:pointer; }
-    .tag:hover { border-color:var(--primary); color:var(--primary); }
-    .list { display:grid; grid-template-columns:repeat(auto-fill,minmax(360px,1fr)); gap:16px; padding:16px 28px 60px; }
-    .review-card { background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
-                   box-shadow:var(--shadow); padding:14px; display:flex; flex-direction:column; }
-    .rc-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
-    .rc-name { font-weight:600; font-size:15px; }
-    .rc-text { width:100%; min-height:200px; border:1px solid var(--border); border-radius:8px;
-               padding:10px; font-size:13px; line-height:1.6; resize:vertical; color:var(--text);
-               font-family:inherit; }
-    .rc-text:disabled { background:#f3f4f6; }
-    .rc-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
-    .btn-mini { background:#eef2ff; color:var(--primary-dark); border:none; padding:6px 12px;
-                border-radius:7px; font-size:12px; cursor:pointer; }
-    .btn-mini:hover { background:#e0e8ff; }
-    .score { font-size:12px; color:var(--muted); margin:4px 0; }
-    .score b { color:var(--text); }
-    .warn { color:var(--warning); margin-left:6px; }
-    .err { color:var(--danger); font-size:12px; background:#fdecec; padding:6px 8px; border-radius:6px; margin:4px 0; }
-    .badge { font-size:11px; padding:2px 9px; border-radius:12px; }
-    .badge-pending { background:#eef2ff; color:var(--primary-dark); }
-    .badge-generating { background:#fff7e6; color:var(--warning); }
-    .badge-draft { background:#ecfdf3; color:var(--success); }
-    .badge-confirmed { background:#e0e8ff; color:var(--primary-dark); }
-    .badge-leave { background:#f3f4f6; color:var(--muted); }
-    .badge-failed { background:#fdecec; color:var(--danger); }
-  </style>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
 </head>
 <body>
   <div class="topbar">
@@ -65,24 +12,22 @@
     <span class="meta">课次：{{ lesson.title }} · 类型：{{ klass.type_name_custom or (preset.name if preset else '通用') }}
       {% if lesson.lesson_type == 'trial' %}· <b style="color:var(--warning)">试听课</b>{% endif %}</span>
     <a class="btn btn-ghost" href="{{ url_for('classes.detail', class_id=klass.id) }}">返回班级</a>
+    <span class="hint-tag" data-tip="这里每位学生一张卡片：AI 已为你写好初稿，可在文本框里逐份微调；点「生成」让 AI 重写，点「确认」归档，点「请假」标记缺席，点「还原原稿」恢复 AI 初稿。">本页怎么用？</span>
   </div>
 
+  {% if not course_ready %}
+  <div class="warn-banner">
+    本节课还没有课件，也没有填写班级共享课程内容，暂不能生成课评。
+    请先上传本节课课件，或在 <a href="{{ url_for('classes.detail', class_id=klass.id) }}">班级详情页</a> 填写共享课程内容后再生成。
+  </div>
+  {% endif %}
+
   <div class="toolbar">
-    <button class="btn" id="gen-all">一键生成全部</button>
+    <button class="btn" id="gen-all" {% if not course_ready %}disabled{% endif %}>一键生成全部</button>
     <button class="btn btn-ghost" id="dedup-btn">同班去重</button>
     <span id="progress"></span>
     <span id="busy"></span>
   </div>
-
-  {% if preset and preset.quick_tags %}
-  <div class="tags" id="tag-bar">
-    {% for dim, tags in preset.quick_tags.items() %}
-      {% for t in tags %}
-        <span class="tag" data-tag="{{ t }}">{{ t }}</span>
-      {% endfor %}
-    {% endfor %}
-  </div>
-  {% endif %}
 
   <div class="list" id="review-list"></div>
   <div id="flash"></div>
@@ -101,6 +46,7 @@
       ]
     };
   </script>
+  <script src="{{ url_for('static', filename='js/tour.js') }}"></script>
   <script src="{{ url_for('static', filename='js/editor.js') }}"></script>
 </body>
 </html>

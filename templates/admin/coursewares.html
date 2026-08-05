@@ -1,0 +1,106 @@
+{% extends "admin/base.html" %}
+
+{% block title %}课件资源{% endblock %}
+{% block page_title %}课件资源{% endblock %}
+{% block breadcrumb %}平台总后台 / 课件资源{% endblock %}
+
+{% block page_content %}
+
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value blue">{{ rows|length }}</div>
+      <div class="stat-label">课件总数</div>
+    </div>
+    <div class="stat-icon blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+    </div>
+  </div>
+  {% set total_kb = rows|map(attribute='size_kb')|sum %}
+  {% set total_mb = (total_kb / 1024)|round(2) %}
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value cyan">{{ total_mb }} <span style="font-size:16px;font-weight:400;">MB</span></div>
+      <div class="stat-label">总文件大小</div>
+    </div>
+    <div class="stat-icon cyan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    {% set uploaders = [] %}
+    {% for r in rows %}{% if r.cw.uploaded_by and r.cw.uploaded_by not in uploaders %}{% if uploaders.append(r.cw.uploaded_by) %}{% endif %}{% endif %}{% endfor %}
+    <div class="stat-value green">{{ uploaders|length }}</div>
+    <div class="stat-label">上传人数</div>
+    <div class="stat-icon green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    {% set exts = [] %}
+    {% for r in rows %}{% if r.cw.ext and r.cw.ext not in exts %}{% if exts.append(r.cw.ext.upper()) %}{% endif %}{% endif %}{% endfor %}
+    <div class="stat-value orange">{{ exts|length }}</div>
+    <div class="stat-label">文件类型</div>
+    <div class="stat-icon orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- Coursewares Table -->
+<div class="card section">
+  <div class="section-header">
+    <span class="section-title">全部课件列表</span>
+    <span style="font-size:13px;color:var(--text-3);">共 {{ rows|length }} 个文件 · 总计 {{ total_mb }} MB</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>源文件名</th><th>类型</th><th>所属班级</th><th>关联课次</th><th>上传人</th><th>上传时间</th><th>文件大小</th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              {% if r.cw.ext and r.cw.ext.lower() in ['pdf'] %}
+                <span style="color:#ef4444;font-size:18px;">📄</span>
+              {% elif r.cw.ext and r.cw.ext.lower() in ['doc','docx'] %}
+                <span style="color:#3b82f6;font-size:18px;">📝</span>
+              {% elif r.cw.ext and r.cw.ext.lower() in ['ppt','pptx'] %}
+                <span style="color:#f59e0b;font-size:18px;">📊</span>
+              {% elif r.cw.ext and r.cw.ext.lower() in ['xls','xlsx','csv'] %}
+                <span style="color:#10b981;font-size:18px;">📈</span>
+              {% else %}
+                <span style="color:var(--text-3);font-size:18px;">📎</span>
+              {% endif %}
+              <a href="/admin/courseware/{{ r.cw.id }}" style="font-weight:500;color:var(--text);text-decoration:none;">{{ r.cw.source_filename or '（无文件名）' }}</a>
+            </div>
+          </td>
+          <td><span class="badge badge-gray">{{ (r.cw.ext or '—').upper() }}</span></td>
+          <td>{{ r.class_name }}</td>
+          <td style="color:var(--text-2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ r.lesson_title }}</td>
+          <td>{{ r.cw.uploaded_by or '<span style="color:var(--text-3);">未知</span>' }}</td>
+          <td style="white-space:nowrap;color:var(--text-2);font-size:13px;">
+            {{ r.cw.created_at.strftime('%Y-%m-%d %H:%M') if r.cw.created_at else '—' }}
+          </td>
+          <td>
+            {% if r.size_kb > 0 %}
+              {% if r.size_kb > 1024 %}
+                <span style="color:var(--danger);font-weight:600;">{{ (r.size_kb/1024)|round(1) }} MB</span>
+              {% else %}
+                <span style="color:var(--text);font-weight:500;">{{ r.size_kb }} KB</span>
+              {% endif %}
+            {% else %}
+              <span style="color:var(--text-3);">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state-lg" style="padding:24px 0;"><p>暂无课件数据</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

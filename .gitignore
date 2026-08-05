@@ -25,3 +25,15 @@ references/
 # 平台无关
 .venv/
 venv/
+.venv-doc/   # 上一轮误提交进仓库的废弃 venv，已全删，避免复发
+
+# 临时与历史目录（本地保留用于参考/待人工清理，不入库）
+logs_*.txt
+_removed_orphan_*/
+_旧git历史_*/
+quantifying/
+*.lnk
+
+# 笔记/草稿
+classreview.html
+# 已被忽略：data/ references/ tools/ skills/ 见上半段旧单体残留

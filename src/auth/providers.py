@@ -36,12 +36,14 @@ class PasswordProvider(BaseProvider):
         return check_password_hash(user.password_hash, password)
 
     @staticmethod
-    def register(email: str, password: str, display_name: str | None = None) -> User:
+    def register(email: str, password: str, display_name: str | None = None,
+                is_superuser: bool = False) -> User:
         user = User(
             email=email,
             password_hash=generate_password_hash(password),
             display_name=display_name or email.split('@')[0],
             auth_provider='password',
+            is_superuser=is_superuser,
         )
         db.session.add(user)
         db.session.commit()

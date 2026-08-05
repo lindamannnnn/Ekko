@@ -1,9 +1,10 @@
 """鉴权路由：注册 / 登录 / 登出 / 邮箱验证 / 密码找回。"""
 import datetime
+import random
 from urllib.parse import urlparse
 
 from flask import (
-    Blueprint, render_template, redirect, url_for, flash, request, current_app,
+    Blueprint, render_template, redirect, url_for, flash, request, current_app, session, jsonify,
 )
 from flask_login import login_user, logout_user, login_required, current_user
 
@@ -36,7 +37,7 @@ def _send_verification(user: User) -> bool:
     link = url_for('auth.verify_email', token=token, _external=True)
     sent = send_email(
         user.email,
-        '验证你的课评系统邮箱',
+        '验证你的 Ekko课评系统 邮箱',
         render_template('auth/email_verify.html', link=link, user=user),
     )
     if not sent:
@@ -50,17 +51,61 @@ def register():
         return redirect(url_for('main.index'))
     form = RegistrationForm()
     if form.validate_on_submit():
+        # 邮箱唯一性已由表单层 UniqueEmail 校验；若存在则落回注册页并显示红字提示，
+        # 不再静默跳登录页。
         email = form.email.data.strip().lower()
-        if User.query.filter_by(email=email).first():
-            flash('该邮箱已注册，请直接登录', 'warning')
-            return redirect(url_for('auth.login'))
-        user = PasswordProvider.register(email, form.password.data, form.display_name.data)
-        _send_verification(user)
+        # 不直接建账号：先发验证码，跳到验证页
+        code = ''.join(random.choices('0123456789', k=6))
+        session['reg_code'] = code
+        session['reg_email'] = email
+        session['reg_pw'] = form.password.data
+        session['reg_name'] = form.display_name.data
+        sent = send_email(
+            email,
+            '你的 Ekko课评系统 注册验证码',
+            render_template('auth/email_code.html', code=code),
+        )
+        if not sent:
+            current_app.logger.warning('[dev] 注册验证码(未真发): %s', code)
         return render_template(
-            'auth/verify_notice.html', email=email,
+            'auth/register_code.html', email=email,
             dev_mode=(not current_app.config.get('MAIL_PASSWORD')),
         )
     return render_template('auth/register.html', form=form, providers=PROVIDER_CARDS)
+
+
+@bp.route('/check-email')
+def check_email():
+    """注册页实时查重：返回该邮箱是否已注册。"""
+    email = (request.args.get('email') or '').strip().lower()
+    if not email:
+        return jsonify(exists=False)
+    exists = User.query.filter_by(email=email).first() is not None
+    return jsonify(exists=exists)
+
+
+@bp.route('/register/verify', methods=['POST'])
+def register_verify():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    code = request.form.get('code', '').strip()
+    expect = session.get('reg_code')
+    email = session.get('reg_email')
+    if not expect or code != expect:
+        flash('验证码不正确或已失效，请重新获取', 'danger')
+        return render_template('auth/register_code.html', email=email, dev_mode=False)
+    # 创建并立刻验证账号
+    user = PasswordProvider.register(email, session.get('reg_pw'), session.get('reg_name'))
+    user.email_verified_at = datetime.datetime.utcnow()
+    db.session.commit()
+    # 清理 session 中的注册临时数据
+    session.pop('reg_code', None)
+    session.pop('reg_email', None)
+    session.pop('reg_pw', None)
+    session.pop('reg_name', None)
+    login_user(user)
+    flash('注册成功！欢迎加入 Ekko课评系统', 'success')
+    return redirect(url_for('main.index'))
 
 
 @bp.route('/verify-email/<token>')
@@ -83,6 +128,9 @@ def verify_email(token):
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
+    if request.method == 'POST':
+        from security.ratelimit import check_rate_limit
+        check_rate_limit('auth.login')
     form = LoginForm()
     if form.validate_on_submit():
         email = form.email.data.strip().lower()
@@ -134,7 +182,7 @@ def forgot_password():
             link = url_for('auth.reset_password', token=token, _external=True)
             sent = send_email(
                 email,
-                '重置你的课评系统密码',
+                '重置你的 Ekko课评系统 密码',
                 render_template('auth/email_reset.html', link=link, user=user),
             )
             if not sent:

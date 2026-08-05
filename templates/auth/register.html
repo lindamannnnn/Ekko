@@ -4,26 +4,111 @@
 {% block content %}
   <form method="post" novalidate>
     {{ form.hidden_tag() }}
-    <label for="display_name">昵称（选填）</label>
-    {{ form.display_name(placeholder="例如：王老师") }}
-    <label for="email">邮箱</label>
-    {{ form.email(placeholder="you@example.com") }}
-    <label for="password">密码</label>
-    {{ form.password(placeholder="至少 8 位") }}
-    <label for="confirm">确认密码</label>
-    {{ form.confirm(placeholder="再次输入密码") }}
+
+    <div class="field">
+      <label for="display_name">昵称（必填）</label>
+      {{ form.display_name(placeholder="例如：王老师") }}
+      {% for e in form.display_name.errors %}<small class="err">{{ e }}</small>{% endfor %}
+      <small class="hint">此昵称将作为课评中的教师签名，请填写真实姓名</small>
+    </div>
+
+    <div class="field">
+      <label for="email">邮箱</label>
+      {{ form.email(placeholder="you@example.com") }}
+      {% for e in form.email.errors %}<small class="err">{{ e }}</small>{% endfor %}
+      <small class="err-live" id="email-feedback"></small>
+      <small class="hint">用于登录与接收验证邮件（请填写真实可用邮箱）</small>
+    </div>
+
+    <div class="field">
+      <label for="password">密码</label>
+      {{ form.password(placeholder="至少 8 位，含字母与数字") }}
+      {% for e in form.password.errors %}<small class="err">{{ e }}</small>{% endfor %}
+      <small class="hint">至少 8 位，且同时包含字母和数字</small>
+    </div>
+
+    <div class="field">
+      <label for="confirm">确认密码</label>
+      {{ form.confirm(placeholder="再次输入密码") }}
+      {% for e in form.confirm.errors %}<small class="err">{{ e }}</small>{% endfor %}
+      <small class="err-live" id="pwd-feedback"></small>
+    </div>
+
     {{ form.submit(class="btn") }}
   </form>
 
-  {% if providers %}
-  <div class="providers">
-    {% for p in providers %}
-      <button class="provider-btn {% if p.available %}enabled{% endif %}" {% if not p.available %}disabled{% endif %}>
-        {{ p.label }}{% if not p.available %}（即将推出）{% endif %}
-      </button>
-    {% endfor %}
-  </div>
-  {% endif %}
+  <script>
+    (function () {
+      var pwd = document.querySelector('#password');
+      var cfm = document.querySelector('#confirm');
+      if (!pwd || !cfm) return;
+      function score() {
+        var v = pwd.value;
+        var s = 0;
+        if (v.length >= 8) s++;
+        if (/[A-Za-z]/.test(v) && /\d/.test(v)) s++;
+        if (/[^A-Za-z0-9]/.test(v)) s++;
+        return s;
+      }
+      function check() {
+        var msg = '';
+        if (pwd.value && score() < 2) {
+          msg = '密码偏弱：建议同时含字母、数字与符号';
+        } else if (cfm.value && pwd.value !== cfm.value) {
+          msg = '两次输入的密码不一致';
+        }
+        var box = document.querySelector('#pwd-feedback');
+        if (box) {
+          box.textContent = msg;
+          box.className = msg ? 'err-live err' : 'err-live';
+        }
+      }
+      pwd.addEventListener('input', check);
+      cfm.addEventListener('input', check);
+    })();
+
+    // 邮箱实时查重：失焦或输入停顿后检测，已在注册页直接提示（无需点注册）
+    (function () {
+      var emailEl = document.querySelector('#email');
+      var fb = document.querySelector('#email-feedback');
+      if (!emailEl || !fb) return;
+      var t;
+      function checkEmail() {
+        var v = emailEl.value.trim().toLowerCase();
+        if (!v || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+          fb.textContent = '';
+          fb.className = 'err-live';
+          emailEl.classList.remove('input-bad');
+          return;
+        }
+        fb.textContent = '检测中…';
+        fb.className = 'err-live hint';
+        fetch('/auth/check-email?email=' + encodeURIComponent(v))
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (d.exists) {
+              fb.textContent = '该邮箱已注册，请直接登录或更换邮箱';
+              fb.className = 'err-live err';
+              emailEl.classList.add('input-bad');
+            } else {
+              fb.textContent = '邮箱可用';
+              fb.className = 'err-live ok';
+              emailEl.classList.remove('input-bad');
+            }
+          })
+          .catch(function () {
+            fb.textContent = '';
+            fb.className = 'err-live';
+            emailEl.classList.remove('input-bad');
+          });
+      }
+      emailEl.addEventListener('blur', checkEmail);
+      emailEl.addEventListener('input', function () {
+        clearTimeout(t);
+        t = setTimeout(checkEmail, 500);
+      });
+    })();
+  </script>
 
   <div class="alt">已有账号？<a href="{{ url_for('auth.login') }}">去登录</a></div>
 {% endblock %}

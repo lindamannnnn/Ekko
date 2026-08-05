@@ -31,6 +31,9 @@ class Courseware(UUIDMixin, TenantMixin, SoftDeleteMixin, db.Model):
     source_filename = Column(String(255), nullable=True)
     stored_path = Column(String(512), nullable=True)        # 磁盘路径（UUID 命名）
     extracted_text = Column(Text, nullable=True)
+    # 上传留痕：时间 + 上传人（解决「教师上传历史查不到」的盲区）
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    uploaded_by = Column(String(128), nullable=True)
 
 
 class Review(UUIDMixin, TenantMixin, SoftDeleteMixin, db.Model):
@@ -57,6 +60,8 @@ class Review(UUIDMixin, TenantMixin, SoftDeleteMixin, db.Model):
     edited_at = Column(DateTime, nullable=True)     # 老师手动改过 → 非空
     sent_at = Column(DateTime, nullable=True)       # 顺序复制发送记录
     generating_since = Column(DateTime, nullable=True)  # 幂等锁：生成开始时间，超时(120s)可重入
+
+    lesson = db.relationship("Lesson", foreign_keys=[lesson_id], lazy="joined")
 
     __table_args__ = (
         UniqueConstraint('student_id', 'lesson_id', name='uq_review_student_lesson'),

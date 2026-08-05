@@ -3,22 +3,29 @@
 并发策略（v6）：前端 4 路 Promise 池，每份课评打一次
 POST /reviews/<rid>/generate（同步、5-8s 返回）。后端只负责单份生成 +
 status 状态机（pending/generating/draft/confirmed/leave/failed）作为断点续跑唯一真相。
+
+全项目**唯一**的课评生成入口是 `_generate_for`（by-keys / editor / dedup 都汇到这里），
+所有数据源都在此组装进 prompt，不再有第二套生成逻辑。
 """
+import json
 from datetime import datetime
 
 from flask import (
     render_template, redirect, url_for, flash, request, current_app, jsonify,
 )
 from flask_login import login_required, current_user
+from sqlalchemy.orm.attributes import flag_modified
 from extensions import db
 from models.class_student import Klass, Student, Enrollment
 from models.lesson import Lesson, Review, Courseware, StyleSample
 from models.class_type_preset import ClassTypePreset
 from ai.llm_client import LLMClient
 from ai.channel import Channel
-from ai.prompt_builder import build_messages
+from ai.prompt_builder import build_messages, load_subject_template
+from ai.review_library import get_library_example
 from ai.redact import Redactor
 from ai.review_scorer import score_review
+from ai.review_normalize import finalize_review
 
 from . import reviews_bp
 
@@ -78,18 +85,39 @@ def _generate_for(review: Review) -> dict:
     if not (lesson and student):
         raise ValueError("课次或学生不存在")
 
+    # 学科课评模板：作为「格式 + 写法示范」注入（严禁 AI 照抄模板示例内容，
+    # 必须结合本节课课件/教案真实内容生成）。subject_code 同时驱动开头范式差异化。
+    subject_code = klass.type_code
+    subject_template = load_subject_template(subject_code)
+
     hist = _history_for(student.id, review.id)
     style = _get_style_examples(klass.id)
+
+    # 课程内容：课件优先，回退班级共享 _course_content（无每课课件时仍可生成）
     cw_text = ""
     if lesson.courseware_id:
         cw = Courseware.query.get(lesson.courseware_id)
         cw_text = cw.extracted_text if cw else ""
+    if not cw_text:
+        cw_text = (klass.extra_data or {}).get("_course_content") or ""
+
+    # 班级级优秀历史课评（次优先级风格范例）
+    excellent_raw = (klass.extra_data or {}).get("_excellent_review") or ""
+    # 同类别课评库兜底：仅当「该生历史课评」与「班级优秀课评」都空时
+    library_example = ""
+    if not hist and not excellent_raw:
+        library_example = get_library_example(klass.type_code, klass.type_name_custom)
+
+    # 教师本节课输入：快捷标签 + 一句话评语（评价/事实锚点，R3③ 禁止编造的依据）
+    quick_tags = review.perf_tags or []
+    one_sentence = review.perf_note or ""
 
     red = Redactor(student.name, student.preferred_name)
     s_name = red.redact(student.name) or "{{STU}}"
     s_nick = red.redact(student.preferred_name) if student.preferred_name else s_name
     hist_r = [red.redact(h) for h in hist]
     style_r = [red.redact(s) for s in style]
+    excellent_review = red.redact(excellent_raw) if excellent_raw else ""
 
     lesson_info = {
         "title": lesson.title,
@@ -105,10 +133,26 @@ def _generate_for(review: Review) -> dict:
         history_reviews=hist_r,
         style_examples=style_r,
         trial=(lesson.lesson_type == 'trial'),
+        subject_code=subject_code,
+        subject_template=subject_template,
+        gender=student.gender,
+        quick_tags=quick_tags,
+        one_sentence=one_sentence,
+        excellent_review=excellent_review,
+        library_example=library_example,
     )
     client = LLMClient()
     raw = client.complete(messages, timeout=120)
     text = red.restore(raw)
+    # 后端确定性兜底：
+    #  - 有「班级级优秀历史课评」作模板时，保留模型多段维度化结构（force_two=False），不硬截断；
+    #  - 否则强制 2 段 + 1 空行结构，并按预置上限做字数硬截断。
+    force_two = not bool(excellent_raw)
+    text = finalize_review(
+        text,
+        (preset.length_max if preset else None) if force_two else None,
+        force_two=force_two,
+    )
 
     review.content = text
     review.ai_raw = raw
@@ -154,10 +198,18 @@ def editor(class_id, lesson_id):
             if isinstance(tags, list):
                 quick_tags_flat.extend(tags)
 
+    # 是否有可生成的内容：班级共享 _course_content 或 本节课有课件
+    course_ready = bool(
+        (klass.extra_data or {}).get("_course_content")
+        or Lesson.query.filter_by(class_id=class_id, deleted_at=None)
+        .join(Courseware, Courseware.id == Lesson.courseware_id)
+        .first()
+    )
+
     return render_template(
         "reviews/editor.html",
         klass=klass, lesson=lesson, preset=preset, students=students, reviews=reviews,
-        quick_tags_flat=quick_tags_flat,
+        quick_tags_flat=quick_tags_flat, course_ready=course_ready,
     )
 
 
@@ -172,6 +224,9 @@ def status(class_id, lesson_id):
     data = [
         {"id": r.id, "student_id": r.student_id, "status": r.status,
          "content": r.content, "score": r.score_json, "error_msg": r.error_msg,
+         "perf_tags": r.perf_tags or [],      # 教师点选快捷标签（前端回显用）
+         "perf_note": r.perf_note,            # 教师一句话评语（前端回显用，冗余于 teacher_comment）
+         "teacher_comment": r.perf_note,      # 兼容旧前端字段名
          "edited_at": r.edited_at.isoformat() if r.edited_at else None}
         for r in rows
     ]
@@ -208,7 +263,19 @@ def generate(review_id):
 @login_required
 def save(review_id):
     review = _review_or_404(review_id)
-    review.content = request.form.get("content", review.content)
+    content = request.form.get("content")
+    if content is not None:
+        review.content = content
+    # 接收前端发来的教师点选快捷标签 / 本节课一句话评语（editor.js 会发）
+    tags = request.form.get("perf_tags")
+    if tags is not None:
+        try:
+            review.perf_tags = json.loads(tags) if tags.strip() else []
+        except Exception:
+            review.perf_tags = [t.strip() for t in tags.split(",") if t.strip()]
+    note = request.form.get("teacher_comment")
+    if note is not None:
+        review.perf_note = note
     review.edited_at = datetime.utcnow()
     db.session.commit()
     return jsonify({"ok": True})
@@ -244,6 +311,18 @@ def revert(review_id):
         db.session.commit()
         return jsonify({"ok": True, "content": review.content})
     return jsonify({"ok": False, "error": "无原稿"}), 400
+
+
+@reviews_bp.route("/<review_id>/delete", methods=["POST", "DELETE"])
+@login_required
+def delete_review(review_id):
+    """软删除历史课评（从该生历史列表移除，不破坏其他依赖）。已删除幂等返回 ok。"""
+    review = _review_or_404(review_id)
+    if review.deleted_at:
+        return jsonify({"ok": True, "review_id": review_id, "already_deleted": True})
+    review.deleted_at = datetime.utcnow()
+    db.session.commit()
+    return jsonify({"ok": True, "review_id": review_id})
 
 
 @reviews_bp.route("/<class_id>/<lesson_id>/dedup", methods=["POST"])
@@ -291,9 +370,19 @@ def _regenerate_with_reference(review, reference_opening):
     if lesson.courseware_id:
         cw = Courseware.query.get(lesson.courseware_id)
         cw_text = cw.extracted_text if cw else ""
+    if not cw_text:
+        cw_text = (klass.extra_data or {}).get("_course_content") or ""
+    excellent_raw = (klass.extra_data or {}).get("_excellent_review") or ""
+    library_example = ""
+    if not hist and not excellent_raw:
+        library_example = get_library_example(klass.type_code, klass.type_name_custom)
+    quick_tags = review.perf_tags or []
+    one_sentence = review.perf_note or ""
     red = Redactor(student.name, student.preferred_name)
     s_name = red.redact(student.name) or "{{STU}}"
     s_nick = red.redact(student.preferred_name) if student.preferred_name else s_name
+    subject_code = klass.type_code
+    subject_template = load_subject_template(subject_code)
     messages = build_messages(
         preset=preset, student_name=s_name, preferred_name=s_nick,
         lesson_info={"title": lesson.title, "common_notes": lesson.common_notes,
@@ -303,10 +392,23 @@ def _regenerate_with_reference(review, reference_opening):
         style_examples=[red.redact(s) for s in style],
         trial=(lesson.lesson_type == 'trial'),
         reference_opening=red.redact(reference_opening),
+        subject_code=subject_code,
+        subject_template=subject_template,
+        gender=student.gender,
+        quick_tags=quick_tags,
+        one_sentence=one_sentence,
+        excellent_review=red.redact(excellent_raw) if excellent_raw else "",
+        library_example=library_example,
     )
     client = LLMClient()
     raw = client.complete(messages, timeout=120)
     text = red.restore(raw)
+    force_two = not bool(excellent_raw)
+    text = finalize_review(
+        text,
+        (preset.length_max if preset else None) if force_two else None,
+        force_two=force_two,
+    )
     review.content = text
     review.ai_raw = raw
     review.status = 'draft'
@@ -326,3 +428,174 @@ def edit(review_id):
         flash("课评已保存", "success")
         return redirect(url_for("classes.detail", class_id=review.class_id))
     return render_template("reviews/edit.html", review=review)
+
+
+# ===================== 关键路由：by-keys（无 lesson_id 的 AI 生成） =====================
+# 旧设计：AI 生成必须先调 status 端点拿 review_id、再调 /<rid>/generate。
+# 这条链路任何一环失败（缓存/竞态/字段不匹配）都会弹窗，故障面太广。
+# 新设计：按自然键（class_id + student_id ± lesson_id）直接生成，
+# 后端自己保证 review 行存在（找不到就当场创建），前端 AI 生成按钮
+# 改为直接 POST 这个端点，根本上消灭弹窗。
+
+def _generate_by_keys_impl(class_id, lesson_id, student_id, allow_fallback):
+    """by-keys 端点的公共实现。
+    class_id:    班级
+    lesson_id:   课次（None 时按 allow_fallback 自动选/建）
+    student_id:  学生
+    allow_fallback: True 时允许自动选最近 lesson 或自建今日 lesson
+    """
+    klass = _klass_or_404(class_id)
+    student = Student.query.filter_by(id=student_id, deleted_at=None).first()
+    if not student:
+        return jsonify({"ok": False, "error": "学生不存在"}), 404
+    enrollment = Enrollment.query.filter_by(
+        student_id=student_id, class_id=class_id, deleted_at=None,
+    ).first()
+    if not enrollment:
+        return jsonify({"ok": False, "error": "该学生不在本班"}), 404
+
+    # --- 解析 lesson ---
+    lesson = None
+    if lesson_id:
+        lesson = Lesson.query.filter_by(
+            id=lesson_id, user_id=current_user.id, class_id=class_id, deleted_at=None,
+        ).first()
+    if not lesson and allow_fallback:
+        lesson = (
+            Lesson.query.filter_by(class_id=class_id, deleted_at=None)
+            .order_by(Lesson.lesson_date.desc().nullslast(), Lesson.created_at.desc())
+            .first()
+        )
+    if not lesson and allow_fallback:
+        from models.lesson import Lesson as _Lesson
+        lesson = _Lesson(
+            user_id=current_user.id, class_id=class_id,
+            title="今日课堂", lesson_type="regular",
+            lesson_date=datetime.utcnow().date(),
+        )
+        db.session.add(lesson)
+        db.session.commit()
+    if not lesson:
+        return jsonify({"ok": False, "error": "课次不存在或已删除"}), 404
+
+    # --- 接收前端 inline 课程内容 / 教师评语 ---
+    try:
+        payload = request.get_json(silent=True) or {}
+    except Exception:  # noqa: BLE001
+        payload = {}
+    inline_course = (payload.get("course_content") or "").strip()
+    if inline_course:
+        extra = dict(klass.extra_data or {})
+        if (extra.get("_course_content") or "").strip() != inline_course:
+            extra["_course_content"] = inline_course
+            klass.extra_data = extra
+            flag_modified(klass, "extra_data")
+            db.session.commit()
+
+    review = Review.query.filter_by(
+        class_id=class_id, lesson_id=lesson.id, student_id=student_id,
+        user_id=current_user.id,
+    ).first()
+    if review is None:
+        review = Review(
+            user_id=current_user.id, class_id=class_id,
+            lesson_id=lesson.id, student_id=student_id, status='pending',
+        )
+        db.session.add(review)
+        db.session.commit()
+    inline_note = (payload.get("teacher_comment") or "").strip()
+    if inline_note and (review.perf_note or "").strip() != inline_note:
+        review.perf_note = inline_note
+        db.session.commit()
+
+    # 接收前端 inline 教师点选快捷标签（与 teacher_comment 同源，保证 by-keys 链路
+    # 也能把教师标签作为事实锚点传给 AI，与 editor 链路一致）
+    inline_tags = payload.get("perf_tags")
+    if inline_tags:
+        try:
+            parsed = json.loads(inline_tags) if isinstance(inline_tags, str) else inline_tags
+            if isinstance(parsed, list) and parsed:
+                review.perf_tags = [str(t) for t in parsed]
+                db.session.commit()
+        except Exception:  # noqa: BLE001
+            pass
+
+    has_cw = bool(lesson.courseware_id and Courseware.query.get(lesson.courseware_id))
+    has_content = bool((klass.extra_data or {}).get("_course_content"))
+    if not has_cw and not has_content:
+        return jsonify({"ok": False, "status": review.status,
+                        "error": "本节课还没有课件，也没有填写班级共享课程内容，无法生成课评。请先上传本节课课件，或在班级详情页填写共享课程内容后再生成。"}), 400
+
+    if review.status == 'generating' and review.generating_since:
+        elapsed = (datetime.utcnow() - review.generating_since).total_seconds()
+        if elapsed < 300:  # GENERATING_TTL
+            return jsonify({"ok": False, "status": review.status,
+                            "error": "正在生成中，请稍候"}), 409
+
+    review.status = 'generating'
+    review.generating_since = datetime.utcnow()
+    review.error_msg = None
+    db.session.commit()
+    try:
+        result = _generate_for(review)
+        result['review_id'] = review.id
+        # 详情页 AI 生成按钮用 setAiContent(genData.content) 把内容写回 textarea，
+        # 必须把生成后的课评正文一并返回（之前漏了导致前端误判为失败弹「未知错误」）。
+        result['content'] = review.content
+        if allow_fallback and not lesson_id:
+            result['lesson_id'] = lesson.id
+        return jsonify(result)
+    except Exception as e:  # noqa: BLE001
+        review.status = 'failed'
+        review.error_msg = str(e)[:500]
+        db.session.commit()
+        current_app.logger.exception('AI generate by-keys failed')
+        return jsonify({"ok": False, "status": "failed", "error": str(e)[:500]}), 500
+
+
+@reviews_bp.route("/by-keys/<class_id>/<lesson_id>/<student_id>/generate", methods=["POST"])
+@login_required
+def generate_by_keys(class_id, lesson_id, student_id):
+    """有 lesson_id 的 by-keys 端点（lesson 必须存在）。"""
+    return _generate_by_keys_impl(class_id, lesson_id, student_id, allow_fallback=False)
+
+
+@reviews_bp.route("/by-keys/<class_id>/<student_id>/generate", methods=["POST"])
+@login_required
+def generate_by_keys_no_lesson(class_id, student_id):
+    """无 lesson_id 的 by-keys 端点（自动选最近 lesson 或自建今日 lesson）。"""
+    return _generate_by_keys_impl(class_id, None, student_id, allow_fallback=True)
+
+
+@reviews_bp.route("/<class_id>/history/<student_id>", methods=["GET"])
+@login_required
+def history(class_id, student_id):
+    """按学生查所有已生成课评（不依赖 lesson_id），供前端历史弹窗用。"""
+    klass = _klass_or_404(class_id)
+    # 安全检查：学生必须在该班
+    enrollment = Enrollment.query.filter_by(
+        student_id=student_id, class_id=class_id, deleted_at=None,
+    ).first()
+    if not enrollment:
+        return jsonify({"ok": False, "error": "该学生不在本班"}), 404
+    rows = (
+        Review.query
+        .filter_by(student_id=student_id, class_id=class_id, user_id=current_user.id)
+        .filter(Review.deleted_at.is_(None))
+        .filter(Review.content.isnot(None))
+        .order_by(Review.updated_at.desc().nullslast(), Review.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    reviews = []
+    for r in rows:
+        reviews.append({
+            "id": r.id,
+            "review_id": r.id,   # 别名：前端统一用 review_id，避免 id/class_id 混淆
+            "lesson_id": r.lesson_id,
+            "status": r.status,
+            "content": r.content or "",
+            "updated_at": r.updated_at.isoformat() if r.updated_at else None,
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        })
+    return jsonify({"ok": True, "reviews": reviews})

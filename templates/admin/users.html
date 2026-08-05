@@ -1,0 +1,101 @@
+{% extends "admin/base.html" %}
+
+{% block title %}账号管理{% endblock %}
+{% block page_title %}账号管理{% endblock %}
+{% block breadcrumb %}平台总后台 / 账号管理{% endblock %}
+
+{% block page_content %}
+
+<!-- Stats summary -->
+<div class="stats-grid" style="margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value blue">{{ users|length }}</div>
+      <div class="stat-label">总账号数</div>
+    </div>
+    <div class="stat-icon blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    {% set super_count = users|selectattr('is_superuser','equalto',true)|list|length %}
+    <div class="stat-value red">{{ super_count }}</div>
+    <div class="stat-label">超管账号</div>
+    <div class="stat-icon red">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    {% set total_students = stat.values()|map('first')|sum %}
+    <div class="stat-value green">{{ total_students }}</div>
+    <div class="stat-label">累计班级</div>
+    <div class="stat-icon green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    {% set total_stu = stat.values()|map('last')|sum %}
+    <div class="stat-value orange">{{ total_stu }}</div>
+    <div class="stat-label">累计学生</div>
+    <div class="stat-icon orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- Users Table -->
+<div class="card section">
+  <div class="section-header">
+    <span class="section-title">全部账号列表</span>
+    <span style="font-size:13px;color:var(--text-3);">共 {{ users|length }} 条记录</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>用户</th><th>邮箱</th><th>角色</th><th>登录方式</th><th>班级数</th><th>学生数</th><th>注册时间</th><th>最近登录</th><th>操作</th></tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <div style="display:flex;align-items:center;gap:10px;">
+              <div class="user-avatar" style="width:32px;height:32px;font-size:11px;">{{ (u.display_name or 'U')[0] }}</div>
+              <a href="/admin/user/{{ u.id }}" style="font-weight:600;font-size:14px;color:var(--text);text-decoration:none;">{{ u.display_name or '未设置' }}</a>
+            </div>
+          </td>
+          <td style="font-family:monospace;font-size:13px;color:var(--text-2);">{{ u.email }}</td>
+          <td>
+            {% if u.is_superuser %}
+              <span class="badge badge-red"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="vertical-align:-1px;margin-right:3px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>超管</span>
+            {% else %}
+              <span class="badge badge-gray">教师</span>
+            {% endif %}
+          </td>
+          <td><span class="badge badge-accent">{{ u.auth_provider or 'password' }}</span></td>
+          <td><strong>{{ stat[u.id][0] }}</strong></td>
+          <td><strong>{{ stat[u.id][1] }}</strong></td>
+          <td style="color:var(--text-2);font-size:13px;white-space:nowrap;">
+            {{ u.created_at.strftime('%Y-%m-%d %H:%M') if u.created_at else '—' }}
+          </td>
+          <td style="color:var(--text-2);font-size:13px;white-space:nowrap;">
+            {{ u.last_login_at.strftime('%Y-%m-%d %H:%M') if u.last_login_at else '从未' }}
+          </td>
+          <td>
+            <form method="POST" action="/admin/users/{{ u.id }}/delete"
+                  onsubmit="return confirm('确定删除账号 {{ u.email }} 吗？\n该账号下的班级、学生、课评等全部数据将一并删除，且不可恢复。');"
+                  style="display:inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button type="submit" class="btn-glass btn-danger-outline btn-sm"
+                {% if u.id == current_user.id %}disabled title="不能删除当前登录账号"{% endif %}>删除</button>
+            </form>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="9"><div class="empty-state-lg" style="padding:24px 0;"><p>暂无账号数据</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

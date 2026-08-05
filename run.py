@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""课评系统启动入口（P2 起统一走 create_app 工厂）。"""
+"""课评系统 启动入口（P2 起统一走 create_app 工厂）。"""
 import os
 import sys
 from pathlib import Path
@@ -23,12 +23,15 @@ if _cfg_path.exists():
 
 app = create_app(_config)
 
+# 开发期：模板改动实时生效，无需重启进程（non-debug 默认会缓存模板）
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+
 
 def main():
     host = os.environ.get('HOST', '127.0.0.1')
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG', '0') == '1'
-    print(f"课评系统已启动: http://{host}:{port}")
+    print(f"课评系统 已启动: http://{host}:{port}")
     app.run(host=host, port=port, debug=debug)
 
 

@@ -1,16 +1,29 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
-  <h1>生成课评 · {{ klass.name }}</h1>
-  <p class="muted">课次：{{ lesson.title }}</p>
+
+<div class="page-header">
+  <div class="ph-left">
+    <h1 class="ph-title">生成课评 · {{ klass.name }}</h1>
+    <p class="ph-sub">课次：{{ lesson.title }} · 选择要生成课评的学生</p>
+  </div>
+</div>
+
+<div class="glass-card form-card">
   <form method="POST">
-    <p>为以下 {{ students|length }} 名学生生成课评：</p>
-    {% for s in students %}
-    <label style="display:block">
-      <input type="checkbox" name="student_ids" value="{{ s.id }}" checked> {{ s.name }}
-    </label>
-    {% endfor %}
-    <button type="submit">生成</button>
+    <p style="color:var(--text-2);font-size:14px;margin-bottom:16px;">为以下 {{ students|length }} 名学生生成课评：</p>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      {% for s in students %}
+      <label class="checkbox-label">
+        <input type="checkbox" name="student_ids" value="{{ s.id }}" checked>
+        <span>{{ s.name }}</span>
+      </label>
+      {% endfor %}
+    </div>
+    <button type="submit" class="btn-gradient" style="margin-top:18px;">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      生成课评
+    </button>
   </form>
 </div>
+
 {% endblock %}

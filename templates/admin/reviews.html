@@ -1,0 +1,89 @@
+{% extends "admin/base.html" %}
+
+{% block title %}课评记录{% endblock %}
+{% block page_title %}课评记录{% endblock %}
+{% block breadcrumb %}平台总后台 / 课评记录{% endblock %}
+
+{% block page_content %}
+
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value blue">{{ rows|length }}</div>
+      <div class="stat-label">课评总数</div>
+    </div>
+    <div class="stat-icon blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    </div>
+  </div>
+  {% set confirmed = rows|selectattr('rv.status','equalto','confirmed')|list|length %}
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value green">{{ confirmed }}</div>
+      <div class="stat-label">已确认</div>
+    </div>
+    <div class="stat-icon green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+  </div>
+  {% set pending = rows|selectattr('rv.status','equalto','pending')|list|length %}
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value orange">{{ pending }}</div>
+      <div class="stat-label">待生成</div>
+    </div>
+    <div class="stat-icon orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+  </div>
+  {% set other = rows|length - confirmed - pending %}
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value purple">{{ other }}</div>
+      <div class="stat-label">其他状态</div>
+    </div>
+    <div class="stat-icon purple">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- Reviews Table -->
+<div class="card section">
+  <div class="section-header">
+    <span class="section-title">全部课评记录</span>
+    <span style="font-size:13px;color:var(--text-3);">共 {{ rows|length }} 条记录</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>班级</th><th>学生</th><th>课次</th><th>状态</th><th>课评正文预览</th></tr></thead>
+      <tbody>
+        {% for r in rows %}
+        <tr>
+          <td style="font-weight:600;"><a href="/admin/review/{{ r.rv.id }}" style="color:var(--text);text-decoration:none;">{{ r.class_name }}</a></td>
+          <td>{{ r.student_name }}</td>
+          <td style="color:var(--text-2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"><a href="/admin/review/{{ r.rv.id }}" style="color:var(--text-2);text-decoration:none;">{{ r.lesson_title }}</a></td>
+          <td>
+            {% set status_cfg = {'confirmed':('已确认','badge-green'),'pending':('待生成','badge-yellow'),'generating':('生成中','badge-blue'),'draft':('草稿','badge-purple'),'failed':('失败','badge-red'),'leave':('请假','badge-gray')} %}
+            {% set cfg = status_cfg.get(r.rv.status, (r.rv.status,'badge-gray')) %}
+            <span class="status-dot {{ r.rv.status }}"></span>
+            <span class="badge {{ cfg[1] }}">{{ cfg[0] }}</span>
+          </td>
+          <td>
+            {% if r.rv.content and r.rv.content|length > 0 %}
+              <div class="content-snip">{{ r.rv.content[:200] }}{% if r.rv.content|length > 200 %}…{% endif %}</div>
+            {% else %}
+              <span style="color:var(--text-3);font-style:italic;">（空）</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty-state-lg" style="padding:24px 0;"><p>暂无课评数据</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

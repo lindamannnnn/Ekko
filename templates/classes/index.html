@@ -1,19 +1,90 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
-  <h1>我的班级</h1>
-  {% if klasses %}
-  <ul class="list">
-    {% for k in klasses %}
-    <li>
-      <a href="{{ url_for('classes.detail', class_id=k.id) }}">{{ k.name }}</a>
-      <span class="muted">（{{ k.type_code }}）</span>
-    </li>
-    {% endfor %}
-  </ul>
-  {% else %}
-  <p>还没有班级，<a href="{{ url_for('classes.new') }}">创建一个</a>。</p>
-  {% endif %}
-  <a class="btn" href="{{ url_for('classes.new') }}">+ 新建班级</a>
+
+<div class="page-header">
+  <div class="ph-left">
+    <h1 class="ph-title">我的班级</h1>
+    <p class="ph-sub">管理你的所有班级，进入详情开始写课评</p>
+  </div>
+  <div class="ph-right">
+    <a class="btn-gradient" href="{{ url_for('classes.new') }}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      新建班级
+    </a>
+  </div>
 </div>
+
+<!-- 未写课评提醒 -->
+<div class="reminder-bar glass-card" id="reminder-bar"></div>
+
+{% if klasses %}
+<div class="class-grid">
+  {% for k in klasses %}
+  <div class="glass-card class-card">
+    <!-- 卡片头部：名称 + 类型 + 人数 -->
+    <div class="cc-header">
+      <div class="cc-title-group">
+        <div class="cc-name">{{ k.name }}</div>
+        <span class="cc-type">{{ k.type_code }}</span>
+      </div>
+      <div class="cc-student-count">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>{{ stu_map.get(k.id|string, 0) }} 人</span>
+      </div>
+    </div>
+
+    <!-- 底部操作区 -->
+    <div class="cc-footer">
+      <a class="cc-enter-btn" href="{{ url_for('classes.detail', class_id=k.id) }}">
+        进入班级
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <form method="POST" action="{{ url_for('classes.delete', class_id=k.id) }}" onclick="event.stopPropagation()" onsubmit="return confirm('确认删除班级【{{ k.name }}】？此操作不可恢复。')">
+        <button type="submit" class="cc-delete-btn" title="删除班级">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        </button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="glass-card empty-state-lg">
+  <div class="empty-icon">&#128218;</div>
+  <h3>还没有班级</h3>
+  <p>创建你的第一个班级，开始用 AI 写课评</p>
+  <a class="btn-gradient" href="{{ url_for('classes.new') }}">+ 创建第一个班级</a>
+</div>
+{% endif %}
+
+<script>
+(function () {
+  var bar = document.getElementById('reminder-bar');
+  if (!bar) return;
+  fetch('{{ url_for("reports.reminder") }}', { credentials: 'same-origin' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (!d) return;
+      if (d.pending_classes === 0) {
+        if (d.total_classes > 0) {
+          bar.className = 'reminder-bar glass-card show all-done';
+          bar.innerHTML = '<div class="reminder-content"><span class="pulse-dot green"></span>&#10004; 所有班级的课评都写完了。</div>';
+        }
+        return;
+      }
+      var html = '<div class="reminder-content"><span class="pulse-dot orange"></span>&#128221; 有 <b>' + d.pending_classes + '</b> 个班级还没写完课评，' +
+                 '共 <span class="r-count">' + d.remaining_total + '</span> 份待处理：' +
+                 '<ul class="r-list">';
+      d.items.forEach(function (it) {
+        html += '<li>&#183; <a href="/classes/' + it.class_id + '/detail">' + it.class_name + '</a>' +
+                '&#12288;还差 <span class="r-count">' + it.remaining + '</span> 份' +
+                '（' + it.lessons + ' 节课 &middot; 已完成 ' + it.done + '/' + it.need + '）</li>';
+      });
+      html += '</ul></div>';
+      bar.className = 'reminder-bar glass-card show';
+      bar.innerHTML = html;
+    })
+    .catch(function () {});
+})();
+</script>
 {% endblock %}

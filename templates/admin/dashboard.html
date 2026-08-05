@@ -1,0 +1,211 @@
+{% extends "admin/base.html" %}
+
+{% block title %}数据总览{% endblock %}
+{% block page_title %}数据总览{% endblock %}
+{% block breadcrumb %}平台总后台 / 数据总览{% endblock %}
+
+{% block page_content %}
+
+<!-- Stats Row -->
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value blue">{{ users }}</div>
+      <div class="stat-label">教师账号</div>
+      <div class="stat-trend up">↑ 平台全部注册用户</div>
+    </div>
+    <div class="stat-icon blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value green">{{ classes }}</div>
+      <div class="stat-label">班级总数</div>
+      <div class="stat-trend up">↑ 含已归档班级</div>
+    </div>
+    <div class="stat-icon green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value orange">{{ students }}</div>
+      <div class="stat-label">学生档案</div>
+      <div class="stat-trend up">↑ 全部在册学生</div>
+    </div>
+    <div class="stat-icon orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value purple">{{ reviews }}</div>
+      <div class="stat-label">课评记录</div>
+      <div class="stat-trend up">↑ 全部状态课评</div>
+    </div>
+    <div class="stat-icon purple">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value cyan">{{ coursewares }}</div>
+      <div class="stat-label">课件资源</div>
+      <div class="stat-trend">占用 {{ disk_mb }} MB</div>
+    </div>
+    <div class="stat-icon cyan">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value red">{{ usage.today_gen }}</div>
+      <div class="stat-label">今日 AI 生成</div>
+      <div class="stat-trend">近 7 天 {{ usage.range_gen }} 次 · 日均 {{ usage.avg_gen }}</div>
+    </div>
+    <div class="stat-icon red">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- AI 用量速览 -->
+<div class="card section">
+  <div class="card-body">
+    <div class="section-header">
+      <span class="section-title">AI 用量速览（近 7 天）</span>
+      <a href="/admin/usage" class="section-action">完整看板 →</a>
+    </div>
+    {% if usage.peak_gen > 0 %}
+    <div class="bar-chart">
+      {% for t in usage.trend %}
+      {% set h = (t.gen / usage.peak_gen * 120)|round(0)|int if usage.peak_gen > 0 else 0 %}
+      <div class="bar-col" title="{{ t.full_date }}：{{ t.gen }} 次 / {{ t.tok }} tokens">
+        <span class="bar-value {% if t.is_today %}today{% endif %}">{{ t.gen if t.gen > 0 else '' }}</span>
+        <div class="bar-fill {% if t.is_today %}today{% endif %}" style="height:{{ [h, 3]|max }}px;"></div>
+        <span class="bar-label {% if t.is_today %}today{% endif %}">{{ t.date }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    <div style="display:flex;gap:24px;margin-top:16px;padding-top:14px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);">
+      <span>Token 消耗 <strong style="color:var(--text);">{% if usage.range_tok >= 10000 %}{{ (usage.range_tok / 10000)|round(1) }} 万{% else %}{{ usage.range_tok }}{% endif %}</strong></span>
+      <span>活跃教师 <strong style="color:var(--text);">{{ usage.active_users }}</strong> 人</span>
+      <span>单账号日配额 <strong style="color:var(--text);">{{ usage.quota }}</strong> 次</span>
+    </div>
+    {% else %}
+    <div class="empty-state-lg" style="padding:32px 0;">
+      <p>近 7 天暂无 AI 生成记录</p>
+      <p style="font-size:12px;color:var(--text-3);margin-top:6px;">教师生成课评后，用量会自动记录 · <a href="/admin/usage" style="color:var(--accent);">打开完整看板</a></p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Info Row -->
+<div class="info-row">
+  <!-- 课评状态分布 -->
+  <div class="card section">
+    <div class="card-body">
+      <div class="section-header">
+        <span class="section-title">课评状态分布</span>
+        <a href="/admin/reviews" class="section-action">查看全部 →</a>
+      </div>
+      {% if status_dist %}
+      <div style="display:flex;flex-direction:column;gap:14px;margin-top:8px;">
+        {% set status_map = {'confirmed':('已确认','green','#10b981'), 'pending':('待生成','yellow','#f59e0b'), 'generating':('生成中','blue','#3b82f6'), 'draft':('草稿','purple','#8b5cf6'), 'failed':('失败','red','#ef4444'), 'leave':('请假','gray','#9ca3af')} %}
+        {% set total_reviews = status_dist.values()|sum %}
+        {% for st, cnt in status_dist.items() %}
+          {% set info = status_map.get(st, (st, 'gray', '#6b7280')) %}
+          {% set pct = (cnt / total_reviews * 100)|round(1) if total_reviews > 0 else 0 %}
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="font-size:13px;width:56px;flex-shrink:0;color:var(--text-2);">{{ info[0] }}</span>
+          <div class="progress-bar" style="flex:1;">
+            <div class="progress-fill" style="width:{{ pct }}%;background:{{ info[2] }};"></div>
+          </div>
+          <span style="font-size:13px;font-weight:700;width:32px;text-align:right;flex-shrink:0;">{{ cnt }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state-lg" style="padding:24px 0;"><p>暂无课评数据</p></div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- 磁盘 & 快捷入口 -->
+  <div class="card section">
+    <div class="card-body">
+      <div class="section-header">
+        <span class="section-title">系统信息</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:4px;">
+        <!-- 磁盘占用 -->
+        <div class="glass-card" style="padding:18px;border-radius:var(--radius-sm);">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+            <span style="font-size:13px;color:var(--text-2);font-weight:500;">磁盘占用（uploads/）</span>
+            <span style="font-size:20px;font-weight:800;color:var(--accent);">{{ disk_mb }} <span style="font-size:13px;font-weight:400;color:var(--text-3);">MB</span></span>
+          </div>
+          <div class="progress-bar">
+            {% set raw_pct = (disk_mb / 100 * 100)|round(0) %}
+            {% set disk_pct = [raw_pct, 1]|max if raw_pct > 0 else 1 %}
+            {% set disk_pct = [disk_pct, 100]|min %}
+            <div class="progress-fill" style="width:{{ disk_pct if disk_mb < 100 else 100 }}%;background:{% if disk_mb < 50 %}#10b981{% elif disk_mb < 80 %}#f59e0b{% else %}#ef4444{% endif %};"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;margin-top:6px;">
+            <span style="font-size:11px;color:var(--text-3);">0 MB</span>
+            <span style="font-size:11px;color:var(--text-3);">上限 100 MB（参考）</span>
+          </div>
+        </div>
+
+        <!-- 快捷操作 -->
+        <div class="quick-grid">
+          <a href="/admin/users" class="quick-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+            管理账号
+          </a>
+          <a href="/admin/coursewares" class="quick-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+            查看课件
+          </a>
+          <a href="/admin/reviews" class="quick-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            课评审核
+          </a>
+          <a href="/admin/classes" class="quick-item">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            班级总览
+          </a>
+          <a href="/admin/usage" class="quick-item" style="grid-column:1 / -1;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><polyline points="7 14 11 10 15 13 21 6"/></svg>
+            AI 用量看板
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Summary Table -->
+<div class="card section">
+  <div class="section-header">
+    <span class="section-title">平台概况摘要</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>指标项</th><th>数值</th><th>说明</th></tr></thead>
+      <tbody>
+        <tr><td>注册教师</td><td><strong>{{ users }}</strong></td><td>含超管账号在内的所有用户</td></tr>
+        <tr><td>活跃班级</td><td><strong>{{ classes }}</strong></td><td>未归档 + 已归档的班级总数</td></tr>
+        <tr><td>在册学生</td><td><strong>{{ students }}</strong></td><td>各班级学生档案汇总</td></tr>
+        <tr><td>课评总量</td><td><strong>{{ reviews }}</strong></td><td>含草稿/待确认/已确认等全部状态</td></tr>
+        <tr><td>上传课件</td><td><strong>{{ coursewares }}</strong></td><td>教师上传的教案文件总数</td></tr>
+        <tr><td>磁盘使用</td><td><strong style="color:var(--accent);">{{ disk_mb }} MB</strong></td><td>uploads/ 目录实际占用空间</td></tr>
+        <tr><td>今日 AI 生成</td><td><strong>{{ usage.today_gen }}</strong></td><td>全平台今日调用大模型生成课评的次数</td></tr>
+        <tr><td>7 日 Token</td><td><strong>{% if usage.range_tok >= 10000 %}{{ (usage.range_tok / 10000)|round(1) }} 万{% else %}{{ usage.range_tok }}{% endif %}</strong></td><td>近 7 天 prompt + completion 累计</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

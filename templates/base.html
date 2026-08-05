@@ -3,107 +3,67 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}课评系统{% endblock %}</title>
-  <style>
-    :root {
-      --bg: #f5f7fa;
-      --card: #ffffff;
-      --text: #1f2933;
-      --muted: #6b7280;
-      --border: #e5e7eb;
-      --primary: #2f6fed;
-      --primary-dark: #1f56c4;
-      --danger: #d64545;
-      --success: #1f9d57;
-      --warning: #c97a16;
-      --info: #2f6fed;
-      --radius: 12px;
-      --shadow: 0 6px 24px rgba(31, 41, 51, .08);
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-                   "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      padding: 24px;
-    }
-    .card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      width: 100%;
-      max-width: 420px;
-      padding: 32px;
-    }
-    h1 { font-size: 22px; margin: 0 0 4px; }
-    .sub { color: var(--muted); font-size: 14px; margin: 0 0 22px; }
-    label { display: block; font-size: 14px; margin: 14px 0 6px; color: var(--text); }
-    input[type=text], input[type=email], input[type=password] {
-      width: 100%;
-      padding: 11px 12px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      font-size: 14px;
-      background: #fff;
-      color: var(--text);
-    }
-    input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(47,111,237,.15); }
-    .btn {
-      display: block; width: 100%; margin-top: 22px;
-      background: var(--primary); color: #fff; border: none;
-      padding: 12px; border-radius: 8px; font-size: 15px; cursor: pointer;
-      text-align: center; text-decoration: none;
-    }
-    .btn:hover { background: var(--primary-dark); }
-    .btn-secondary { background: #eef2ff; color: var(--primary-dark); }
-    .btn-secondary:hover { background: #e0e8ff; }
-    .alt { margin-top: 16px; font-size: 13px; color: var(--muted); text-align: center; }
-    .alt a { color: var(--primary); text-decoration: none; }
-    .remember { display: flex; align-items: center; gap: 6px; margin-top: 12px; font-size: 14px; color: var(--muted); }
-    .providers { margin-top: 18px; border-top: 1px solid var(--border); padding-top: 16px; }
-    .provider-btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; padding: 10px; margin-top: 10px;
-      border: 1px solid var(--border); border-radius: 8px;
-      background: #fff; color: var(--muted); font-size: 14px; cursor: not-allowed;
-    }
-    .provider-btn.enabled { cursor: pointer; color: var(--text); }
-    .alert { padding: 10px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 14px; }
-    .alert-success { background: #ecfdf3; color: var(--success); }
-    .alert-danger  { background: #fdecec; color: var(--danger); }
-    .alert-warning { background: #fff7e6; color: var(--warning); }
-    .alert-info    { background: #eef4ff; color: var(--info); }
-    .dev-link {
-      display: block; word-break: break-all; background: #f3f4f6; color: var(--primary-dark);
-      padding: 10px; border-radius: 8px; font-size: 12px; margin-top: 12px; text-decoration: none;
-    }
-    .banner {
-      background: #fff7e6; border: 1px solid #f3d28a; color: #8a5a00;
-      padding: 12px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 20px;
-    }
-  </style>
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}Ekko课评系统{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
 </head>
 <body>
-  <div class="card">
-    <h1>{% block h1 %}课评系统{% endblock %}</h1>
-    <p class="sub">{% block sub %}{% endblock %}</p>
+  <nav class="topnav">
+    <a class="brand" href="{{ url_for('classes.index') }}"><img src="{{ url_for('static', filename='images/ekko_logo.png') }}" alt="Ekko课评系统"></a>
+    <button class="help-btn" onclick="Tour.open()" title="新手引导">?</button>
+    <a href="{{ url_for('classes.index') }}">我的班级</a>
+    <a href="{{ url_for('classes.new') }}">+ 新建班级</a>
+    <span class="nav-sep"></span>
+    {% if current_user.is_authenticated %}
+    <span class="teacher-name">{{ current_user.display_name or '教师' }}</span>
+    {% endif %}
+    {% if current_user.is_authenticated %}
+    <a class="logout" href="{{ url_for('auth.logout') }}">退出登录</a>
+    {% else %}
+    <a href="{{ url_for('auth.login') }}">登录</a>
+    {% endif %}
+  </nav>
 
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for cat, msg in messages %}
-          <div class="alert alert-{{ cat }}">{{ msg }}</div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-
-    {% block content %}{% endblock %}
+  <div class="tour-mask" id="tour-mask">
+    <div class="tour-box" id="tour-box"></div>
   </div>
+
+  <div class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+  </div>
+
+  <script src="{{ url_for('static', filename='js/tour.js') }}"></script>
+
+  <!-- 全局 CSRF 钩子：为所有 fetch 的非安全请求自动附带 X-CSRFToken 头 -->
+  <script>
+  (function () {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    if (!meta) return;
+    var t = meta.getAttribute('content');
+    if (!t) return;
+    var _fetch = window.fetch;
+    window.fetch = function (url, opts) {
+      opts = opts || {};
+      var method = (opts.method || 'GET').toUpperCase();
+      if (['POST', 'PUT', 'DELETE', 'PATCH'].indexOf(method) !== -1) {
+        opts.headers = opts.headers || {};
+        if (!(opts.headers instanceof Headers)) {
+          if (!opts.headers['X-CSRFToken']) opts.headers['X-CSRFToken'] = t;
+        } else if (!opts.headers.has('X-CSRFToken')) {
+          opts.headers.set('X-CSRFToken', t);
+        }
+      }
+      return _fetch.call(this, url, opts);
+    };
+  })();
+  </script>
+
 </body>
 </html>

@@ -1,0 +1,95 @@
+{% extends "admin/base.html" %}
+
+{% block title %}班级管理{% endblock %}
+{% block page_title %}班级管理{% endblock %}
+{% block breadcrumb %}平台总后台 / 班级管理{% endblock %}
+
+{% block page_content %}
+
+<!-- Stats -->
+<div class="stats-grid" style="margin-bottom:24px;">
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value blue">{{ ks|length }}</div>
+      <div class="stat-label">班级总数</div>
+    </div>
+    <div class="stat-icon blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    </div>
+  </div>
+  {% set total_stu = stu_count.values()|sum %}
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value green">{{ total_stu }}</div>
+      <div class="stat-label">在册学生</div>
+    </div>
+    <div class="stat-icon green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    </div>
+  </div>
+  {% set avg_stu = (total_stu / ks|length)|round(1) if ks|length > 0 else 0 %}
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value orange">{{ avg_stu }}</div>
+      <div class="stat-label">平均班额</div>
+    </div>
+    <div class="stat-icon orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+    </div>
+  </div>
+  {% set archived = 0 %}{% for k in ks %}{% if k.archived_at %}{% set archived = archived + 1 %}{% endif %}{% endfor %}
+  <div class="stat-card">
+    <div class="stat-info">
+      <div class="stat-value purple">{{ archived }}</div>
+      <div class="stat-label">已归档</div>
+    </div>
+    <div class="stat-icon purple">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 3 8 9 2 9"/></svg>
+    </div>
+  </div>
+</div>
+
+<!-- Classes Table -->
+<div class="card section">
+  <div class="section-header">
+    <span class="section-title">全部班级列表</span>
+    <span style="font-size:13px;color:var(--text-3);">共 {{ ks|length }} 个班级 · {{ total_stu }} 名学生</span>
+  </div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr><th>班级名称</th><th>类型</th><th>评价维度</th><th>课评周期</th><th>在册学生</th><th>状态</th><th>归档时间</th></tr>
+      </thead>
+      <tbody>
+        {% for k in ks %}
+        <tr>
+          <td style="font-weight:700;font-size:14px;"><a href="/admin/class/{{ k.id }}" style="color:var(--text);text-decoration:none;">{{ k.name }}</a></td>
+          <td><span class="badge badge-accent">{{ k.type_name_custom or k.type_code or '—' }}</span></td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);">
+            {% if k.dimensions %}{{ k.dimensions | join('、') }}{% else %}<span style="color:var(--text-3);">—</span>{% endif %}
+          </td>
+          <td>{{ k.review_term or '<span style="color:var(--text-3);">—</span>' }}</td>
+          <td>
+            <span style="font-weight:700;font-size:15px;color:var(--accent);">{{ stu_count[k.id] }}</span>
+            <span style="color:var(--text-3);font-size:12px;margin-left:4px;">人</span>
+          </td>
+          <td>
+            {% if k.archived_at %}
+              <span class="badge badge-gray">已归档</span>
+            {% else %}
+              <span class="badge badge-green">活跃</span>
+            {% endif %}
+          </td>
+          <td style="white-space:nowrap;color:var(--text-2);font-size:13px;">
+            {{ k.archived_at.strftime('%Y-%m-%d') if k.archived_at else '—' }}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7"><div class="empty-state-lg" style="padding:24px 0;"><p>暂无班级数据</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

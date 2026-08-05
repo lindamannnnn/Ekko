@@ -22,6 +22,7 @@ class User(UUIDMixin, db.Model):
     display_name = Column(String(128), nullable=True)
     org_name = Column(String(255), nullable=True)          # 印在图片模板上的机构名
     review_term = Column(String(32), default='课评', nullable=False)
+    is_superuser = Column(Boolean, default=False, nullable=False)  # 平台总后台守卫
     last_login_at = Column(DateTime, nullable=True)
     deleted_at = Column(DateTime, nullable=True)
 

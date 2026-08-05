@@ -18,6 +18,7 @@ class Klass(UUIDMixin, TenantMixin, SoftDeleteMixin, db.Model):
     type_name_custom = Column(String(128), nullable=True)          # 自定义类型名（覆盖 type_code 显示）
     dimensions = Column(JSON, nullable=True)                       # 自定义评价维度（覆盖预置）
     quick_tags_custom = Column(JSON, nullable=True)                # 自定义快捷标签
+    extra_data = Column(JSON, nullable=True)                         # 班级级扩展数据（优秀课评、课程内容等）
     review_term = Column(String(32), default='课评', nullable=False)
     archived_at = Column(DateTime, nullable=True)
 

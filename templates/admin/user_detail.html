@@ -1,0 +1,92 @@
+{% extends "admin/base.html" %}
+
+{% block title %}账号详情{% endblock %}
+{% block page_title %}账号详情 · {{ u.display_name or '未设置' }}{% endblock %}
+{% block breadcrumb %}平台总后台 / 账号管理 / 详情{% endblock %}
+
+{% block page_content %}
+
+<div class="card section" style="margin-bottom:24px;">
+  <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="user-avatar" style="width:44px;height:44px;font-size:16px;">{{ (u.display_name or 'U')[0] }}</div>
+      <div>
+        <div style="font-size:20px;font-weight:800;color:var(--text);">{{ u.display_name or '未设置' }}</div>
+        <div style="font-size:13px;color:var(--text-3);font-family:monospace;">{{ u.email }}</div>
+      </div>
+    </div>
+    <a href="/admin/users" class="section-action">← 返回账号列表</a>
+  </div>
+</div>
+
+<div class="info-row" style="margin-bottom:24px;">
+  <div class="card section">
+    <div class="card-body">
+      <div class="section-header"><span class="section-title">账号档案</span></div>
+      <table class="data-table" style="margin:0;">
+        <tbody>
+          <tr><td style="width:130px;font-weight:600;color:var(--text-2);">显示名</td><td>{{ u.display_name or '—' }}</td></tr>
+          <tr><td style="font-weight:600;color:var(--text-2);">邮箱</td><td style="font-family:monospace;font-size:13px;">{{ u.email }}</td></tr>
+          <tr><td style="font-weight:600;color:var(--text-2);">角色</td><td>{% if u.is_superuser %}<span class="badge badge-red">超管</span>{% else %}<span class="badge badge-gray">教师</span>{% endif %}</td></tr>
+          <tr><td style="font-weight:600;color:var(--text-2);">登录方式</td><td><span class="badge badge-accent">{{ u.auth_provider or 'password' }}</span></td></tr>
+          <tr><td style="font-weight:600;color:var(--text-2);">注册时间</td><td style="white-space:nowrap;color:var(--text-2);font-size:13px;">{{ u.created_at.strftime('%Y-%m-%d %H:%M') if u.created_at else '—' }}</td></tr>
+          <tr><td style="font-weight:600;color:var(--text-2);">最近登录</td><td style="white-space:nowrap;color:var(--text-2);font-size:13px;">{{ u.last_login_at.strftime('%Y-%m-%d %H:%M') if u.last_login_at else '从未' }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card section">
+    <div class="card-body">
+      <div class="section-header"><span class="section-title">资源统计</span></div>
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="glass-card" style="padding:18px;border-radius:var(--radius-sm);">
+          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;color:var(--text-2);font-weight:500;">名下班级</span><span style="font-size:20px;font-weight:800;color:var(--accent);">{{ cls_list|length }} <span style="font-size:13px;font-weight:400;color:var(--text-3);">个</span></span></div>
+        </div>
+        <div class="glass-card" style="padding:18px;border-radius:var(--radius-sm);">
+          <div style="display:flex;justify-content:space-between;align-items:center;"><span style="font-size:13px;color:var(--text-2);font-weight:500;">名下学生</span><span style="font-size:20px;font-weight:800;color:#10b981;">{{ stu_list|length }} <span style="font-size:13px;font-weight:400;color:var(--text-3);">人</span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card section">
+  <div class="section-header"><span class="section-title">名下班级（{{ cls_list|length }} 个）</span></div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>班级名称</th><th>类型</th><th>评价维度</th><th>课评周期</th><th>归档</th></tr></thead>
+      <tbody>
+        {% for c in cls_list %}
+        <tr>
+          <td style="font-weight:600;"><a href="/admin/class/{{ c.id }}" style="color:var(--text);text-decoration:none;">{{ c.name }} ↗</a></td>
+          <td><span class="badge badge-accent">{{ c.type_name_custom or c.type_code or '—' }}</span></td>
+          <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-2);">{% if c.dimensions %}{{ c.dimensions | join('、') }}{% else %}<span style="color:var(--text-3);">—</span>{% endif %}</td>
+          <td>{{ c.review_term or '—' }}</td>
+          <td>{% if c.archived_at %}<span class="badge badge-gray">已归档</span>{% else %}<span class="badge badge-green">活跃</span>{% endif %}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="5"><div class="empty-state-lg" style="padding:24px 0;"><p>该账号暂无班级</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card section">
+  <div class="section-header"><span class="section-title">名下学生（{{ stu_list|length }} 人）</span></div>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead><tr><th>姓名</th><th>称呼</th><th>性别</th><th>出生日期</th></tr></thead>
+      <tbody>
+        {% for s in stu_list %}
+        <tr><td style="font-weight:600;color:var(--text);">{{ s.name }}</td><td style="color:var(--text-2);">{{ s.preferred_name or '—' }}</td><td>{{ s.gender or '—' }}</td><td style="white-space:nowrap;color:var(--text-2);font-size:13px;">{{ s.birth_date.strftime('%Y-%m-%d') if s.birth_date else '—' }}</td></tr>
+        {% else %}
+        <tr><td colspan="4"><div class="empty-state-lg" style="padding:24px 0;"><p>该账号暂无学生</p></div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}

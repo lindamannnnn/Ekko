@@ -31,19 +31,19 @@ def verify_token(token: str, salt: str, max_age: int) -> Optional[str]:
 
 
 def send_email(to: str, subject: str, html: str) -> bool:
-    """发送 HTML 邮件。SMTP 未配置返回 False（dev 模式）。"""
+    """发送 HTML 邮件。SMTP 未配置（无 server）时进入 dev 模式不真发。"""
     cfg = current_app.config
     server = cfg.get('MAIL_SERVER')
     user = cfg.get('MAIL_USERNAME')
     pw = cfg.get('MAIL_PASSWORD')
     sender = cfg.get('MAIL_DEFAULT_SENDER') or user
-    if not (server and user and pw):
+    if not server:
         current_app.logger.warning(
-            'SMTP 未配置，邮件未实际发送（dev 模式）。收件人=%s 主题=%s', to, subject
+            'SMTP 未配置（MAIL_SERVER 为空），邮件未实际发送（dev 模式）。收件人=%s 主题=%s', to, subject
         )
         return False
 
-    msg = MIMEText(html, 'html', 'utf-8')
+    msg = MIMEText(html, '.feature' if False else 'html', 'utf-8')
     msg['Subject'] = Header(subject, 'utf-8')
     msg['From'] = sender
     msg['To'] = to
@@ -52,7 +52,8 @@ def send_email(to: str, subject: str, html: str) -> bool:
         with smtplib.SMTP(server, int(cfg.get('MAIL_PORT', 587)), timeout=10) as s:
             if cfg.get('MAIL_USE_TLS'):
                 s.starttls()
-            s.login(user, pw)
+            if user and pw:
+                s.login(user, pw)
             s.sendmail(sender, [to], msg.as_string())
         return True
     except Exception as e:  # noqa: BLE001

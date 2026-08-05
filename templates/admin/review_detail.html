@@ -1,0 +1,80 @@
+{% extends "admin/base.html" %}
+
+{% block title %}课评详情{% endblock %}
+{% block page_title %}课评详情 · {{ rv.id[:8] }}{% endblock %}
+{% block breadcrumb %}平台总后台 / 课评记录 / 详情{% endblock %}
+
+{% block page_content %}
+
+{% set cfg = {'confirmed':('已确认','#10b981'),'pending':('待生成','#f59e0b'),'generating':('生成中','#3b82f6'),'draft':('草稿','#8b5cf6'),'failed':('失败','#ef4444'),'leave':('请假','#9ca3af')}.get(rv.status,(rv.status,'#6b7280')) %}
+
+<div class="card section" style="margin-bottom:24px;">
+  <div class="card-body" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;">
+    <div style="display:flex;align-items:center;gap:14px;">
+      <span class="status-dot {{ rv.status }}" style="width:14px;height:14px;"></span>
+      <div>
+        <div style="font-size:20px;font-weight:800;color:{{ cfg[1] }};">{{ cfg[0] }}</div>
+        <div style="font-size:13px;color:var(--text-3);">课评ID {{ rv.id }}</div>
+      </div>
+    </div>
+    <a href="/admin/reviews" class="section-action">← 返回课评列表</a>
+  </div>
+</div>
+
+<div class="info-row" style="margin-bottom:24px;">
+  <div class="card section">
+    <div class="card-body">
+      <div class="section-header"><span class="section-title">关联关系</span></div>
+      <table class="data-table" style="margin:0;">
+        <tbody>
+          <tr><td style="width:140px;font-weight:600;color:var(--text-2);">所属班级</td><td><strong>{{ klass.name if klass else '（未知）' }}</strong></td></tr>
+          <tr><td style="font-weight:600;color:var(--text-2);">学生</td><td>{{ student.name if student else '（未知）' }}</td></tr>
+          <tr><td style="font-weight:600;color:var(--text-2);">课次</td><td>{{ lesson.title if lesson else '（未知）' }}</td></tr>
+          <tr><td style="font-weight:600;color:var(--text-2);">班级ID</td><td style="font-family:monospace;font-size:12px;color:var(--text-3);">{{ rv.class_id }}</td></tr>
+          <tr><td style="font-weight:600;color:var(--text-2);">学生ID</td><td style="font-family:monospace;font-size:12px;color:var(--text-3);">{{ rv.student_id }}</td></tr>
+          <tr><td style="font-weight:600;color:var(--text-2);">课次ID</td><td style="font-family:monospace;font-size:12px;color:var(--text-3);">{{ rv.lesson_id }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card section">
+    <div class="card-body">
+      <div class="section-header"><span class="section-title">评分与标签</span></div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:8px;font-weight:500;">快捷标签</div>
+          {% if rv.perf_tags %}
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">
+            {% for t in rv.perf_tags %}<span class="student-tag" style="background:rgba(139,92,246,.15);border-color:rgba(139,92,246,.25);color:#a78bfa;">{{ t }}</span>{% endfor %}
+          </div>
+          {% else %}
+          <span style="color:var(--text-3);font-style:italic;">（无标签）</span>
+          {% endif %}
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:8px;font-weight:500;">老师补充</div>
+          <div style="font-size:14px;line-height:1.6;color:var(--text-2);">{{ rv.perf_note or '<span style="color:var(--text-3);font-style:italic;">（无手写补充）</span>' }}</div>
+        </div>
+        <div>
+          <div style="font-size:13px;color:var(--text-2);margin-bottom:8px;font-weight:500;">模型</div>
+          <span class="badge badge-accent">{{ rv.model_used or '（未知）' }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card section">
+  <div class="section-header">
+    <span class="section-title">课评正文</span>
+    <span style="font-size:13px;color:var(--text-3);">共 {{ (rv.content or '')|length }} 字</span>
+  </div>
+  {% if rv.content %}
+  <div class="glass-card" style="padding:22px;white-space:pre-wrap;line-height:1.8;font-size:14px;color:var(--text-2);max-height:420px;overflow:auto;">{{ rv.content }}</div>
+  {% else %}
+  <div class="empty-state-lg" style="padding:24px 0;"><p>这份课评暂无正文内容</p></div>
+  {% endif %}
+</div>
+
+{% endblock %}

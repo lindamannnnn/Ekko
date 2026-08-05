@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}平台总后台{% endblock %} · Ekko课评系统</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <img class="logo" src="{{ url_for('static', filename='images/ekko_logo.png') }}" alt="Ekko">
+    <div>
+      <div class="brand-text">Ekko课评管理系统</div>
+      <div class="brand-sub">Admin Console</div>
+    </div>
+  </div>
+
+  <nav class="nav-section">
+    <div class="nav-label">概览</div>
+    <a class="nav-item {% if request.endpoint == 'admin_bp.dashboard' %}active{% endif %}" href="/admin">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      <span>数据总览</span>
+    </a>
+    <a class="nav-item {% if request.endpoint == 'admin_bp.usage' %}active{% endif %}" href="/admin/usage">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><polyline points="7 14 11 10 15 13 21 6"/></svg>
+      <span>AI 用量</span>
+    </a>
+
+    <div class="nav-label" style="margin-top:12px;">数据管理</div>
+    <a class="nav-item {% if request.endpoint == 'admin_bp.users' %}active{% endif %}" href="/admin/users">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>账号管理</span>
+    </a>
+    <a class="nav-item {% if request.endpoint == 'admin_bp.classes' %}active{% endif %}" href="/admin/classes">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <span>班级管理</span>
+    </a>
+    <a class="nav-item {% if request.endpoint == 'admin_bp.coursewares' %}active{% endif %}" href="/admin/coursewares">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+      <span>课件资源</span>
+    </a>
+    <a class="nav-item {% if request.endpoint == 'admin_bp.reviews' %}active{% endif %}" href="/admin/reviews">
+      <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      <span>课评记录</span>
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    v1.0 &middot; SQLite Engine
+  </div>
+</aside>
+
+<!-- Main -->
+<div class="main">
+  <header class="topbar topbar--admin">
+    <div>
+      <h2>{% block page_title %}数据总览{% endblock %}</h2>
+      <div class="breadcrumb">{% block breadcrumb %}平台总后台{% endblock %}</div>
+    </div>
+    <div class="topbar-right">
+      <div class="user-badge">
+        <div class="user-avatar">{{ current_user.display_name[0] if current_user and current_user.display_name else 'A' }}</div>
+        <span>{{ current_user.email if current_user else 'Admin' }}</span>
+      </div>
+      <a class="btn-logout" href="{{ url_for('admin_bp.admin_logout') }}">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        退出后台
+      </a>
+    </div>
+  </header>
+
+  <div class="content">
+    {% block page_content %}{% endblock %}
+  </div>
+</div>
+
+{% block extra_js %}{% endblock %}
+
+  <!-- 全局 CSRF 钩子：为所有 fetch 的非安全请求自动附带 X-CSRFToken 头 -->
+  <script>
+  (function () {
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    if (!meta) return;
+    var t = meta.getAttribute('content');
+    if (!t) return;
+    var _fetch = window.fetch;
+    window.fetch = function (url, opts) {
+      opts = opts || {};
+      var method = (opts.method || 'GET').toUpperCase();
+      if (['POST', 'PUT', 'DELETE', 'PATCH'].indexOf(method) !== -1) {
+        opts.headers = opts.headers || {};
+        if (!(opts.headers instanceof Headers)) {
+          if (!opts.headers['X-CSRFToken']) opts.headers['X-CSRFToken'] = t;
+        } else if (!opts.headers.has('X-CSRFToken')) {
+          opts.headers.set('X-CSRFToken', t);
+        }
+      }
+      return _fetch.call(this, url, opts);
+    };
+  })();
+  </script>
+
+</body>
+</html>

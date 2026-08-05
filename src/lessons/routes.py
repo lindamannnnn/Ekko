@@ -10,8 +10,16 @@ from extensions import db
 from models.class_student import Klass
 from models.lesson import Lesson, Courseware
 from parsers.core import extract_text, extract_objectives
+from security.upload_check import validate_upload, check_extracted_text
 
 from . import lessons_bp
+
+
+def _tour_next(req, cur):
+    if req.args.get('tour'):
+        nxt = req.args.get('step', default=cur, type=int) + 1
+        return f'?tour=1&step={nxt}'
+    return ''
 
 ALLOWED_EXT = {".txt", ".pptx", ".docx", ".doc", ".pdf"}
 UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
@@ -21,73 +29,25 @@ UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
 def _save_courseware(class_id, file_storage):
     """保存上传文件 -> Courseware 记录，返回 (Courseware, extracted_text, objectives)。"""
     os.makedirs(UPLOAD_DIR, exist_ok=True)
-    ext = os.path.splitext(file_storage.filename)[1].lower()
-    if ext not in ALLOWED_EXT:
-        raise ValueError(f"不支持的文件类型：{ext}（支持 txt/pptx/docx/pdf）")
+    # 扩展名 + 文件头魔数 + 大小校验（防改名绕过 / 超大文件）；校验后指针已回到开头
+    ext = validate_upload(file_storage)
     fname = uuid.uuid4().hex + ext
     dest = os.path.join(UPLOAD_DIR, fname)
     file_storage.save(dest)
     text = extract_text(dest)
+    check_extracted_text(text)  # 防解析炸弹：抽取文本过长直接拒绝
     objs = extract_objectives(text)
     cw = Courseware(
         user_id=current_user.id, class_id=class_id,
         source_filename=secure_filename(file_storage.filename or "file"),
         stored_path=dest, extracted_text=text,
+        created_at=datetime.utcnow(), uploaded_by=current_user.email,
     )
     db.session.add(cw)
     db.session.flush()
     return cw, objs
 
 
-@lessons_bp.route("/<class_id>/new", methods=["GET", "POST"])
-@login_required
-def new(class_id):
-    klass = Klass.query.filter_by(id=class_id, user_id=current_user.id, deleted_at=None).first_or_404()
-    if request.method == "GET":
-        return render_template("lessons/new.html", klass=klass)
-    title = request.form.get("title", "").strip()
-    lesson_date = request.form.get("lesson_date", "")
-    common_notes = request.form.get("common_notes", "")
-    objectives_raw = request.form.get("objectives", "")
-    cw_text = request.form.get("courseware_text", "")
-    if not title:
-        flash("课次标题不能为空", "error")
-        return render_template("lessons/new.html", klass=klass)
-    ld = None
-    if lesson_date:
-        try:
-            ld = datetime.strptime(lesson_date, "%Y-%m-%d").date()
-        except ValueError:
-            ld = None
-    lesson = Lesson(
-        user_id=current_user.id,
-        class_id=class_id,
-        title=title,
-        lesson_date=ld,
-        common_notes=common_notes or None,
-        objectives=[a.strip() for a in [objectives_raw] if a] or None,
-    )
-    db.session.add(lesson)
-    db.session.flush()
-    # 课件：优先文件上传，其次粘贴文本
-    file = request.files.get("courseware_file")
-    if file and file.filename:
-        try:
-            cw, objs = _save_courseware(class_id, file)
-            lesson.courseware_id = cw.id
-            # 自动抽取知识点（若老师没手填则采用）
-            if not lesson.objectives and objs:
-                lesson.objectives = objs
-        except ValueError as e:
-            flash(str(e), "error")
-    elif cw_text.strip():
-        cw = Courseware(user_id=current_user.id, class_id=class_id, extracted_text=cw_text)
-        db.session.add(cw)
-        db.session.flush()
-        lesson.courseware_id = cw.id
-    db.session.commit()
-    flash(f"课次【{title}】已创建", "success")
-    return redirect(url_for("classes.detail", class_id=class_id))
 
 
 @lessons_bp.route("/<lesson_id>/detail")

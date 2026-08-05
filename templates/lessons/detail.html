@@ -1,9 +1,17 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="container">
-  <h1>{{ lesson.title }}</h1>
-  <p class="muted">{{ lesson.lesson_date or '未设日期' }}</p>
-  <p>共性表现：{{ lesson.common_notes or '（无）' }}</p>
-  <a class="btn" href="{{ url_for('classes.detail', class_id=lesson.class_id) }}">← 返回班级</a>
+
+<div class="page-header">
+  <div class="ph-left">
+    <h1 class="ph-title">{{ lesson.title }}</h1>
+    <p class="ph-sub">{{ lesson.lesson_date or '未设日期' }}</p>
+  </div>
+  <a class="btn-glass" href="{{ url_for('classes.detail', class_id=lesson.class_id) }}">← 返回班级</a>
 </div>
+
+<div class="glass-card" style="margin-bottom:22px;">
+  <h3 style="font-size:15px;font-weight:700;color:var(--text);margin:0 0 10px;">全班共性表现</h3>
+  <p style="color:var(--text-2);font-size:14px;line-height:1.7;margin:0;">{{ lesson.common_notes or '（无）' }}</p>
+</div>
+
 {% endblock %}
