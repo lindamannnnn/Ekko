@@ -1,31 +1,37 @@
 services:
   web:
-    build: .
+    build:
+      context: .
+      args:
+        # 国内服务器默认走清华源；海外机器可改为 https://pypi.org/simple
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
+        PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-pypi.tuna.tsinghua.edu.cn}
+    image: ekko-web:latest
+    container_name: ekko-web
+    # 只监听本机回环：外网一律由 nginx 反代进来，避免 5000 端口裸奔被扫。
+    # 若暂时不装 nginx、想直接用 IP:5000 访问，改成 "5000:5000"。
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
+    env_file:
+      - .env
     environment:
       - FLASK_APP=app:create_app
-      - SECRET_KEY=${SECRET_KEY:-dev-secret-change-in-prod}
-      - AI_API_KEY=${AI_API_KEY}
-      - AI_BASE_URL=${AI_BASE_URL:-https://open.bigmodel.cn/api/paas/v4}
-      - AI_MODEL=${AI_MODEL:-glm-4-flash}
-      - AI_PROXY=${AI_PROXY:-}
       - DATABASE_URL=${DATABASE_URL:-sqlite:////app/instance/app.db}
-      - ADMIN_EMAIL=${ADMIN_EMAIL}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
-      - ADMIN_PATH=${ADMIN_PATH}
-      - ADMIN_GATE_KEY=${ADMIN_GATE_KEY}
-      - MAIL_SERVER=${MAIL_SERVER}
-      - MAIL_PORT=${MAIL_PORT}
-      - MAIL_USE_TLS=${MAIL_USE_TLS}
-      - MAIL_USERNAME=${MAIL_USERNAME}
-      - MAIL_PASSWORD=${MAIL_PASSWORD}
-      - MAIL_DEFAULT_SENDER=${MAIL_DEFAULT_SENDER}
+      # 强制直连大模型，不继承宿主机代理（除非显式设置 AI_PROXY）
+      - AI_PROXY=${AI_PROXY:-}
     volumes:
+      # SQLite 数据库与上传文件落在宿主机，容器重建/升级数据不丢
       - ./instance:/app/instance
+      - ./uploads:/app/uploads
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:5000/')"]
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:5000/health',timeout=5)"]
       interval: 30s
-      timeout: 5s
+      timeout: 10s
       retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

@@ -1,0 +1,25 @@
+# 默认自动处理文本换行
+* text=auto
+
+# Shell 脚本强制 LF —— 关键！
+# Windows 上开发时 git 会把 LF 转成 CRLF，这类文件传到 Linux 执行会报
+#   $'\r': command not found
+# 导致一键部署脚本完全跑不起来。下面几行锁死为 LF。
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+.env.example text eol=lf
+.dockerignore text eol=lf
+
+# 二进制文件不做换行转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.docx binary
+*.pptx binary
+*.xlsx binary
+*.db binary

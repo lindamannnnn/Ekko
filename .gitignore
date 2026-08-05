@@ -34,6 +34,15 @@ _旧git历史_*/
 *quantifying*/   # 含鬼目录 ' quantifying/'（首 commit 误提交）
 *.lnk
 
+# 调试与一次性临时脚本（本地排查用，不入库）
+_dbg/
+_dbg_run.log*
+_*_tmp.py
+_proxy_backup_*.json
+
+# 服务器生成的凭据文件（含管理员密码，严禁入库）
+CREDENTIALS.txt
+
 # 笔记/草稿
 classreview.html
 # 已被忽略：data/ references/ tools/ skills/ 见上半段旧单体残留

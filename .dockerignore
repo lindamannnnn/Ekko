@@ -1,0 +1,42 @@
+# 虚拟环境（125MB，容器内会重新装依赖，绝不能打进镜像）
+.venv/
+venv/
+env/
+
+# 版本库（17MB）
+.git/
+.gitignore
+
+# 本地数据库与上传文件（通过 volume 挂载，不进镜像）
+instance/
+uploads/
+
+# 密钥文件（严禁进镜像！生产用环境变量注入）
+.env
+
+# 调试/临时目录
+_dbg/
+_dbg_run.log
+_dbg_run.log.err
+_removed_orphan_*/
+_旧git历史_请手动删除/
+_proxy_backup_*.json
+
+# Python 缓存
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# 编辑器/系统
+.vscode/
+.idea/
+.claude/
+.workbuddy/
+.DS_Store
+Thumbs.db
+
+# 文档（不影响运行）
+*.md
+!README.md
