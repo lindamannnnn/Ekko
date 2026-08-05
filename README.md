@@ -46,7 +46,7 @@ class-review-system/
 ├── templates/ static/       # 前端
 ├── uploads/ instance/       # 上传文件 / SQLite 库（不入库）
 ├── seeds/ migrations/       # 学科预置 / 数据库迁移
-├── tools/ reports/ docs/    # 脚本 / 报告 / 样例
+├── reports/ docs/           # 项目报告 / 样例
 ├── .env .env.example        # 环境变量（密钥不入库）
 ├── requirements.txt Dockerfile docker-compose.yml
 ├── DEPLOY.md CLAUDE.md      # 部署文档 / 架构索引（开发者）
