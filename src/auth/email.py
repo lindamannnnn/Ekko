@@ -4,6 +4,7 @@ SMTP 未配置时进入 dev 模式：不真正发信，调用方应把链接打�
 保证整条流程可在无真实邮箱授权码时跑通。授权码到位后只需在 .env 填 MAIL_* 即可。
 """
 import smtplib
+import socket
 from email.header import Header
 from email.mime.text import MIMEText
 from typing import Optional
@@ -30,6 +31,15 @@ def verify_token(token: str, salt: str, max_age: int) -> Optional[str]:
         return None
 
 
+def _resolve_ipv4(host: str, port: int) -> str:
+    """把域名解析为 IPv4 地址。某些网络（云服务器 IPv6 路由不全时）走 IPv6 会
+    报 [Errno 101] Network is unreachable。强制 IPv4 是最稳的做法。"""
+    infos = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
+    if not infos:
+        raise socket.gaierror(f'no IPv4 address for {host}')
+    return infos[0][4][0]
+
+
 def send_email(to: str, subject: str, html: str) -> bool:
     """发送 HTML 邮件。SMTP 未配置（无 server）时进入 dev 模式不真发。"""
     cfg = current_app.config
@@ -43,18 +53,29 @@ def send_email(to: str, subject: str, html: str) -> bool:
         )
         return False
 
+    port = int(cfg.get('MAIL_PORT', 587))
+    use_ssl = bool(cfg.get('MAIL_USE_SSL'))
+    use_tls = bool(cfg.get('MAIL_USE_TLS'))
+
     msg = MIMEText(html, '.feature' if False else 'html', 'utf-8')
     msg['Subject'] = Header(subject, 'utf-8')
     msg['From'] = sender
     msg['To'] = to
 
     try:
-        with smtplib.SMTP(server, int(cfg.get('MAIL_PORT', 587)), timeout=10) as s:
-            if cfg.get('MAIL_USE_TLS'):
-                s.starttls()
-            if user and pw:
-                s.login(user, pw)
-            s.sendmail(sender, [to], msg.as_string())
+        ip = _resolve_ipv4(server, port)
+        if use_ssl:
+            with smtplib.SMTP_SSL(ip, port, timeout=10) as s:
+                if user and pw:
+                    s.login(user, pw)
+                s.sendmail(sender, [to], msg.as_string())
+        else:
+            with smtplib.SMTP(ip, port, timeout=10) as s:
+                if use_tls:
+                    s.starttls()
+                if user and pw:
+                    s.login(user, pw)
+                s.sendmail(sender, [to], msg.as_string())
         return True
     except Exception as e:  # noqa: BLE001
         current_app.logger.error('邮件发送失败: %s', e)
