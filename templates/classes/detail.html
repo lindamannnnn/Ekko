@@ -17,11 +17,11 @@ body > .container {
 <header class="detail-header">
     <a href="{{ url_for('classes.index') }}" class="back-btn">
         <span>←</span>
-        <span>返回大厅</span>
+        <span>返回班级</span>
     </a>
     <div class="detail-title">{{ klass.name }}</div>
     <div class="detail-actions">
-        <a href="{{ url_for('classes.add_students', class_id=klass.id) }}" class="btn-secondary" style="text-decoration:none;padding:10px 24px;border-radius:10px;font-size:14px">添加学生</a>
+        <a href="{{ url_for('classes.add_students', class_id=klass.id) }}{% if request.args.get('tour') %}?tour=1&amp;step=2{% endif %}" class="btn-secondary" style="text-decoration:none;padding:10px 24px;border-radius:10px;font-size:14px">添加学生</a>
     </div>
 </header>
 
@@ -99,7 +99,7 @@ body > .container {
             <div style="margin-bottom:16px">
                 <div style="font-size:13px;color:var(--text-secondary);margin-bottom:10px">快捷评语</div>
                 <div class="quick-tags" id="tag-bar">
-                    <span class="tag active" data-tag="逻辑清晰">逻辑清晰</span>
+                    <span class="tag" data-tag="逻辑清晰">逻辑清晰</span>
                     <span class="tag" data-tag="积极互动">积极互动</span>
                     <span class="tag" data-tag="需加强练习">需加强练习</span>
                     <span class="tag" data-tag="表现优异">表现优异</span>
@@ -138,6 +138,7 @@ body > .container {
                 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
                     <span id="save-status">未保存</span>
                     <button class="btn-primary" id="btn-save-review" style="padding:8px 24px;font-size:14px;border-radius:8px">💾 保存评语</button>
+                    <button class="btn-secondary" id="btn-gen-image" style="padding:8px 18px;font-size:14px;border-radius:8px">🖼️ 生成课评图片</button>
                 </div>
                 <span id="word-count">0 字</span>
             </div>
@@ -961,6 +962,11 @@ body > .container {
     const body = $('#hm-body');
     if (body) body.textContent = fullContent;
 
+    // 给"生成图片"按钮存当前 review id（从 timeline-item 的 data-review-id 取）
+    const _item = contentEl.closest('.timeline-item');
+    const _genBtn = document.getElementById('hm-gen-image');
+    if (_genBtn) _genBtn.dataset.reviewId = _item ? (_item.dataset.reviewId || '') : '';
+
     // 给"载入编辑区"按钮存当前 review content
     const loadBtn = $('#hm-load-to-editor');
     if (loadBtn) loadBtn.dataset.content = fullContent;
@@ -1015,6 +1021,23 @@ body > .container {
         closeHistoryModal();
       });
     }
+    // 历史弹窗：生成课评图片
+    const genImgBtn = document.getElementById('hm-gen-image');
+    if (genImgBtn) {
+      genImgBtn.addEventListener('click', function() {
+        const rid = this.dataset.reviewId;
+        if (!rid) { alert('找不到课评 ID'); return; }
+        window.open('/cards/preview/' + rid, '_blank');
+      });
+    }
+    // 编辑区：生成课评图片
+    const genImgBtn2 = document.getElementById('btn-gen-image');
+    if (genImgBtn2) {
+      genImgBtn2.addEventListener('click', function() {
+        if (!currentReviewId) { alert('请先生成或保存课评，再生成图片'); return; }
+        window.open('/cards/preview/' + currentReviewId, '_blank');
+      });
+    }
     // ESC 关闭
     document.addEventListener('keydown', function(e) {
       if (e.key === 'Escape') closeHistoryModal();
@@ -1046,6 +1069,7 @@ body > .container {
   // 标签选择状态：教师本节课点选的快捷标签（多选），作为 AI 生成的事实锚点
   // 注意：这里的状态独立于 textarea 文本——选标签不会改 AI 草稿框内容
   let selectedTags = [];
+  let currentReviewId = null;
 
   // ---- 双框：教师一句话评语 + AI课评 ----
   const teacherComment = $('#teacher-comment');
@@ -1107,6 +1131,11 @@ body > .container {
                        + '&perf_tags=' + encodeURIComponent(JSON.stringify(selectedTags));
           await fetch(`/reviews/${rev.id}/save`, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
           $('#save-status').textContent = '已自动保存于 ' + new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+          // 新手引导：一句话评语已填 + 自动保存成功 = 写出第一篇课评
+          // （一句话评语必填，未填写不视为完成，避免引导在评语缺失时就结束）
+          if (window.Tour && typeof window.Tour.complete === 'function' && teacherComment && teacherComment.value.trim()) {
+            try { window.Tour.complete(); } catch (e) {}
+          }
         }
       } catch(e) { $('#save-status').textContent = '保存失败'; }
     }, 1200);
@@ -1158,6 +1187,7 @@ body > .container {
   const saveBtn = $('#btn-save-review');
   if (saveBtn) {
     saveBtn.addEventListener('click', async function() {
+      if (!teacherComment || !teacherComment.value.trim()) { alert('请先填写「教师对本节课的一句话评语」（一句话评语为必填项）'); return; }
       if (!aiReviewContent || !aiReviewContent.value.trim()) { alert('课评内容不能为空'); return; }
       if (!selectedLessonId) { alert('请先点上方「AI 生成课评」生成内容（首次使用会顺便建立课次）'); return; }
       this.textContent = '保存中...'; this.disabled = true;
@@ -1170,8 +1200,13 @@ body > .container {
                        + '&teacher_comment=' + encodeURIComponent(teacherComment ? teacherComment.value : '')
                        + '&perf_tags=' + encodeURIComponent(JSON.stringify(selectedTags));
           await fetch(`/reviews/${rev.id}/save`, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+          currentReviewId = rev.id;
           this.textContent = '已保存 ✓';
           setTimeout(() => { this.textContent = '保存评语'; this.disabled = false; }, 2000);
+          // 新手引导：保存课评 = 写出第一篇课评
+          if (window.Tour && typeof window.Tour.complete === 'function') {
+            try { window.Tour.complete(); } catch (e) {}
+          }
         }
       } catch(e) { alert('保存失败'); this.textContent = '保存评语'; this.disabled = false; }
     });
@@ -1205,6 +1240,7 @@ body > .container {
         });
         const genData = await genResp.json();
         if (genData.ok && genData.content) {
+          currentReviewId = genData.review_id;
           if (aiReviewContent) setAiContent(genData.content);
           this.textContent = '✓ 已生成';
           setTimeout(() => { this.textContent = '🤖 AI 生成课评'; this.disabled = false; }, 2000);
@@ -1249,6 +1285,7 @@ body > .container {
         <div class="history-modal-body" id="hm-body"></div>
         <div class="history-modal-footer">
             <button class="btn-secondary" id="hm-copy" style="padding:8px 18px;font-size:13px">📋 复制全文</button>
+            <button class="btn-secondary" id="hm-gen-image" style="padding:8px 18px;font-size:13px">🖼️ 生成课评图片</button>
             <button class="btn-primary" id="hm-load-to-editor" style="padding:8px 18px;font-size:13px">✏️ 载入到编辑区</button>
         </div>
     </div>

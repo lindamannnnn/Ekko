@@ -3,33 +3,348 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>课评图片模板 · {{ review.student_id[:6] }}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <title>课评 · {{ (student.name if student else '课评') }}</title>
+  <style>
+    /* ========================================================================
+       课评卡片 · 手账温暖风 v3
+       - 自包含：不依赖外部 theme.css / CSS 变量（html2canvas v1.4.1 兼容）
+       - 全字面色：避免 var() 截图失效
+       - 类型色：通过 .rcard.skill/.academic/.work/.general 切换 4 套强调色
+       ======================================================================== */
+    :root { color-scheme: light; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      background: #ece5d8;
+      font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Hiragino Sans GB", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .stage {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 40px 16px; gap: 18px;
+    }
+    .serif { font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "SimSun", serif; }
+    .hand  { font-family: "Ma Shan Zheng", "Noto Serif SC", "STKaiti", "KaiTi", "楷体", serif; }
+
+    /* ===================== 卡片外壳 ===================== */
+    .rcard {
+      position: relative;
+      width: 760px; max-width: 94vw; box-sizing: border-box;
+      background: #fdfaf3;
+      background-image:
+        radial-gradient(120% 80% at 100% 0%, #fffaef 0%, #fdfaf3 60%),
+        radial-gradient(60% 40% at 0% 100%, #f6efde 0%, transparent 80%);
+      border: 1px solid #ece3d2;
+      border-radius: 26px;
+      box-shadow:
+        0 20px 60px rgba(74, 62, 48, .14),
+        0 2px 6px rgba(74, 62, 48, .04);
+      padding: 0 44px 32px;
+      color: #3f382f;
+      min-height: 360px;
+      overflow: hidden;
+    }
+    /* 顶部细色条 */
+    .rcard .ribbon {
+      position: relative;
+      height: 64px;
+      display: flex; align-items: center; justify-content: center;
+      border-bottom: 1px dashed #e6ddcd;
+    }
+    .rcard .ribbon::before, .rcard .ribbon::after {
+      content: ""; position: absolute; top: 50%; width: 50px; height: 1px; background: #d4c9b3;
+    }
+    .rcard .ribbon::before { left: 30%; }
+    .rcard .ribbon::after  { right: 30%; }
+    .rcard .ribbon-tag {
+      position: relative; z-index: 1;
+      padding: 5px 18px; border-radius: 999px;
+      background: #fdfaf3;
+      font-size: 12px; letter-spacing: 4px; color: #8a8175;
+      font-family: "Noto Serif SC", "Songti SC", serif;
+    }
+    /* 类型色：顶部圆点 + 装饰小元素 */
+    .rcard .ribbon-dot {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      width: 7px; height: 7px; border-radius: 50%;
+    }
+    .rcard .ribbon-dot.l { left: calc(30% - 70px); }
+    .rcard .ribbon-dot.r { right: calc(30% - 70px); }
+
+    /* ===================== 顶部三栏信息行 ===================== */
+    .tri-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 22px; }
+    .tri-cell {
+      display: flex; align-items: center; gap: 11px;
+      padding: 12px 13px; border-radius: 14px;
+      background: rgba(255, 255, 255, .55);
+      border: 1px solid #ece3d2;
+    }
+    .tri-ic {
+      width: 32px; height: 32px; border-radius: 10px; flex: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .tri-ic svg { width: 17px; height: 17px; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+    .tri-body { min-width: 0; }
+    .tri-lbl { font-size: 11px; color: #a59b8b; letter-spacing: 1px; line-height: 1.2; margin-bottom: 3px; }
+    .tri-val { font-size: 15px; color: #2f2922; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
+
+    /* ===================== 大标题 ===================== */
+    .title-block { margin-top: 22px; }
+    .stu {
+      margin: 0; font-size: 44px; font-weight: 700; line-height: 1.15;
+      color: #2a241c; letter-spacing: 2px;
+      overflow-wrap: anywhere; max-width: 100%;
+    }
+    .stu-sub {
+      margin-top: 10px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      font-size: 13.5px; color: #8a8175; letter-spacing: .5px;
+    }
+    .stu-sub .sep { width: 4px; height: 4px; border-radius: 50%; background: #cdc4b3; }
+    .stu-sub .lesson-no {
+      padding: 2px 10px; border-radius: 999px; font-size: 12px;
+      letter-spacing: 1px; font-weight: 500;
+    }
+
+    /* ===================== 段落小标 ===================== */
+    .sec-h {
+      display: flex; align-items: center; gap: 10px;
+      margin: 26px 0 12px;
+      font-family: "Noto Serif SC", "Songti SC", serif;
+      font-size: 14px; color: #6b6253; letter-spacing: 3px; font-weight: 600;
+    }
+    .sec-h .ln { flex: 1; height: 1px; background: #ece3d2; }
+    .sec-h .sq { width: 6px; height: 6px; border-radius: 1px; transform: rotate(45deg); }
+
+    /* ===================== 本次亮点 · 行式 ===================== */
+    .achv-list { display: flex; flex-direction: column; gap: 8px; }
+    .achv-row {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 14px; border-radius: 12px;
+      background: rgba(255, 255, 255, .55);
+      border: 1px solid #ece3d2;
+    }
+    .achv-bar {
+      width: 4px; height: 22px; border-radius: 2px; flex: none;
+    }
+    .achv-icon {
+      width: 28px; height: 28px; border-radius: 50%; flex: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .achv-icon svg { width: 15px; height: 15px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .achv-text {
+      flex: 1; min-width: 0;
+      font-size: 14.5px; color: #3a3328; line-height: 1.4; font-weight: 500;
+      overflow-wrap: anywhere;
+    }
+    .achv-empty {
+      padding: 14px; text-align: center; font-size: 13px; color: #a59b8b;
+      background: rgba(255, 255, 255, .4); border: 1px dashed #e0d6c0; border-radius: 12px;
+    }
+
+    /* ===================== 正文 ===================== */
+    .body {
+      position: relative; padding-left: 16px; margin-left: 4px;
+      font-size: 15px; line-height: 2.0; color: #4a4339;
+      white-space: pre-wrap; word-break: break-word; min-height: 80px;
+    }
+    .body::before {
+      content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 2px;
+    }
+
+    /* ===================== 底部 ===================== */
+    .foot {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-top: 26px; padding-top: 14px; border-top: 1px dashed #e6ddcd;
+      font-size: 12px; color: #a59b8b; letter-spacing: 1px;
+    }
+    .foot .hand-date { font-family: "Ma Shan Zheng", "STKaiti", "KaiTi", "楷体", serif; font-size: 16px; color: #6b6253; letter-spacing: 1.5px; }
+
+    /* ===================== 类型色配置 ===================== */
+    /* skill · 苔绿（舞蹈/体育） */
+    .rcard.skill .ribbon-dot { background: #6f9279; }
+    .rcard.skill .ribbon-tag  { color: #4e6e58; }
+    .rcard.skill .tri-ic      { background: rgba(111, 146, 121, .14); }
+    .rcard.skill .tri-ic svg  { stroke: #6f9279; }
+    .rcard.skill .stu-sub .lesson-no { background: rgba(111, 146, 121, .14); color: #4e6e58; }
+    .rcard.skill .stu-sub .sep { background: #b6cdbc; }
+    .rcard.skill .sec-h .sq   { background: #6f9279; }
+    .rcard.skill .achv-bar    { background: #6f9279; }
+    .rcard.skill .achv-icon   { background: rgba(111, 146, 121, .16); }
+    .rcard.skill .achv-icon svg { stroke: #4e6e58; }
+    .rcard.skill .body::before { background: #6f9279; }
+
+    /* academic · 暖棕（编程/英语/学科辅导） */
+    .rcard.academic .ribbon-dot { background: #b08146; }
+    .rcard.academic .ribbon-tag  { color: #87622f; }
+    .rcard.academic .tri-ic      { background: rgba(176, 129, 70, .14); }
+    .rcard.academic .tri-ic svg  { stroke: #b08146; }
+    .rcard.academic .stu-sub .lesson-no { background: rgba(176, 129, 70, .14); color: #87622f; }
+    .rcard.academic .stu-sub .sep { background: #d4b890; }
+    .rcard.academic .sec-h .sq   { background: #b08146; }
+    .rcard.academic .achv-bar    { background: #b08146; }
+    .rcard.academic .achv-icon   { background: rgba(176, 129, 70, .16); }
+    .rcard.academic .achv-icon svg { stroke: #87622f; }
+    .rcard.academic .body::before { background: #b08146; }
+
+    /* work · 蓝灰（美术/书法） */
+    .rcard.work .ribbon-dot { background: #5d7e9e; }
+    .rcard.work .ribbon-tag  { color: #3f5b78; }
+    .rcard.work .tri-ic      { background: rgba(93, 126, 158, .14); }
+    .rcard.work .tri-ic svg  { stroke: #5d7e9e; }
+    .rcard.work .stu-sub .lesson-no { background: rgba(93, 126, 158, .14); color: #3f5b78; }
+    .rcard.work .stu-sub .sep { background: #a8bccc; }
+    .rcard.work .sec-h .sq   { background: #5d7e9e; }
+    .rcard.work .achv-bar    { background: #5d7e9e; }
+    .rcard.work .achv-icon   { background: rgba(93, 126, 158, .16); }
+    .rcard.work .achv-icon svg { stroke: #3f5b78; }
+    .rcard.work .body::before { background: #5d7e9e; }
+
+    /* general · 陶土橙（其他） */
+    .rcard.general .ribbon-dot { background: #bd8064; }
+    .rcard.general .ribbon-tag  { color: #92583c; }
+    .rcard.general .tri-ic      { background: rgba(189, 128, 100, .14); }
+    .rcard.general .tri-ic svg  { stroke: #bd8064; }
+    .rcard.general .stu-sub .lesson-no { background: rgba(189, 128, 100, .14); color: #92583c; }
+    .rcard.general .stu-sub .sep { background: #d4b09a; }
+    .rcard.general .sec-h .sq   { background: #bd8064; }
+    .rcard.general .achv-bar    { background: #bd8064; }
+    .rcard.general .achv-icon   { background: rgba(189, 128, 100, .16); }
+    .rcard.general .achv-icon svg { stroke: #92583c; }
+    .rcard.general .body::before { background: #bd8064; }
+
+    /* ===================== 导出按钮 ===================== */
+    .toolbar { display: flex; align-items: center; gap: 12px; }
+    .exp-btn {
+      background: #2f2922; color: #fff; border: none; cursor: pointer;
+      padding: 12px 24px; border-radius: 12px; font-size: 14px; letter-spacing: 1px;
+      transition: transform .2s ease, box-shadow .2s ease;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .exp-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(74,62,48,.32); }
+    #busy { font-size: 13px; color: #8a8175; }
+  </style>
 </head>
 <body>
   <div class="stage">
-    <div class="pcard {{ (preset.card_template if preset else 'general') }}">
-      <span class="badge">{{ (klass.type_name_custom or (preset.name if preset else '通用')) }}</span>
-      <div class="ttl">{{ (klass.type_name_custom or (preset.name if preset else '通用')) }} · 课评</div>
-      <div class="meta">学生：{{ review.student_id[:6] }} · 课次：{{ lesson.title if lesson else '—' }}</div>
-      <div class="body" id="card-body">{{ review.content or '（尚无内容，先去编辑器生成）' }}</div>
-      <div class="org">机构：{{ current_user.org_name or '示例机构' }}</div>
-      <button class="btn" id="export-png">导出为图片</button>
-      <span id="busy" style="color:var(--muted);font-size:13px;margin-left:8px;"></span>
+    <div class="rcard {{ (preset.card_template if preset else 'general') }}" id="rcard">
+      {# ===== 顶部：细色条 + 居中「一对一课评」标签 ===== #}
+      <div class="ribbon">
+        <span class="ribbon-dot l"></span>
+        <span class="ribbon-tag serif">一 对 一 课 评</span>
+        <span class="ribbon-dot r"></span>
+      </div>
+
+      {# ===== 顶部三栏信息行：学员 / 老师 / 课程 ===== #}
+      <div class="tri-row">
+        <div class="tri-cell">
+          <span class="tri-ic">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+          </span>
+          <div class="tri-body">
+            <div class="tri-lbl">学 员</div>
+            <div class="tri-val">{{ student.name if student else '同学' }}</div>
+          </div>
+        </div>
+        <div class="tri-cell">
+          <span class="tri-ic">
+            <svg viewBox="0 0 24 24"><path d="M12 2l2.4 5.4L20 8l-4 3.8 1 6L12 15l-5 2.8 1-6L4 8l5.6-.6z"/></svg>
+          </span>
+          <div class="tri-body">
+            <div class="tri-lbl">老 师</div>
+            <div class="tri-val">{{ current_user.display_name or '老师' }}</div>
+          </div>
+        </div>
+        <div class="tri-cell">
+          <span class="tri-ic">
+            <svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/><path d="M8 8h8"/><path d="M8 12h8"/></svg>
+          </span>
+          <div class="tri-body">
+            <div class="tri-lbl">课 程</div>
+            <div class="tri-val">{{ (klass.type_name_custom if klass else None) or (preset.name if preset else '课程') }}</div>
+          </div>
+        </div>
+      </div>
+
+      {# ===== 大标题 + 副标题（课程次数） ===== #}
+      <div class="title-block">
+        <h1 class="stu serif">{{ student.name if student else '同学' }}</h1>
+        <div class="stu-sub">
+          {% if klass and klass.lesson_count is defined and klass.lesson_count %}
+            <span class="lesson-no">第 {{ klass.lesson_count }} 次课</span>
+          {% endif %}
+          {% if lesson and lesson.title %}<span>{{ lesson.title }}</span>{% endif %}
+          {% if lesson and lesson.lesson_date %}<span class="sep"></span><span>{{ lesson.lesson_date }}</span>{% endif %}
+        </div>
+      </div>
+
+      {# ===== 本次亮点 · 行式 =====
+         老师点过正面标签时直接显示；未点时，routes.py 会从 AI 课评正文中
+         自动总结 2-4 条 (走 _extract_highlights)，所以 pos_tags 永远 ≥ 2 条，
+         下方的 achv-empty 兜底块其实不会再走到了 —— 保留作最后保险。 #}
+      <div class="sec-h"><span class="ln"></span><span class="sq"></span><span>本 次 亮 点</span><span class="ln"></span></div>
+      {% set _achv = (pos_tags or [])[:4] %}
+      {% if _achv %}
+      <div class="achv-list">
+        {% for t in _achv %}
+        <div class="achv-row">
+          <span class="achv-bar"></span>
+          <span class="achv-icon">
+            {% set _i = loop.index0 % 4 %}
+            {% if _i == 0 %}
+            <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            {% elif _i == 1 %}
+            <svg viewBox="0 0 24 24"><path d="M12 2l2.4 5.4L20 8l-4 3.8 1 6L12 15l-5 2.8 1-6L4 8l5.6-.6z"/></svg>
+            {% elif _i == 2 %}
+            <svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-3.9 7l-5.1 3-5.1-3a8.5 8.5 0 0 1 6-15.4 8.4 8.4 0 0 1 8.1 8.4z"/><path d="M12 7v5l3 2"/></svg>
+            {% else %}
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><path d="M9 9h.01"/><path d="M15 9h.01"/></svg>
+            {% endif %}
+          </span>
+          <span class="achv-text">{{ t }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="achv-empty">本次课尚未记录亮点</div>
+      {% endif %}
+
+      {# ===== 本次回顾 · 正文 ===== #}
+      <div class="sec-h"><span class="ln"></span><span class="sq"></span><span>本 次 回 顾</span><span class="ln"></span></div>
+      <div class="body">{{ review.content or '（尚未生成课评内容，先去编辑器生成吧）' }}</div>
+
+      {# ===== 底部 ===== #}
+      <div class="foot">
+        <span>第 {{ klass.lesson_count if (klass and klass.lesson_count is defined and klass.lesson_count) else '—' }} 次课 · 课堂记录</span>
+        <span class="hand-date">
+          {%- if lesson and lesson.lesson_date %}{{ lesson.lesson_date }}{% else %}今日{% endif -%}
+        </span>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="exp-btn" id="export-png">导出为图片</button>
+      <span id="busy"></span>
     </div>
   </div>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
   <script>
-    document.getElementById('export-png').addEventListener('click', async () => {
-      const card = document.querySelector('.pcard');
-      document.getElementById('busy').textContent = '渲染中…';
+    document.getElementById('export-png').addEventListener('click', async function () {
+      var card = document.getElementById('rcard');
+      var busy = document.getElementById('busy');
+      busy.textContent = '渲染中…';
       try {
-        const canvas = await html2canvas(card, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
-        const link = document.createElement('a');
-        link.download = 'keping-{{ (klass.name or 'preset') }}-{{ review.student_id[:6] }}.png';
+        var canvas = await html2canvas(card, {
+          scale: 2, backgroundColor: '#fdfaf3', useCORS: true, logging: false,
+        });
+        var link = document.createElement('a');
+        var name = {{ (student.name if student else "keping") | tojson | safe }};
+        var lesson = {{ (lesson.title if lesson else "") | tojson | safe }};
+        link.download = '课评-' + name + (lesson ? '-' + lesson : '') + '.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
-        document.getElementById('busy').textContent = '已导出 PNG';
+        busy.textContent = '已导出 PNG';
       } catch (e) { alert('导出失败：' + e); }
     });
   </script>

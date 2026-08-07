@@ -8,6 +8,7 @@ status 状态机（pending/generating/draft/confirmed/leave/failed）作为断�
 所有数据源都在此组装进 prompt，不再有第二套生成逻辑。
 """
 import json
+import re
 from datetime import datetime
 
 from flask import (
@@ -30,6 +31,45 @@ from ai.review_normalize import finalize_review
 from . import reviews_bp
 
 GENERATING_TTL = 120  # 秒：超过则允许重入
+
+
+def _split_ai_highlights(text: str):
+    """从 AI 原稿里解析「亮点标签」区块。返回 (highlights: list[str], body: str)。
+
+    仅当模型真的输出了显式标记「【AI亮点标签】」才认；否则视为无标签，
+    整段原文作为正文返回（后续由规则兜底提取或直接展示）。
+    兼容弱模型把多标签写在同一行（顿号/逗号/空格分隔）的变体。
+    """
+    marker = "【AI亮点标签】"
+    idx = text.find(marker)
+    if idx < 0:
+        # 退化变体：去空格版本
+        marker2 = "【AI 亮点标签】"
+        idx = text.find(marker2)
+        marker = marker2
+    if idx < 0:
+        return [], text
+
+    body = text[:idx].rstrip()
+    tail = text[idx + len(marker):]
+
+    highlights = []
+    for line in tail.splitlines():
+        line = line.strip().strip("【】[]()").strip()
+        line = re.sub(r"^[:：·•\-—]+\s*", "", line).strip()
+        # 一行内可能用顿号/逗号/空格分隔多个标签
+        for part in re.split(r"[、，,\s]+", line):
+            p = part.strip()
+            if not p:
+                continue
+            if 2 <= len(p) <= 12 and "亮点" not in p and "标签" not in p \
+               and not any(ch in p for ch in "。？！；…：:"):
+                highlights.append(p)
+            if len(highlights) >= 4:
+                break
+        if len(highlights) >= 4:
+            break
+    return highlights, body
 
 
 def _get_style_examples(class_id):
@@ -144,12 +184,14 @@ def _generate_for(review: Review) -> dict:
     client = LLMClient()
     raw = client.complete(messages, timeout=120)
     text = red.restore(raw)
+    # 教师未点标签时，模型会在文末附「【AI亮点标签】」区块：先解析剥离，正文只留课评
+    ai_highlights, body = _split_ai_highlights(text)
     # 后端确定性兜底：
     #  - 有「班级级优秀历史课评」作模板时，保留模型多段维度化结构（force_two=False），不硬截断；
     #  - 否则强制 2 段 + 1 空行结构，并按预置上限做字数硬截断。
     force_two = not bool(excellent_raw)
     text = finalize_review(
-        text,
+        body,
         (preset.length_max if preset else None) if force_two else None,
         force_two=force_two,
     )
@@ -161,6 +203,12 @@ def _generate_for(review: Review) -> dict:
     review.score_json = score_review(text, preset=preset)
     review.generating_since = None
     review.error_msg = None
+    # 存 AI 自动总结的亮点标签（老师没点标签时由模型产出），供卡片渲染优先使用
+    if ai_highlights:
+        meta = dict(review.meta_json or {})
+        meta['ai_highlights'] = ai_highlights
+        review.meta_json = meta
+        flag_modified(review, 'meta_json')
     db.session.commit()
 
     chan = Channel(current_user.id)

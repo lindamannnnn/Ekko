@@ -5,12 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <title>{% block title %}Ekko课评系统{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/ekko_logo.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
 </head>
 <body>
   <nav class="topnav">
     <a class="brand" href="{{ url_for('classes.index') }}"><img src="{{ url_for('static', filename='images/ekko_logo.png') }}" alt="Ekko课评系统"></a>
-    <button class="help-btn" onclick="Tour.open()" title="新手引导">?</button>
+    <a href="javascript:void(0)" class="help-btn help-btn-strong" onclick="Tour.start()" title="新手引导"><span style="font-size:14px;">💡</span> 新手引导</a>
+    <a class="help-btn help-btn-mini" onclick="Tour.open()" title="新手引导">?</a>
     <a href="{{ url_for('classes.index') }}">我的班级</a>
     <a href="{{ url_for('classes.new') }}">+ 新建班级</a>
     <span class="nav-sep"></span>
@@ -23,10 +25,6 @@
     <a href="{{ url_for('auth.login') }}">登录</a>
     {% endif %}
   </nav>
-
-  <div class="tour-mask" id="tour-mask">
-    <div class="tour-box" id="tour-box"></div>
-  </div>
 
   <div class="container">
   {% with messages = get_flashed_messages(with_categories=true) %}

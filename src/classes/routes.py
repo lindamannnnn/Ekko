@@ -10,6 +10,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy.exc import IntegrityError
 from werkzeug.utils import secure_filename
 from extensions import db
 from models.class_student import Klass, Student, Enrollment
@@ -26,9 +27,11 @@ UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(
 
 
 def _tour_next(req, cur):
-    """引导流程：请求带 tour 参数时返回带下一步 step 的查询串，否则空串。"""
-    if req.args.get('tour'):
-        nxt = req.args.get('step', default=cur, type=int) + 1
+    """引导流程：当前请求在 tour 链中时返回 ?tour=1&step=N+1，否则空串。
+    用 req.values 同时查 URL args 与 POST form data，确保 POST 提交也能保留 tour 链。"""
+    if req.values.get('tour'):
+        cur = req.values.get('step', default=cur, type=int)
+        nxt = cur + 1
         return f'?tour=1&step={nxt}'
     return ''
 
@@ -64,15 +67,27 @@ def new():
         return render_template("classes/new.html", presets=presets)
     name = request.form.get("name", "").strip()
     type_code = request.form.get("type_code", "").strip()
+    # 出错重渲染时回显已填的 name/type_code
+    ctx = dict(presets=presets, form_name=name, form_type=type_code)
     if not name or not type_code:
         flash("班级名称与类型均不能为空", "error")
-        return render_template("classes/new.html", presets=presets)
+        return render_template("classes/new.html", **ctx)
     if ClassTypePreset.query.filter_by(code=type_code).first() is None:
         flash("班级类型无效，请从列表中选择", "error")
-        return render_template("classes/new.html", presets=presets)
+        return render_template("classes/new.html", **ctx)
+    # 预拦截：同用户、未软删的同名班级（最常见 500 来源）
+    if Klass.query.filter_by(user_id=current_user.id, name=name, deleted_at=None).first() is not None:
+        flash(f"已存在同名班级【{name}】，请换一个名字", "error")
+        return render_template("classes/new.html", **ctx)
     k = Klass(user_id=current_user.id, name=name, type_code=type_code)
     db.session.add(k)
-    db.session.commit()
+    try:
+        db.session.commit()
+    except IntegrityError:
+        # 兜底：可能撞上已软删的历史同名班级（DB UNIQUE 不过滤 deleted_at）
+        db.session.rollback()
+        flash(f"班级【{name}】创建失败：可能与已删除的同名班级冲突，请换一个名字", "error")
+        return render_template("classes/new.html", **ctx)
     flash(f"班级【{name}】已创建", "success")
     return redirect(url_for("classes.detail", class_id=k.id) + _tour_next(request, 1))
 
@@ -160,7 +175,7 @@ def add_students(class_id):
     if skipped:
         msg_parts.append(f"（{len(skipped)} 人已存在：{', '.join(skipped)}）")
     flash("".join(msg_parts), "success" if not skipped else "warning")
-    return redirect(url_for("classes.detail", class_id=class_id))
+    return redirect(url_for("classes.detail", class_id=class_id) + _tour_next(request, 2))
 
 
 @classes_bp.route("/<class_id>/archive", methods=["POST"])

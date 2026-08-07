@@ -210,6 +210,20 @@ textarea:focus, select:focus, input[type]:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-ring);
 }
+/* 修复原生 select 下拉面板在深色主题下被系统渲染成浅色的问题 */
+select option {
+  background-color: #0f172a;   /* 与页面深色背景一致 */
+  color: #e2e8f0;
+}
+select option:checked {
+  background-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+select option:hover {
+  background-color: var(--accent-soft);
+  color: var(--text);
+}
 input[type=text], input[type=email], input[type=password], input[type=date], input[type=number] {
   width: 100%; padding: 13px 16px; border: 1px solid var(--border);
   border-radius: var(--radius-xs); font-size: 14px;
@@ -275,11 +289,32 @@ input::placeholder, textarea::placeholder { color: #475569; }
 .topnav .help-btn {
   background: var(--warning-soft); color: var(--warning); border: 1px solid rgba(245,158,11,.2);
   cursor: pointer; font-size: 13px; padding: 6px 12px; border-radius: var(--radius-xs);
+  text-decoration: none;
 }
 .topnav .help-btn:hover { background: rgba(245,158,11,.18); }
 .topnav .help-btn.btn-dot {
   width: 28px; height: 28px; padding: 0; font-size: 15px; font-weight: 700;
   line-height: 1; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+/* 「💡 新手引导」醒目按钮 */
+.topnav .help-btn-strong {
+  background: linear-gradient(135deg, rgba(59,130,246,.18), rgba(6,182,212,.18));
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  font-weight: 600;
+  display: inline-flex; align-items: center; gap: 4px;
+}
+.topnav .help-btn-strong:hover {
+  background: linear-gradient(135deg, rgba(59,130,246,.28), rgba(6,182,212,.28));
+  color: var(--text);
+}
+/* 紧凑型「?」按钮（次要入口） */
+.topnav .help-btn-mini {
+  width: 28px; height: 28px; padding: 0;
+  font-size: 14px; font-weight: 700;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
 .topnav .teacher-name {
