@@ -278,12 +278,9 @@
         </div>
       </div>
 
-      {# ===== 本次亮点 · 行式 =====
-         老师点过正面标签时直接显示；未点时，routes.py 会从 AI 课评正文中
-         自动总结 2-4 条 (走 _extract_highlights)，所以 pos_tags 永远 ≥ 2 条，
-         下方的 achv-empty 兜底块其实不会再走到了 —— 保留作最后保险。 #}
+      {# ===== 本次亮点 · 行式 ===== #}
       <div class="sec-h"><span class="ln"></span><span class="sq"></span><span>本 次 亮 点</span><span class="ln"></span></div>
-      {% set _achv = (pos_tags or [])[:4] %}
+      {% set _achv = (pos_tags or [])[:6] %}
       {% if _achv %}
       <div class="achv-list">
         {% for t in _achv %}

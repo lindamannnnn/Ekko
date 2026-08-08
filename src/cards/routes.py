@@ -9,7 +9,8 @@ from extensions import db
 from models.lesson import Review, Lesson
 from models.class_student import Klass, Student
 from models.class_type_preset import ClassTypePreset
-from ai.prompt_builder import _classify_tag, _POS_KW, _FOCUS_MAP
+from ai.prompt_builder import _POS_KW, _FOCUS_MAP
+from ai.tag_classifier import render_tags
 
 from flask import Blueprint
 card_bp = Blueprint("cards", __name__, url_prefix="/cards")
@@ -210,11 +211,9 @@ def preview(review_id):
     student = Student.query.get(review.student_id)
     preset = ClassTypePreset.query.filter_by(code=klass.type_code).first() if klass else None
 
-    # 把教师标签按情感分类，便于卡片上用不同色系呈现（亮点/待提升/观察）
+    # 渲染期用 AI 判定标签情感：负向标签（含老师自定义）一律不渲染。
     raw_tags = [t for t in (review.perf_tags or []) if t]
-    pos_tags = [t for t in raw_tags if _classify_tag(t) == "positive"]
-    neg_tags = [t for t in raw_tags if _classify_tag(t) == "negative"]
-    neu_tags = [t for t in raw_tags if _classify_tag(t) == "neutral"]
+    pos_tags = render_tags(raw_tags)   # 已过滤负向，仅保留正面 / 中性标签
 
     # 老师没点正面标签时：优先用「生成时 AI 自己总结的亮点标签」(meta_json.ai_highlights)，
     # 没有再回退到规则提取（兼容历史课评 / 弱模型偶尔没输出标签的情况）。
@@ -231,5 +230,5 @@ def preview(review_id):
     return render_template(
         "cards/preview.html",
         review=review, lesson=lesson, klass=klass, preset=preset, student=student,
-        pos_tags=pos_tags, neg_tags=neg_tags, neu_tags=neu_tags,
+        pos_tags=pos_tags,
     )

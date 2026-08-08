@@ -1,6 +1,7 @@
 """鉴权路由：注册 / 登录 / 登出 / 邮箱验证 / 密码找回。"""
 import datetime
 import random
+import time
 from urllib.parse import urlparse
 
 from flask import (
@@ -60,6 +61,7 @@ def register():
         session['reg_email'] = email
         session['reg_pw'] = form.password.data
         session['reg_name'] = form.display_name.data
+        session['reg_resend_at'] = int(time.time())
         sent = send_email(
             email,
             '你的 Ekko课评系统 注册验证码',
@@ -70,6 +72,8 @@ def register():
         return render_template(
             'auth/register_code.html', email=email,
             dev_mode=(not current_app.config.get('MAIL_PASSWORD')),
+            resend_at=session.get('reg_resend_at', 0),
+            now_ts=int(time.time()),
         )
     return render_template('auth/register.html', form=form, providers=PROVIDER_CARDS)
 
@@ -84,6 +88,51 @@ def check_email():
     return jsonify(exists=exists)
 
 
+@bp.route('/register/code', methods=['GET'])
+def register_code_page():
+    """独立的验证码输入页：供「重新发送」重定向返回，也避免刷新导致重复提交。"""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    email = session.get('reg_email')
+    if not email:
+        flash('注册会话已失效，请重新注册', 'warning')
+        return redirect(url_for('auth.register'))
+    return render_template(
+        'auth/register_code.html', email=email,
+        dev_mode=(not current_app.config.get('MAIL_PASSWORD')),
+        resend_at=session.get('reg_resend_at', 0),
+        now_ts=int(time.time()),
+    )
+
+
+@bp.route('/register/resend', methods=['POST'])
+def register_resend():
+    """重新发送注册验证码，30 秒间隔限制（防滥用 + 前端倒计时双重保险）。"""
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    email = session.get('reg_email')
+    if not email:
+        flash('注册会话已失效，请重新注册', 'warning')
+        return redirect(url_for('auth.register'))
+    now = int(time.time())
+    last = session.get('reg_resend_at', 0)
+    if now - last < 30:
+        flash('验证码发送过于频繁，请 30 秒后再试', 'warning')
+        return redirect(url_for('auth.register_code_page'))
+    code = ''.join(random.choices('0123456789', k=6))
+    session['reg_code'] = code
+    session['reg_resend_at'] = now
+    sent = send_email(
+        email,
+        '你的 Ekko课评系统 注册验证码',
+        render_template('auth/email_code.html', code=code),
+    )
+    if not sent:
+        current_app.logger.warning('[dev] 注册验证码(未真发): %s', code)
+    flash('验证码已重新发送，请查收邮箱', 'success')
+    return redirect(url_for('auth.register_code_page'))
+
+
 @bp.route('/register/verify', methods=['POST'])
 def register_verify():
     if current_user.is_authenticated:
@@ -93,7 +142,7 @@ def register_verify():
     email = session.get('reg_email')
     if not expect or code != expect:
         flash('验证码不正确或已失效，请重新获取', 'danger')
-        return render_template('auth/register_code.html', email=email, dev_mode=False)
+        return redirect(url_for('auth.register_code_page'))
     # 创建并立刻验证账号
     user = PasswordProvider.register(email, session.get('reg_pw'), session.get('reg_name'))
     user.email_verified_at = datetime.datetime.utcnow()

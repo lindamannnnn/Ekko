@@ -45,9 +45,4 @@ CREDENTIALS.txt
 
 # 笔记/草稿
 classreview.html
-
-# 本地预览/调试产物（开发期生成的卡片预览 HTML、临时渲染脚本，不入库）
-card-*.html
-live-card-deployed.html
-render_mock_preview.py
 # 已被忽略：data/ references/ tools/ skills/ 见上半段旧单体残留
