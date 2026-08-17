@@ -39,6 +39,19 @@ _dbg/
 _dbg_run.log*
 _*_tmp.py
 _proxy_backup_*.json
+# 调试脚本与日志（_ 前缀；用 _[a-z]*.py 避开 __init__.py，避免误忽略）
+_[a-z]*.py
+_*.log
+# 卡片预览 / mock / 部署预览 HTML（一次性排查产物）
+card-*-preview.html
+card-*-mock.html
+card-preview-*.html
+card-templates-*.html
+live-card-deployed.html
+/detail.html
+render_mock_preview.py
+verify_dup_route.py
+tour.js
 
 # 服务器生成的凭据文件（含管理员密码，严禁入库）
 CREDENTIALS.txt
