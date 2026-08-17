@@ -23,7 +23,7 @@ class LLMClient:
             {"http": proxy_url, "https": proxy_url} if proxy_url else {"http": None, "https": None}
         )
 
-    def complete(self, messages, temperature=0.7, timeout=120):
+    def complete(self, messages, temperature=0.7, timeout=120, max_tokens=None):
         """同步调用，返回纯文本。失败时抛异常交由调用方处理。"""
         headers = {
             "Authorization": f"Bearer {self.api_key}",
@@ -34,6 +34,8 @@ class LLMClient:
             "messages": messages,
             "temperature": temperature,
         }
+        if max_tokens is not None:
+            payload["max_tokens"] = int(max_tokens)
         try:
             r = requests.post(
                 f"{self.base_url.rstrip('/')}/chat/completions",

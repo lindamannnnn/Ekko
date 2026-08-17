@@ -13,7 +13,7 @@
 import os
 
 ALLOWED_EXT = {".txt", ".pptx", ".docx", ".doc", ".pdf"}
-DEFAULT_MAX_BYTES = 10 * 1024 * 1024  # 10MB
+DEFAULT_MAX_BYTES = 15 * 1024 * 1024  # 15MB
 MAX_EXTRACTED_CHARS = 1_500_000        # 抽取文本上限 ~1.5MB（防解析炸弹）
 
 # 各类型合法的文件头签名（前若干字节）
@@ -45,7 +45,7 @@ def validate_upload(file_storage, max_bytes=DEFAULT_MAX_BYTES):
     except Exception:  # noqa: BLE001
         size = 0
     if size > max_bytes:
-        raise ValueError("文件过大：课件不能超过 10MB，请压缩或分卷后再传。")
+        raise ValueError("文件过大：课件不能超过 15MB，请压缩或分卷后再传。")
 
     # 文件头魔数校验（防改名绕过白名单）
     sigs = _SIGNATURES.get(ext)

@@ -72,7 +72,7 @@ def create_app(config: dict | None = None) -> Flask:
         WTF_CSRF_ENABLED=True,
         # 写事务保持极短；绝不在事务里调 LLM（见风险 T10）
         SQLALCHEMY_ENGINE_OPTIONS={"connect_args": {"timeout": 15}},
-        MAX_CONTENT_LENGTH=10 * 1024 * 1024,  # 上传上限 10MB（课件大小限制）
+        MAX_CONTENT_LENGTH=15 * 1024 * 1024,  # 上传上限 15MB（课件大小限制）
         # —— 邮件（SMTP）—— 未配置时进入 dev 模式（控制台打印链接，不真发信）
         MAIL_SERVER=os.environ.get('MAIL_SERVER', ''),
         MAIL_PORT=int(os.environ.get('MAIL_PORT', 587)),

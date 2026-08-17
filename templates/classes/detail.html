@@ -90,6 +90,7 @@ body > .container {
                         <input type="file" id="course-file-input" accept=".txt,.docx,.doc,.pptx,.pdf" style="display:none">
                     </label>
                     <button id="btn-save-course" class="btn-secondary" style="padding:6px 14px;font-size:12px;cursor:pointer">💾 保存课程内容</button>
+                    <span style="color:var(--text-3);font-size:12px">或把文件拖到上方文本框</span>
                     <span id="file-name-hint" style="color:var(--text-3);font-size:12px"></span>
                 </div>
                 <div id="upload-status" style="margin-top:6px;font-size:12px;color:var(--text-3)"></div>
@@ -670,31 +671,62 @@ body > .container {
   const fileHint = $('#file-name-hint');
   const uploadStatus = $('#upload-status');
 
+  // 抽成函数：文件上传（change 与拖拽共用）
+  async function uploadFile(file) {
+    if (!file) return;
+    fileHint.textContent = '⏳ 正在解析: ' + file.name + '...';
+    uploadStatus.textContent = '';
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const resp = await fetch('/classes/{{ klass.id }}/upload_course', { method:'POST', body:fd });
+      const data = await resp.json();
+      if (data.ok) {
+        if (courseInput) courseInput.value = data.markdown;
+        fileHint.textContent = '✅ ' + data.filename + ' (' + (data.raw_length || 0) + ' 字 → Markdown)';
+        uploadStatus.textContent = '✅ 已保存到班级';
+        uploadStatus.style.color = 'var(--success)';
+      } else {
+        fileHint.textContent = '❌ ' + (data.error || '上传失败');
+        uploadStatus.style.color = 'var(--danger)';
+      }
+    } catch(e) {
+      fileHint.textContent = '❌ 网络错误';
+      uploadStatus.style.color = 'var(--danger)';
+    }
+  }
+
   if (fileInput) {
     fileInput.addEventListener('change', async function() {
       const file = this.files[0];
       if (!file) return;
-      fileHint.textContent = '⏳ 正在解析: ' + file.name + '...';
-      uploadStatus.textContent = '';
-      const fd = new FormData();
-      fd.append('file', file);
-      try {
-        const resp = await fetch('/classes/{{ klass.id }}/upload_course', { method:'POST', body:fd });
-        const data = await resp.json();
-        if (data.ok) {
-          if (courseInput) courseInput.value = data.markdown;
-          fileHint.textContent = '✅ ' + data.filename + ' (' + (data.raw_length || 0) + ' 字 → Markdown)';
-          uploadStatus.textContent = '✅ 已保存到班级';
-          uploadStatus.style.color = 'var(--success)';
-        } else {
-          fileHint.textContent = '❌ ' + (data.error || '上传失败');
-          uploadStatus.style.color = 'var(--danger)';
-        }
-      } catch(e) {
-        fileHint.textContent = '❌ 网络错误';
-        uploadStatus.style.color = 'var(--danger)';
-      }
+      await uploadFile(file);
       this.value = '';
+    });
+  }
+
+  // —— 拖拽上传：把文件拖到课程内容区直接上传 ——
+  const scoreArea = $('#score-area');
+  if (scoreArea && courseInput) {
+    const setDropHint = (on) => {
+      courseInput.style.borderColor = on ? 'var(--accent)' : 'var(--border)';
+      courseInput.style.boxShadow = on ? '0 0 0 3px rgba(59,130,246,.25)' : 'none';
+    };
+    scoreArea.addEventListener('dragover', (e) => {
+      if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes('Files')) {
+        e.preventDefault();  // 仅对拖文件生效，不干扰文本框接收拖入文本
+        setDropHint(true);
+      }
+    });
+    scoreArea.addEventListener('dragleave', (e) => {
+      if (!scoreArea.contains(e.relatedTarget)) setDropHint(false);
+    });
+    scoreArea.addEventListener('drop', (e) => {
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        e.preventDefault();
+        setDropHint(false);
+        uploadFile(e.dataTransfer.files[0]);
+      }
     });
   }
 
