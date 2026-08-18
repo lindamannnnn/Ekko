@@ -1,0 +1,410 @@
+/* =====================================================================
+   Ekko 瑞士国际主义风格覆盖层 (theme-swiss.css)
+   设计基调：白底 / 黑字 / 亮黄 #ffcc00 强调 / 网格 / 直角粗边框
+   引入方式：在 theme.css 之后加载，覆盖原有暗色玻璃拟态风格
+   ===================================================================== */
+
+/* ---------- 设计令牌覆盖 ---------- */
+:root {
+  --accent: #ffcc00;      /* 亮黄强调 */
+  --accent-strong: #000000;
+  --accent-deep: #000000;
+  --accent-soft: #ffcc00;
+  --accent-ring: rgba(0,0,0,.15);
+  --cyan: #000000;
+  --cyan-soft: #f3f4f6;
+  --gradient-accent: linear-gradient(135deg, #ffcc00, #ffcc00);
+
+  --success: #000000;
+  --success-soft: #f3f4f6;
+  --warning: #ffcc00;
+  --warning-soft: #fffbeb;
+  --danger: #000000;
+  --danger-soft: #fee2e2;
+  --info: #000000;
+
+  --bg: #ffffff;
+  --bg-card: #ffffff;
+  --surface: #ffffff;
+  --surface-2: #f3f4f6;
+  --surface-3: #e5e7eb;
+  --border: #000000;
+  --border-strong: #000000;
+  --border-subtle: #e5e7eb;
+
+  --text: #000000;
+  --text-2: #525252;
+  --text-3: #737373;
+
+  --radius: 0px;
+  --radius-sm: 0px;
+  --radius-xs: 0px;
+  --shadow-sm: none;
+  --shadow: none;
+  --shadow-lg: none;
+
+  --nav-bg: #ffffff;
+  --nav-bg-2: #ffffff;
+  --nav-text: #000000;
+  --nav-text-2: #525252;
+  --nav-active: #000000;
+  --nav-hover-bg: #ffcc00;
+  --nav-active-bg: #ffcc00;
+  --nav-border: #000000;
+
+  --primary: #000000;
+  --primary-dark: #000000;
+  --primary-light: #ffcc00;
+  --card: #ffffff;
+  --card-bg: #ffffff;
+  --muted: #525252;
+  --text-primary: #000000;
+  --text-secondary: #525252;
+  --sidebar-bg: #ffffff;
+  --sidebar-text: #000000;
+  --sidebar-active: #000000;
+  --sidebar-hover-bg: #ffcc00;
+}
+
+/* ---------- 基础覆盖 ---------- */
+body {
+  font-family: Helvetica, Arial, Roboto, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: #ffffff;
+  color: #000000;
+  background-image:
+    linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+
+/* 去掉暗色光晕，保留淡网格 */
+body::before {
+  background-image:
+    linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px);
+  background-size: 80px 80px;
+}
+body::after {
+  display: none;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #000000;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+}
+
+.sub { color: #525252; }
+.muted { color: #525252; }
+
+/* ---------- 容器 ---------- */
+.container {
+  max-width: 960px;
+}
+
+/* ---------- 卡片 ---------- */
+.glass-card, .card {
+  background: #ffffff;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border: 2px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+}
+.glass-card:hover, .card:hover {
+  border-color: #000000;
+  box-shadow: none;
+  transform: translateY(-2px);
+  background: #ffcc00;
+}
+.card-body { padding: 24px; }
+
+/* ---------- 按钮 ---------- */
+.btn {
+  background: #ffcc00;
+  color: #000000;
+  border: 2px solid #000000;
+  border-radius: 0;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.btn:hover {
+  background: #000000;
+  color: #ffffff;
+  box-shadow: none;
+  transform: translateY(-1px);
+}
+.btn:active { transform: translateY(0); }
+.btn:focus-visible { outline: 2px solid #000000; outline-offset: 2px; }
+
+.btn-secondary {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+  border-radius: 0;
+}
+.btn-secondary:hover {
+  border-color: #000000;
+  color: #ffffff;
+  background: #000000;
+}
+
+.btn-ghost {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+  border-radius: 0;
+}
+.btn-ghost:hover {
+  border-color: #000000;
+  color: #000000;
+  background: #ffcc00;
+}
+
+.btn-danger {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+  border-radius: 0;
+}
+.btn-danger:hover {
+  background: #000000;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+.btn-sm { border-radius: 0; }
+
+.btn-logout {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+  border-radius: 0;
+}
+.btn-logout:hover {
+  background: #000000;
+  color: #ffffff;
+}
+
+/* ---------- 表单 ---------- */
+label { color: #000000; font-weight: 700; text-transform: uppercase; font-size: 13px; }
+textarea, select, input[type=text], input[type=email], input[type=password], input[type=date], input[type=number] {
+  border: 2px solid #000000;
+  border-radius: 0;
+  background: #ffffff;
+  color: #000000;
+}
+textarea:focus, select:focus, input[type]:focus {
+  border-color: #000000;
+  box-shadow: 0 0 0 3px rgba(255,204,0,.35);
+}
+select option {
+  background-color: #ffffff;
+  color: #000000;
+}
+select option:checked {
+  background-color: #ffcc00;
+  color: #000000;
+}
+select option:hover {
+  background-color: #ffcc00;
+  color: #000000;
+}
+input::placeholder, textarea::placeholder { color: #a3a3a3; }
+
+/* ---------- 提示条 ---------- */
+.alert {
+  border-radius: 0;
+  border: 2px solid #000000;
+  font-weight: 600;
+}
+.alert-success { background: #f3f4f6; color: #000000; }
+.alert-danger { background: #fee2e2; color: #000000; }
+.alert-warning { background: #fffbeb; color: #000000; }
+.alert-info { background: #f3f4f6; color: #000000; }
+.banner {
+  background: #fffbeb;
+  border: 2px solid #000000;
+  color: #000000;
+  border-radius: 0;
+}
+.dev-link {
+  background: #f3f4f6;
+  color: #000000;
+  border-radius: 0;
+  border: 2px solid #000000;
+}
+.alt { color: #525252; }
+.alt a { color: #000000; text-decoration: underline; font-weight: 700; }
+.alt a:hover { background: #ffcc00; }
+
+/* ---------- 顶部导航 ---------- */
+.topnav {
+  background: #ffffff;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom: 2px solid #000000;
+  padding: 12px 28px;
+}
+.topnav .brand img { height: 28px; }
+.topnav a {
+  color: #000000;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 13px;
+  border-radius: 0;
+}
+.topnav a:hover {
+  background: #ffcc00;
+  color: #000000;
+}
+.topnav .nav-sep { width: 1px; height: 22px; background: #000000; }
+.topnav .help-btn {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+  border-radius: 0;
+  font-weight: 700;
+}
+.topnav .help-btn:hover { background: #ffcc00; }
+.topnav .help-btn.btn-dot {
+  width: 28px; height: 28px;
+  border-radius: 0;
+}
+.topnav .help-btn-strong {
+  background: #ffffff;
+  color: #000000;
+  border: 2px solid #000000;
+}
+.topnav .help-btn-strong:hover {
+  background: #ffcc00;
+  color: #000000;
+}
+.topnav .help-btn-mini {
+  border-radius: 0;
+}
+.topnav .teacher-name {
+  color: #000000;
+  background: #ffcc00;
+  border-radius: 0;
+  font-weight: 700;
+}
+.topnav .logout { color: #000000; }
+.topnav .logout:hover { background: #000000; color: #ffffff; }
+
+/* ---------- 工作台入口卡片 ---------- */
+.card-link {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
+  color: #000000;
+}
+.card-link::before {
+  background: #000000;
+}
+.card-link:hover {
+  border-color: #000000;
+  box-shadow: none;
+  background: #ffcc00;
+  transform: translateY(-2px);
+}
+.card-link b { color: #000000; font-weight: 700; }
+.card-link span { color: #525252; }
+.card-link.disabled { opacity: .5; }
+
+/* ---------- 链接 ---------- */
+a { color: #000000; }
+a:hover { background: #ffcc00; }
+
+/* ---------- 表格 ---------- */
+table {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-collapse: collapse;
+  width: 100%;
+}
+th, td {
+  border: 1px solid #000000;
+  padding: 10px 12px;
+  text-align: left;
+}
+th {
+  background: #f3f4f6;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 12px;
+}
+tr:hover { background: #ffcc00; }
+
+/* ---------- 标签 ---------- */
+.badge {
+  border-radius: 0;
+  border: 1px solid #000000;
+  background: #f3f4f6;
+  color: #000000;
+  font-weight: 700;
+}
+.badge-success { background: #f3f4f6; color: #000000; }
+.badge-danger { background: #fee2e2; color: #000000; }
+.badge-warning { background: #fffbeb; color: #000000; }
+.badge-info { background: #f3f4f6; color: #000000; }
+
+/* ---------- 模态框 ---------- */
+.modal-content {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+}
+.modal-header {
+  border-bottom: 2px solid #000000;
+}
+.modal-footer {
+  border-top: 2px solid #000000;
+}
+
+/* ---------- 下拉菜单 ---------- */
+.dropdown-menu {
+  background: #ffffff;
+  border: 2px solid #000000;
+  border-radius: 0;
+  box-shadow: none;
+}
+.dropdown-item {
+  color: #000000;
+}
+.dropdown-item:hover {
+  background: #ffcc00;
+  color: #000000;
+}
+
+/* ---------- 分页 ---------- */
+.pagination a, .pagination span {
+  border: 1px solid #000000;
+  color: #000000;
+  border-radius: 0;
+}
+.pagination a:hover { background: #ffcc00; }
+.pagination .active { background: #000000; color: #ffffff; }
+
+/* ---------- 列表 ---------- */
+.list li {
+  border-bottom: 1px solid #000000;
+}
+
+/* ---------- 统计卡片 / 数字 ---------- */
+.stat-value { color: #000000; }
+.stat-label { color: #525252; }
+
+/* ---------- 滚动条 ---------- */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: #f3f4f6; }
+::-webkit-scrollbar-thumb { background: #000000; border: 1px solid #f3f4f6; }
+::-webkit-scrollbar-thumb:hover { background: #525252; }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 680px) {
+  .topnav { padding: 10px 16px; }
+  .topnav a { font-size: 12px; padding: 6px 8px; }
+}
