@@ -66,26 +66,26 @@
   --sidebar-hover-bg: #ffcc00;
 }
 
-/* ---------- 基础覆盖 ---------- */
-body {
-  font-family: Helvetica, Arial, Roboto, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  background: #ffffff;
-  color: #000000;
+/* ---------- 基础覆盖（高优先级，彻底压制 theme.css 暗色） ---------- */
+html body {
+  font-family: Helvetica, Arial, Roboto, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif !important;
+  background: #ffffff !important;
+  color: #000000 !important;
   background-image:
     linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px);
-  background-size: 80px 80px;
+    linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px) !important;
+  background-size: 80px 80px !important;
 }
 
 /* 去掉暗色光晕，保留淡网格 */
-body::before {
+html body::before {
   background-image:
     linear-gradient(rgba(0,0,0,.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px);
-  background-size: 80px 80px;
+    linear-gradient(90deg, rgba(0,0,0,.04) 1px, transparent 1px) !important;
+  background-size: 80px 80px !important;
 }
-body::after {
-  display: none;
+html body::after {
+  display: none !important;
 }
 
 h1, h2, h3, h4, h5, h6 {
