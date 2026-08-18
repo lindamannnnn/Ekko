@@ -112,6 +112,7 @@ def create_app(config: dict | None = None) -> Flask:
     _admin_path = os.environ.get('ADMIN_PATH', 'admin').strip('/')
     admin_bp.url_prefix = '/' + _admin_path
     app.jinja_env.globals['ADMIN_PREFIX'] = '/' + _admin_path
+    app.jinja_env.globals['HALL_URL'] = os.environ.get('HALL_URL', 'http://localhost:8080/')
     app.register_blueprint(auth_bp)
     app.register_blueprint(main_bp)
     app.register_blueprint(classes_bp)
