@@ -213,6 +213,26 @@ select option:hover {
 }
 input::placeholder, textarea::placeholder { color: #a3a3a3; }
 
+.field { margin-bottom: 18px; }
+.field label { display: block; margin-bottom: 6px; }
+.field small,
+.field .err,
+.field .ok,
+.err-live {
+  display: block;
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+.field .err,
+.err-live.err { color: #000000; }
+.field .ok,
+.err-live.ok { color: #000000; }
+.field .hint,
+.err-live.hint { color: #525252; font-weight: 500; }
+.field input.input-bad { border-color: #000000; background: #fee2e2; }
+.field input.input-bad:focus { box-shadow: 0 0 0 3px rgba(0,0,0,.12); }
+
 /* ---------- 提示条 ---------- */
 .alert {
   border-radius: 0;
