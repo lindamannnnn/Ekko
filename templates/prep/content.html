@@ -1,0 +1,61 @@
+{% extends "prep/base.html" %}
+{% block title %}上传内容{% endblock %}
+{% block prep_content %}
+<h1>根据内容生成</h1>
+<p class="sub">上传教案、讲义、笔记或粘贴文本，系统会先做安全检查，再生成课件。</p>
+
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+
+<div class="card">
+  <form method="post" enctype="multipart/form-data" id="uploadForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>① 上传文件</label>
+    <input type="file" name="file" id="fileInput"
+           accept=".docx,.pptx,.pdf,.txt,.md,.markdown,.csv,.html,.htm">
+    <p class="hint">支持 docx / pptx / pdf / txt / md / html；文件大小不超过 15MB</p>
+
+    <label>② 或粘贴文本</label>
+    <textarea name="text" id="textInput" placeholder="把课程讲义、提纲、笔记粘贴到这里…"></textarea>
+
+    <div style="margin-top:14px;">
+      <label style="display:flex;align-items:center;gap:8px;text-transform:none;font-weight:400;cursor:pointer;">
+        <input type="checkbox" name="use_api_mod"> 启用模型二次审核（更严格，消耗 API）
+      </label>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%;margin-top:22px;padding:14px;">下一步：选择风格</button>
+  </form>
+</div>
+
+<div style="margin-top:46px;">
+  <h2>风格样例</h2>
+  <p class="sub">点击卡片放大预览</p>
+  <div class="style-grid">
+    {% for s in styles %}
+    <div class="style-card" onclick="openStyleDemo('{{ s.id }}')">
+      <iframe class="style-thumb" src="{{ url_for('prep.style_demo', style_id=s.id) }}" loading="lazy" scrolling="no"></iframe>
+      <div class="style-info">
+        <p class="style-name">{{ s.name }}</p>
+        <p class="style-desc">{{ s.desc }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block prep_extra_js %}
+<script>
+document.getElementById('uploadForm').addEventListener('submit', function(e){
+  var file = document.getElementById('fileInput').files[0];
+  var text = document.getElementById('textInput').value.trim();
+  if(!file && !text){
+    e.preventDefault(); alert('请上传文件或粘贴文本'); return;
+  }
+  if(file && file.size > 15 * 1024 * 1024){
+    e.preventDefault(); alert('文件超过 15MB'); return;
+  }
+});
+</script>
+{% endblock %}

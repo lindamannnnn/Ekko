@@ -26,6 +26,11 @@ class User(UUIDMixin, db.Model):
     last_login_at = Column(DateTime, nullable=True)
     deleted_at = Column(DateTime, nullable=True)
 
+    # 课前备课自定义 AI 通道（为空时使用平台默认通道）
+    ai_api_key = Column(String(255), nullable=True)
+    ai_base_url = Column(String(512), nullable=True)
+    ai_model = Column(String(128), nullable=True)
+
     __table_args__ = (
         UniqueConstraint('auth_provider', 'external_id', name='uq_user_provider_external'),
     )

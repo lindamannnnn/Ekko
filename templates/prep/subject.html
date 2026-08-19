@@ -1,0 +1,139 @@
+{% extends "prep/base.html" %}
+{% block title %}学科生成{% endblock %}
+{% block prep_content %}
+<h1>根据学科生成</h1>
+<p class="sub">仅支持语文、数学、英语三科。选择年级与课题后自动生成教案和课件。</p>
+
+{% if error %}<div class="flash error">{{ error }}</div>{% endif %}
+
+<div class="card">
+  <form method="post" id="subjectForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+      <div>
+        <label>学科</label>
+        <select name="subject" id="subSubject" required>
+          <option value="">请选择</option>
+          {% for s in subjects %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>年级</label>
+        <select name="grade" id="subGrade" required>
+          <option value="">请选择</option>
+        </select>
+      </div>
+      <div>
+        <label>课题</label>
+        <select name="topic" id="subTopic" required>
+          <option value="">请选择</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:8px;">
+      <div>
+        <label>课时（分钟）</label>
+        <input type="number" name="duration" value="40" min="15" max="120">
+      </div>
+      <div>
+        <label>风格</label>
+        <select name="style" id="subStyle">
+          {% for s in styles %}<option value="{{ s.id }}"{{ ' selected' if loop.first }}>{{ s.name }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary" style="width:100%;margin-top:22px;padding:14px;">生成教案 + 课件</button>
+  </form>
+</div>
+
+<div class="card" style="margin-top:24px;background:#fafafa;" id="model-info">
+  <h2 style="font-size:16px;">关于 AI 模型</h2>
+  <p style="font-size:13px;color:var(--muted);margin:8px 0 14px;">
+    默认使用系统内置的<strong>弱模型</strong>（免费、速度快），能帮你搭出完整的教案和课件框架，
+    但遇到复杂推理、跨学科整合或创意拓展时，可能会"泛泛而谈"，偶尔出现事实偏差。
+    如果你追求更稳的事实性和更强的教学设计，可以上传自己的<strong>强模型 API KEY</strong>。
+  </p>
+  {% if mask_key %}
+  <p style="font-size:13px;margin:0 0 12px;">当前已配置：{{ mask_key }}</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('prep.api_user_key') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+      <div>
+        <label>API KEY</label>
+        <input type="text" name="ai_api_key" placeholder="sk-..." autocomplete="off">
+      </div>
+      <div>
+        <label>接口地址（可选）</label>
+        <input type="text" name="ai_base_url" placeholder="https://api.openai.com/v1">
+      </div>
+      <div>
+        <label>模型名（可选）</label>
+        <input type="text" name="ai_model" placeholder="gpt-4o">
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:10px;">
+      <button type="submit" class="btn btn-primary">保存到我的账户</button>
+      <button type="submit" name="action" value="clear" class="btn">清空</button>
+    </div>
+    <p class="hint">KEY 仅保存在你的账户中，页面只显示末 4 位。不填写则继续使用系统默认模型。</p>
+  </form>
+</div>
+
+<div style="margin-top:46px;">
+  <h2>风格样例</h2>
+  <p class="sub">点击卡片放大预览</p>
+  <div class="style-grid">
+    {% for s in styles %}
+    <div class="style-card" onclick="openStyleDemo('{{ s.id }}')">
+      <iframe class="style-thumb" src="{{ url_for('prep.style_demo', style_id=s.id) }}" loading="lazy" scrolling="no"></iframe>
+      <div class="style-info">
+        <p class="style-name">{{ s.name }}</p>
+        <p class="style-desc">{{ s.desc }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block prep_extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  var courseTree = {};
+  var subEl = document.getElementById('subSubject');
+  var gradeEl = document.getElementById('subGrade');
+  var topicEl = document.getElementById('subTopic');
+
+  function fillGrades(){
+    gradeEl.innerHTML = '<option value="">请选择</option>';
+    topicEl.innerHTML = '<option value="">请选择</option>';
+    var grades = Object.keys(courseTree[subEl.value] || {});
+    grades.forEach(function(g){
+      var o = document.createElement('option'); o.value = g; o.textContent = g; gradeEl.appendChild(o);
+    });
+  }
+  function fillTopics(){
+    topicEl.innerHTML = '<option value="">请选择</option>';
+    var topics = ((courseTree[subEl.value] || {})[gradeEl.value] || []);
+    topics.forEach(function(t){
+      var o = document.createElement('option'); o.value = t; o.textContent = t; topicEl.appendChild(o);
+    });
+  }
+
+  fetch('{{ url_for("prep.courses") }}').then(function(r){ return r.json(); }).then(function(tree){
+    courseTree = tree;
+    if (subEl.value) fillGrades();
+  }).catch(function(e){
+    console.error('加载课程数据失败', e);
+  });
+
+  subEl.addEventListener('change', fillGrades);
+  gradeEl.addEventListener('change', fillTopics);
+});
+</script>
+{% endblock %}

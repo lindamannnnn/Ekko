@@ -53,6 +53,10 @@ render_mock_preview.py
 verify_dup_route.py
 tour.js
 
+# 本地截图与 prep 运行时产物
+_*.png
+uploads/prep/
+
 # 服务器生成的凭据文件（含管理员密码，严禁入库）
 CREDENTIALS.txt
 

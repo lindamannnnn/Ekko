@@ -17,6 +17,17 @@
 <!-- 未写课评提醒 -->
 <div class="reminder-bar glass-card" id="reminder-bar"></div>
 
+<!-- 工作台入口 -->
+<div class="glass-card" style="margin-bottom: 24px;">
+  <div style="display: flex; gap: 16px; align-items: center; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 220px;">
+      <h2 style="margin: 0 0 6px;">课前备课</h2>
+      <p style="margin: 0; color: var(--text-2);">根据学科或内容自动生成教案与课件</p>
+    </div>
+    <a class="btn" href="{{ url_for('prep.index') }}">进入备课 →</a>
+  </div>
+</div>
+
 {% if klasses %}
 <div class="class-grid">
   {% for k in klasses %}

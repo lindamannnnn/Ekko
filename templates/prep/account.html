@@ -1,0 +1,37 @@
+{% extends "prep/base.html" %}
+{% block title %}API KEY 管理{% endblock %}
+{% block prep_content %}
+<h1>API KEY 管理</h1>
+<p class="sub">管理课前备课使用的自定义 AI 通道。</p>
+
+<div class="card" id="api-key" style="background:#fafafa;">
+  <h2>API KEY 管理</h2>
+  <p style="font-size:13px;color:var(--muted);">
+    默认使用系统内置弱模型。上传自己的强模型 KEY 后，学科生成会优先使用你的 KEY。
+  </p>
+  {% if mask_key %}
+  <p style="font-size:13px;margin:0 0 12px;">当前已配置：{{ mask_key }}</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('prep.api_user_key') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+      <div>
+        <label>API KEY</label>
+        <input type="text" name="ai_api_key" placeholder="sk-... 留空则清空" autocomplete="off">
+      </div>
+      <div>
+        <label>接口地址（可选）</label>
+        <input type="text" name="ai_base_url" placeholder="https://api.openai.com/v1">
+      </div>
+      <div>
+        <label>模型名（可选）</label>
+        <input type="text" name="ai_model" placeholder="gpt-4o">
+      </div>
+    </div>
+    <div style="margin-top:12px;display:flex;gap:10px;">
+      <button type="submit" class="btn btn-primary">保存 API KEY</button>
+      <button type="submit" name="action" value="clear" class="btn">清空</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -110,6 +110,7 @@ def create_app(config: dict | None = None) -> Flask:
     from cards import card_bp
     from reports import reports_bp
     from admin import admin_bp
+    from prep import prep_bp
     # 后台入口随机化：用 ADMIN_PATH 作为 url_prefix（IP 无关，防止后台被扫到）
     _admin_path = os.environ.get('ADMIN_PATH', 'admin').strip('/')
     admin_bp.url_prefix = '/' + _admin_path
@@ -124,6 +125,7 @@ def create_app(config: dict | None = None) -> Flask:
     app.register_blueprint(card_bp)
     app.register_blueprint(reports_bp)
     app.register_blueprint(admin_bp)
+    app.register_blueprint(prep_bp)
     # reviews 蓝图是纯 JSON API（前端 fetch 带登录态），整体豁免 CSRF；
     # 鉴权仍由 @login_required 保证。登录/注册表单在 auth 蓝图，仍受 CSRF 保护。
     csrf.exempt(reviews_bp)
@@ -164,6 +166,16 @@ def create_app(config: dict | None = None) -> Flask:
             if 'is_superuser' not in _cols:
                 with db.engine.connect() as _conn:
                     _conn.execute(_text("ALTER TABLE users ADD COLUMN is_superuser BOOLEAN DEFAULT 0"))
+            # —— 课前备课 AI 通道字段（兼容旧库）——
+            if 'ai_api_key' not in _cols:
+                with db.engine.connect() as _conn:
+                    _conn.execute(_text("ALTER TABLE users ADD COLUMN ai_api_key VARCHAR(255)"))
+            if 'ai_base_url' not in _cols:
+                with db.engine.connect() as _conn:
+                    _conn.execute(_text("ALTER TABLE users ADD COLUMN ai_base_url VARCHAR(512)"))
+            if 'ai_model' not in _cols:
+                with db.engine.connect() as _conn:
+                    _conn.execute(_text("ALTER TABLE users ADD COLUMN ai_model VARCHAR(128)"))
 
         # —— 课件表补 created_at / uploaded_by 列（解决旧库缺列）——
         if 'coursewares' in _tbls:

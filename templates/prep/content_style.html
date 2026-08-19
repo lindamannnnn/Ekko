@@ -1,0 +1,52 @@
+{% extends "prep/base.html" %}
+{% block title %}选择风格{% endblock %}
+{% block prep_content %}
+<h1>选择风格</h1>
+<p class="sub">为「{{ job.filename or '粘贴内容' }}」选择一种课件风格。</p>
+
+<div class="card">
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="row">
+      <div>
+        <label>风格</label>
+        <select name="style" id="styleSelect">
+          {% for s in styles %}<option value="{{ s.id }}"{{ ' selected' if loop.first }}>{{ s.name }} — {{ s.desc }}</option>{% endfor %}
+        </select>
+      </div>
+      <div>
+        <label>课件标题</label>
+        <input type="text" name="title" value="{{ job.title or '' }}" placeholder="留空自动提取">
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary" style="width:100%;margin-top:22px;padding:14px;">生成课件</button>
+  </form>
+</div>
+
+<div style="margin-top:46px;">
+  <h2>风格样例</h2>
+  <p class="sub">点击卡片放大预览</p>
+  <div class="style-grid">
+    {% for s in styles %}
+    <div class="style-card" onclick="openStyleDemo('{{ s.id }}')">
+      <iframe class="style-thumb" src="{{ url_for('prep.style_demo', style_id=s.id) }}" loading="lazy" scrolling="no"></iframe>
+      <div class="style-info">
+        <p class="style-name">{{ s.name }}</p>
+        <p class="style-desc">{{ s.desc }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
+
+{% block prep_extra_js %}
+<script>
+document.querySelectorAll('.style-card').forEach(function(card){
+  card.addEventListener('click', function(e){
+    if(e.target.closest('iframe')) return;
+  });
+});
+</script>
+{% endblock %}

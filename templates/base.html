@@ -11,17 +11,19 @@
   <link rel="icon" href="{{ url_for('static', filename='images/ekko_logo.png') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=6">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/theme-swiss.css') }}?v=6">
+  {% block head %}{% endblock %}
 </head>
 <body>
   <nav class="topnav">
-    <a class="brand" href="{{ HALL_URL }}"><img src="{{ url_for('static', filename='images/ekko_logo.png') }}" alt="Ekko课评系统"></a>
+    <a class="brand" href="{{ url_for('classes.index') }}"><img src="{{ url_for('static', filename='images/ekko_logo.png') }}" alt="Ekko课评系统"></a>
     <a href="javascript:void(0)" class="help-btn help-btn-strong" onclick="Tour.start()" title="新手引导"><span style="font-size:14px;">💡</span> 新手引导</a>
     <a class="help-btn help-btn-mini" onclick="Tour.open()" title="新手引导">?</a>
     <a href="{{ url_for('classes.index') }}">我的班级</a>
     <a href="{{ url_for('classes.new') }}">+ 新建班级</a>
+    <a href="{{ url_for('prep.index') }}">课前备课</a>
     <span class="nav-sep"></span>
     {% if current_user.is_authenticated %}
-    <span class="teacher-name">{{ current_user.display_name or '教师' }}</span>
+    <a class="teacher-name" href="{{ url_for('main.account') }}">{{ current_user.display_name or '教师' }}</a>
     {% endif %}
     {% if current_user.is_authenticated %}
     <a class="logout" href="{{ url_for('auth.logout') }}">退出登录</a>
@@ -67,5 +69,6 @@
   })();
   </script>
 
+  {% block scripts %}{% endblock %}
 </body>
 </html>

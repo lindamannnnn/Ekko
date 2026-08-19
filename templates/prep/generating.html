@@ -1,0 +1,94 @@
+{% extends "prep/base.html" %}
+{% block title %}生成中{% endblock %}
+{% block prep_content %}
+<style>
+.gen-wrap { text-align: center; padding: 50px 20px; }
+.gen-title { font-size: 24px; font-weight: 700; margin-bottom: 30px; text-transform: uppercase; }
+.robot-stage {
+  width: 240px; height: 180px; margin: 0 auto 30px;
+  border: 2px solid var(--fg); background: #fafafa; position: relative; overflow: hidden;
+}
+.robot {
+  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  width: 48px; height: 48px; background: var(--accent); border: 2px solid var(--fg);
+  border-radius: 4px; animation: robotBounce 1s infinite ease-in-out;
+}
+.robot::before { /* eye */ content: ''; position: absolute; top: 12px; left: 10px; width: 8px; height: 8px; background: var(--fg); }
+.robot::after { /* eye */ content: ''; position: absolute; top: 12px; right: 10px; width: 8px; height: 8px; background: var(--fg); }
+.arm { position: absolute; top: 26px; width: 10px; height: 26px; background: var(--fg); }
+.arm.left { left: -12px; transform-origin: top right; animation: wave 1.2s infinite; }
+.arm.right { right: -12px; transform-origin: top left; animation: wave 1.2s infinite reverse; }
+.slide-card {
+  position: absolute; top: 50%; left: 50%; width: 60px; height: 42px;
+  background: #fff; border: 2px solid var(--fg); transform: translate(-50%, -50%);
+  opacity: 0; animation: dropIn 2.4s infinite;
+}
+.slide-card:nth-child(2) { animation-delay: 0.8s; }
+.slide-card:nth-child(3) { animation-delay: 1.6s; }
+@keyframes robotBounce { 0%,100%{ bottom: 20px; } 50%{ bottom: 32px; } }
+@keyframes wave { 0%,100%{ transform: rotate(0deg); } 50%{ transform: rotate(25deg); } }
+@keyframes dropIn {
+  0% { opacity: 0; transform: translate(-50%, -120%) scale(0.8); }
+  30% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  70% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  100% { opacity: 0; transform: translate(-50%, 80%) scale(0.8); }
+}
+.progress-bar { width: 100%; max-width: 400px; height: 12px; border: 2px solid var(--fg); margin: 0 auto 16px; background: #fff; }
+.progress-fill { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+.gen-tip { color: var(--muted); font-size: 14px; min-height: 22px; }
+.gen-meta { margin-top: 24px; font-size: 12px; color: var(--muted); }
+</style>
+
+<div class="gen-wrap">
+  <div class="gen-title">正在备课…</div>
+  <div class="robot-stage">
+    <div class="slide-card"></div>
+    <div class="slide-card"></div>
+    <div class="slide-card"></div>
+    <div class="robot"><div class="arm left"></div><div class="arm right"></div></div>
+  </div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <p class="gen-tip" id="genTip">小机器人正在拆读内容…</p>
+  <p class="gen-meta">生成可能需要 30 秒 ~ 3 分钟，请保持页面打开</p>
+</div>
+
+<script>
+var tips = [
+  "小机器人正在拆读内容…",
+  "它把知识点整理成提纲…",
+  "正在给每一页挑选配色…",
+  "排版检查中…",
+  "马上就好，再等等我…"
+];
+var tipIdx = 0;
+var progress = 0;
+var done = false;
+
+function updateProgress(){
+  if(done) return;
+  progress = Math.min(progress + Math.random()*3, 90);
+  document.getElementById('progressFill').style.width = progress + '%';
+  document.getElementById('genTip').textContent = tips[tipIdx % tips.length];
+  tipIdx++;
+}
+setInterval(updateProgress, 2500);
+updateProgress();
+
+function pollStatus(){
+  fetch('{{ url_for("prep.status", job=job.id) }}').then(r=>r.json()).then(function(data){
+    if(data.status === 'success'){
+      done = true;
+      document.getElementById('progressFill').style.width = '100%';
+      document.getElementById('genTip').textContent = '完成！正在跳转…';
+      setTimeout(function(){ window.location.href = '{{ url_for("prep.result", job=job.id) }}'; }, 600);
+    } else if(data.status === 'failed'){
+      done = true;
+      document.getElementById('genTip').textContent = '生成失败：' + (data.error || '未知错误');
+    } else {
+      setTimeout(pollStatus, 2000);
+    }
+  }).catch(function(){ setTimeout(pollStatus, 3000); });
+}
+pollStatus();
+</script>
+{% endblock %}

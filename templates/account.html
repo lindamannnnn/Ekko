@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block title %}账号设置 - Ekko课评系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div class="ph-left">
+    <h1 class="ph-title">账号设置</h1>
+    <p class="ph-sub">管理个人信息与课前备课 AI 通道</p>
+  </div>
+</div>
+
+<div class="glass-card" style="margin-bottom: 24px;">
+  <h2>基本信息</h2>
+  <div style="margin-top: 12px; color: var(--text-2);">
+    <p><strong>邮箱：</strong>{{ user.email or '-' }}</p>
+    <p><strong>显示名：</strong>{{ user.display_name or '-' }}</p>
+  </div>
+</div>
+
+<div class="glass-card" id="prep-key">
+  <h2>课前备课 API KEY</h2>
+  <p style="color: var(--text-2); margin: 8px 0 18px;">
+    默认使用系统内置模型。上传自己的强模型 KEY 后，课前备课的学科生成会优先使用你的 KEY。
+  </p>
+  {% if user.ai_api_key %}
+  <p style="margin: 0 0 12px;">当前已配置：{{ user.ai_api_key[-4:] if user.ai_api_key|length > 4 else '****' }}</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('main.account') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="action" value="prep_key">
+    <div style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+      <div>
+        <label for="ai_api_key">API KEY</label>
+        <input type="text" id="ai_api_key" name="ai_api_key" placeholder="sk-... 留空则清空" autocomplete="off">
+      </div>
+      <div>
+        <label for="ai_base_url">接口地址（可选）</label>
+        <input type="text" id="ai_base_url" name="ai_base_url" value="{{ user.ai_base_url or '' }}" placeholder="https://api.openai.com/v1">
+      </div>
+      <div>
+        <label for="ai_model">模型名（可选）</label>
+        <input type="text" id="ai_model" name="ai_model" value="{{ user.ai_model or '' }}" placeholder="gpt-4o">
+      </div>
+    </div>
+    <div style="margin-top: 18px; display: flex; gap: 12px;">
+      <button type="submit" class="btn">保存 API KEY</button>
+      <button type="submit" name="ai_api_key" value="" class="btn btn-secondary">清空</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

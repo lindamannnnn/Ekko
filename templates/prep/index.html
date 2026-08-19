@@ -1,0 +1,35 @@
+{% extends "prep/base.html" %}
+{% block title %}课前备课{% endblock %}
+{% block prep_content %}
+<h1>课前备课</h1>
+<p class="sub">选择学科自动生成教案 + 课件，或上传内容生成课件。</p>
+
+<div class="row" style="gap:22px;">
+  <a href="{{ url_for('prep.subject') }}" class="card card-hover" style="flex:1;min-width:280px;text-decoration:none;color:inherit;">
+    <h2 style="font-size:22px;text-transform:uppercase;">课前 · 学科生成</h2>
+    <p style="color:var(--muted);margin:10px 0 18px;">选择语文、数学、英语中的年级与课题，自动生成<strong>教案 + 课件</strong>。</p>
+    <span class="btn btn-primary">开始备课 →</span>
+  </a>
+  <a href="{{ url_for('prep.content') }}" class="card card-hover" style="flex:1;min-width:280px;text-decoration:none;color:inherit;">
+    <h2 style="font-size:22px;text-transform:uppercase;">课前 · 内容生成</h2>
+    <p style="color:var(--muted);margin:10px 0 18px;">上传教案、讲义或粘贴文本，选择风格后生成可下载课件。</p>
+    <span class="btn btn-primary">上传内容 →</span>
+  </a>
+</div>
+
+<div style="margin-top:46px;">
+  <h2>风格样例</h2>
+  <p class="sub">点击卡片放大预览，生成时可自由选择任意风格。</p>
+  <div class="style-grid">
+    {% for s in styles %}
+    <div class="style-card" onclick="openStyleDemo('{{ s.id }}')">
+      <iframe class="style-thumb" src="{{ url_for('prep.style_demo', style_id=s.id) }}" loading="lazy" scrolling="no"></iframe>
+      <div class="style-info">
+        <p class="style-name">{{ s.name }}</p>
+        <p class="style-desc">{{ s.desc }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}
