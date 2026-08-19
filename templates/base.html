@@ -15,7 +15,7 @@
 </head>
 <body>
   <nav class="topnav">
-    <a class="brand" href="{{ url_for('classes.index') }}"><img src="{{ url_for('static', filename='images/ekko_logo.png') }}" alt="Ekko课评系统"></a>
+    <a class="brand" href="{{ url_for('main.index') }}" title="回到大厅"><img src="{{ url_for('static', filename='images/ekko_logo.png') }}" alt="Ekko课评系统"></a>
     <a href="javascript:void(0)" class="help-btn help-btn-strong" onclick="Tour.start()" title="新手引导"><span style="font-size:14px;">💡</span> 新手引导</a>
     <a class="help-btn help-btn-mini" onclick="Tour.open()" title="新手引导">?</a>
     <a href="{{ url_for('classes.index') }}">我的班级</a>

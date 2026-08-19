@@ -1,0 +1,22 @@
+/* 3. 水墨中国风 —— 宣纸 + 墨色 + 印章红 */
+:root{
+  --bg:#f5f0e6; --fg:#1c1c1c; --muted:#6b6256; --accent:#9e2b25;
+  --font: "STKaiti", "KaiTi", "Kaiti SC", "Songti SC", "Noto Serif SC", serif;
+}
+body{
+  background:
+    radial-gradient(circle at 15% 20%, rgba(0,0,0,.04), transparent 35%),
+    radial-gradient(circle at 85% 80%, rgba(0,0,0,.05), transparent 40%),
+    var(--bg);
+}
+.slide{ font-family:var(--font); }
+.title{ font-weight:700; letter-spacing:.04em; border-left:6px solid var(--accent);
+  padding-left:.4em; }
+.kicker{ letter-spacing:.3em; }
+.bullets li::before{ background:var(--accent); border-radius:50%; width:.45em; height:.45em; top:.7em; }
+.slide-num{ color:var(--muted); }
+/* 印章式角标 */
+.slide::after{ content:"課"; position:absolute; right:5vw; top:5vh;
+  width:42px; height:42px; line-height:42px; text-align:center; color:#fff;
+  background:var(--accent); border-radius:6px; font-family:var(--font); opacity:.9; }
+.cover .title{ border-left:none; padding-left:0; font-size:clamp(40px,9vw,96px); }

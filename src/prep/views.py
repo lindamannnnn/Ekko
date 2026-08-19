@@ -29,11 +29,11 @@ from extensions import db
 from models import User, PrepJob
 from . import prep_bp
 
-from pipeline.ingest import ingest_file, ingest_text
-from pipeline.segment import segment
-from pipeline.moderate import moderate
-from render import render, list_styles, STYLE_IDS
-from kb_courses import list_kb_courses, get_entry, kb_to_slides
+from .pipeline.ingest import ingest_file, ingest_text
+from .pipeline.segment import segment
+from .pipeline.moderate import moderate
+from .render import render, list_styles, STYLE_IDS
+from .kb_courses import list_kb_courses, get_entry, kb_to_slides
 
 
 # ---------- 配置 ----------
@@ -506,19 +506,8 @@ def style_demo(style_id):
 @prep_bp.route("/admin/uploads")
 @login_required
 def admin_uploads():
-    user = current_user
-    _cleanup_expired_files()
-    jobs = PrepJob.query.filter_by(user_id=user.id).order_by(PrepJob.created_at.desc()).all()
-    cutoff = datetime.utcnow() - timedelta(days=RETENTION_DAYS)
-    for j in jobs:
-        j.expired = j.created_at < cutoff
-        j.has_files = bool(
-            (j.courseware_path and os.path.exists(j.courseware_path)) or
-            (j.lesson_path and os.path.exists(j.lesson_path))
-        )
-    style_names = {s["id"]: s["name"] for s in list_styles()}
-    return render_template("prep/admin.html", jobs=jobs, style_names=style_names,
-                           user=user, retention_days=RETENTION_DAYS)
+    """课前备课独立后台已合并到平台总后台 /admin/prep_jobs（地址随 ADMIN_PATH）。"""
+    return redirect(url_for("admin_bp.prep_jobs") + "?from=prep")
 
 
 @prep_bp.route("/account")

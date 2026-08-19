@@ -8,10 +8,9 @@ bp = Blueprint('main', __name__)
 
 
 @bp.route('/')
-@login_required
 def index():
-    # 登录后第一页 = 班级列表（用户要求的「大厅」实际就是展示班级的页面）
-    return redirect(url_for('classes.index'))
+    """网站大厅：课前备课与课后课评的统一入口，未登录也可访问。"""
+    return render_template('index.html')
 
 
 @bp.route('/account', methods=['GET', 'POST'])

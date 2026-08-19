@@ -1,0 +1,15 @@
+/* 4. 开发者极简蓝 —— 单一蓝 + 琥珀，非对称 */
+:root{
+  --bg:#ffffff; --fg:#1e293b; --muted:#64748b; --accent:#2563eb; --accent2:#f59e0b;
+  --font: -apple-system, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+body{ --topbar:var(--accent); }
+.slide{ font-family:var(--font); padding-left:14vw; padding-right:8vw; }
+.slide::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:10px;
+  background:linear-gradient(var(--accent), var(--accent2)); }
+.kicker{ color:var(--accent); }
+.title{ font-weight:800; letter-spacing:-1px; }
+.bullets li::before{ background:var(--accent); width:.5em; height:.5em; top:.6em; }
+.bullets li:nth-child(even)::before{ background:var(--accent2); }
+.cover{ padding-left:14vw; }
+.cover .title{ color:var(--accent); }

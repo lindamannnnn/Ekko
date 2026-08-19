@@ -13,6 +13,7 @@ from extensions import db
 from models.user import User, DailyUsage, GenerationLog
 from models.class_student import Klass, Student, Enrollment
 from models.lesson import Lesson, Courseware, Review
+from models.prep_job import PrepJob
 
 admin_bp = Blueprint('admin_bp', __name__)
 
@@ -445,4 +446,37 @@ def user_detail(uid):
     stu_list = Student.query.filter_by(user_id=u.id).all()
     return render_template(
         'admin/user_detail.html', u=u, cls_list=cls_list, stu_list=stu_list,
+    )
+
+
+@admin_bp.route('/prep_jobs')
+@admin_required
+def prep_jobs():
+    """课前备课生成任务（跨租户全量）。"""
+    page = request.args.get('page', 1, type=int)
+    per = 50
+    q = PrepJob.query.order_by(PrepJob.created_at.desc())
+    total = q.count()
+    jobs = q.offset((page - 1) * per).limit(per).all()
+
+    uids = {j.user_id for j in jobs if j.user_id}
+    umap = {
+        u.id: (u.display_name or u.email)
+        for u in (User.query.filter(User.id.in_(list(uids))).all() if uids else [])
+    }
+
+    rows = []
+    for j in jobs:
+        rows.append({
+            'job': j,
+            'user_name': umap.get(j.user_id, '（未知）'),
+        })
+
+    return render_template(
+        'admin/prep_jobs.html',
+        rows=rows,
+        page=page,
+        per=per,
+        total=total,
+        pages=(total + per - 1) // per,
     )

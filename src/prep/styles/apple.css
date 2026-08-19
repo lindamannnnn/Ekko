@@ -1,0 +1,15 @@
+/* 5. 苹果极简 —— 系统字体 + 大量留白 + 居中 */
+:root{
+  --bg:#fbfbfd; --fg:#1d1d1f; --muted:#86868b; --accent:#0071e3;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+.slide{ font-family:var(--font); align-items:center; text-align:center; justify-content:center; }
+.slide-inner{ margin:0 auto; }
+.title{ font-weight:600; letter-spacing:-.02em; }
+.kicker{ letter-spacing:.2em; color:var(--accent); }
+.bullets{ display:inline-block; text-align:left; margin-top:1em; }
+.bullets li{ font-weight:400; color:#333; }
+.bullets li::before{ background:var(--accent); border-radius:50%; top:.7em; }
+.slide-num{ color:var(--muted); }
+.cover .title{ font-weight:700; }
+.cover .sub{ color:var(--muted); }

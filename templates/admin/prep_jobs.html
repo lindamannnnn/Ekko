@@ -1,0 +1,87 @@
+{% extends "admin/base.html" %}
+{% block title %}课前备课记录{% endblock %}
+{% block page_title %}课前备课生成记录{% endblock %}
+{% block breadcrumb %}平台总后台 / 课前备课{% endblock %}
+
+{% block page_content %}
+<div class="stat-bar" style="margin-bottom: 20px;">
+  <div class="stat-card">
+    <div class="stat-label">总任务数</div>
+    <div class="stat-value">{{ total }}</div>
+  </div>
+</div>
+
+<div class="card">
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>时间</th>
+        <th>教师</th>
+        <th>模式</th>
+        <th>学科/课题/文件名</th>
+        <th>风格</th>
+        <th>状态</th>
+        <th>操作</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for r in rows %}
+      {% set j = r.job %}
+      <tr>
+        <td>{{ j.created_at.strftime('%Y-%m-%d %H:%M') if j.created_at else '-' }}</td>
+        <td>{{ r.user_name }}</td>
+        <td>{{ '学科生成' if j.mode == 'subject' else '内容生成' }}</td>
+        <td>
+          {% if j.mode == 'subject' %}
+            {{ j.subject or '-' }} / {{ j.grade or '-' }}<br>
+            <span style="color:var(--text-3);">{{ j.topic or '' }}</span>
+          {% else %}
+            {{ j.filename or '文本内容' }}
+          {% endif %}
+        </td>
+        <td>{{ j.style or '-' }}</td>
+        <td>
+          {% if j.status == 'success' %}
+            <span class="badge badge-success">成功</span>
+          {% elif j.status == 'failed' %}
+            <span class="badge badge-danger">失败</span>
+          {% elif j.status == 'running' %}
+            <span class="badge badge-warning">生成中</span>
+          {% else %}
+            <span class="badge">待处理</span>
+          {% endif %}
+        </td>
+        <td>
+          {% if j.status == 'success' %}
+            <a class="link" href="{{ url_for('prep.download', job_id=j.id) }}" target="_blank">下载课件</a>
+            {% if j.lesson_path %}
+            &middot; <a class="link" href="{{ url_for('prep.download_lesson', job_id=j.id) }}" target="_blank">教案</a>
+            {% endif %}
+          {% elif j.status == 'failed' %}
+            <span class="text-muted" title="{{ j.error_msg or '' }}">查看错误</span>
+          {% else %}
+            -
+          {% endif %}
+        </td>
+      </tr>
+      {% else %}
+      <tr>
+        <td colspan="7" class="empty-cell">暂无课前备课记录</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if pages > 1 %}
+  <div class="pagination" style="margin-top: 18px;">
+    {% if page > 1 %}
+      <a class="btn-sm" href="{{ url_for('admin_bp.prep_jobs', page=page-1) }}">上一页</a>
+    {% endif %}
+    <span style="color:var(--text-2);padding:0 12px;">第 {{ page }} / {{ pages }} 页</span>
+    {% if page < pages %}
+      <a class="btn-sm" href="{{ url_for('admin_bp.prep_jobs', page=page+1) }}">下一页</a>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

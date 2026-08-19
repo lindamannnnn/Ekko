@@ -1,0 +1,16 @@
+/* 1. 电子杂志·电子墨水 —— 衬线 + 暖纸 + 赭石 */
+:root{
+  --bg:#f4ecd8; --fg:#2b2723; --muted:#7a6f5d; --accent:#b5532a;
+  --font: Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "SimSun", serif;
+}
+body{ background:
+  radial-gradient(circle at 20% 10%, rgba(0,0,0,.025), transparent 40%),
+  radial-gradient(circle at 80% 90%, rgba(0,0,0,.03), transparent 45%), var(--bg); }
+.slide{ font-family:var(--font); }
+.title{ font-family:var(--font); font-weight:700; letter-spacing:-.3px; }
+.title::after{ content:""; display:block; width:64px; height:4px; background:var(--accent);
+  margin-top:.35em; border-radius:2px; }
+.kicker{ font-family:var(--font); }
+.bullets li::before{ background:var(--accent); border-radius:50%; top:.7em; }
+.bullets li{ text-indent:-.2em; }
+.cover .title{ font-style:italic; }

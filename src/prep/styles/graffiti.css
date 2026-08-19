@@ -1,0 +1,98 @@
+/* ============================================================
+   涂鸦像素游戏风 (graffiti) —— 严格还原《涂鸦PK（一）》视觉语言
+   适配：content-upload-feature 离线引擎（无 CDN、横向 scroll-snap）
+   设计token（与源稿 --bg-* / --accent-* 一一对应）：
+     · 背景三套轮换：深海军蓝 / 玫红紫(bg-game) / 青蓝(bg-pixel)
+     · 亮白卡片 rgba(255,255,255,.95) + 深字（源稿 .card 核心签名）
+     · 主强调金 #ffd700 + 橙 #ffa502；霓虹红/蓝/青/紫/绿/粉
+     · 金→橙方点项目符号、药丸渐变徽章、金橙红进度条、像素网格
+   ============================================================ */
+:root{
+  /* 三套背景（参考 .bg-primary / .bg-game / .bg-pixel） */
+  --bg-navy:  linear-gradient(135deg,#1a1a2e 0%,#16213e 50%,#0f3460 100%);
+  --bg-game:  linear-gradient(135deg,#2d132c 0%,#801336 50%,#c72c41 100%);
+  --bg-pixel: linear-gradient(135deg,#00b4db 0%,#0083b0 100%);
+  --fg:#ffffff;
+  --muted: rgba(255,255,255,.72);
+  /* 强调 */
+  --accent:#ffd700;        /* 主金 */
+  --accent2:#ffa502;       /* 橙 */
+  /* 亮白卡（源稿 .card） */
+  --card:#ffffff;
+  --card-fg:#1a1a2e;
+  --card-muted:#4a4a6a;
+  /* 霓虹色板 */
+  --neon-red:#ff4757; --neon-blue:#3742fa; --neon-cyan:#00d9ff;
+  --neon-purple:#a855f7; --neon-green:#2ed573; --neon-pink:#ff6b9d;
+  --font:"PingFang SC","Microsoft YaHei","Noto Sans SC","Segoe UI",system-ui,sans-serif;
+  --mono:"JetBrains Mono","Courier New",Consolas,monospace;
+}
+
+body.theme-graffiti{ background:var(--bg-navy); color:var(--fg); }
+
+/* 像素网格（参考 .pixel-grid，纯 CSS 内联，无外部资源） */
+.slide::before{
+  content:""; position:absolute; inset:0; pointer-events:none; z-index:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+  background-size:22px 22px;
+}
+.slide > .slide-inner{ position:relative; z-index:1; }
+
+/* 背景节奏：navy / game(玫红) / pixel(青蓝) 轮换（近似源稿语义切换） */
+.deck > .slide:nth-child(3n+1){ background:var(--bg-navy); }
+.deck > .slide:nth-child(3n+2){ background:var(--bg-game); }
+.deck > .slide:nth-child(3n+3){ background:var(--bg-pixel); }
+/* 封面强制玫红（参考 title slide 用 bg-game） */
+.deck > .slide.cover{ background:var(--bg-game) !important; }
+
+/* 标题：白字 + 金色辉光（参考 h1/h2 发光感） */
+.title{
+  color:#fff; font-weight:800; letter-spacing:.5px;
+  text-shadow:0 0 18px rgba(255,215,0,.30), 0 2px 0 rgba(0,0,0,.25);
+}
+/* 封面标题：金→橙→红渐变裁切（参考 .badge-gold 暖金调性） */
+.cover .title{
+  background:linear-gradient(135deg,#ffd700,#ffa502 60%,#ff4757);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  text-shadow:none;
+}
+/* 封面副标题做成药丸徽章（参考 .tagline / .badge） */
+.cover .sub{
+  display:inline-block; margin-top:1.1em; padding:.45em 1.3em;
+  border-radius:50px; font-size:clamp(13px,1.6vw,17px);
+  background:rgba(255,255,255,.16); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  color:#fff; letter-spacing:.04em;
+}
+
+/* 要点：亮白卡 + 金→橙方点（参考 .card + .bullet-list） */
+.bullets li{
+  color:var(--card-fg);
+  background:var(--card);
+  border-radius:16px;
+  padding:.6em 1em .6em 1.85em;
+  margin:.55em 0;
+  box-shadow:0 14px 44px rgba(0,0,0,.28);
+  position:relative;
+  line-height:1.55;
+}
+.bullets li::before{
+  content:""; position:absolute; left:.75em; top:.95em;
+  width:.5em; height:.5em; border-radius:2px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  box-shadow:0 0 8px rgba(255,215,0,.5);
+}
+
+/* 进度条：金→橙→红渐变（参考 .progress-bar） */
+.progress{ background:linear-gradient(90deg,#ffd700,#ffa502,#ff4757); height:4px; }
+
+/* 导航按钮：霓虹描边（参考 .nav-dot 金激活） */
+.nav-btn{
+  background:rgba(255,255,255,.1);
+  border:1px solid rgba(255,255,255,.2);
+  color:#fff;
+}
+.nav-btn:hover{ background:rgba(255,215,0,.2); }
+
+.slide-num{ color:rgba(255,255,255,.55); z-index:2; }

@@ -1,0 +1,17 @@
+/* 6. 复古工业 —— 等宽 + 粗黑边框 + 高对比，无圆角 */
+:root{
+  --bg:#ece8dc; --fg:#0a0a0a; --muted:#444; --accent:#ff3b00;
+  --font: "JetBrains Mono", "Courier New", "SFMono-Regular", Consolas, monospace;
+}
+body{ --ink:#0a0a0a; }
+.slide{ font-family:var(--font); border:0; }
+.slide-inner{ border:3px solid var(--ink); padding:6vh 5vw; background:#fff; }
+.title{ font-weight:800; text-transform:uppercase; letter-spacing:0; border-bottom:3px solid var(--ink);
+  padding-bottom:.3em; }
+.kicker{ color:var(--accent); letter-spacing:.1em; }
+.bullets li{ font-weight:600; }
+.bullets li::before{ background:var(--ink); border-radius:0; width:.5em; height:.5em; top:.6em; }
+.slide:nth-child(odd) .slide-inner{ border-color:var(--accent); }
+.slide:nth-child(odd) .title{ border-bottom-color:var(--accent); }
+.cover .slide-inner{ border-width:5px; }
+.cover .title{ font-size:clamp(36px,8vw,90px); }
