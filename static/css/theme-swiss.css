@@ -114,8 +114,8 @@ h1, h2, h3, h4, h5, h6 {
 .glass-card:hover, .card:hover {
   border-color: #000000;
   box-shadow: none;
-  transform: translateY(-2px);
   background: #ffcc00;
+  transform: none !important;
 }
 .card-body { padding: 24px; }
 
@@ -133,7 +133,6 @@ h1, h2, h3, h4, h5, h6 {
   background: #000000;
   color: #ffffff;
   box-shadow: none;
-  transform: translateY(-1px);
 }
 .btn:active { transform: translateY(0); }
 .btn:focus-visible { outline: 2px solid #000000; outline-offset: 2px; }
@@ -143,6 +142,9 @@ h1, h2, h3, h4, h5, h6 {
   color: #000000;
   border: 2px solid #000000;
   border-radius: 0;
+  display: inline-flex;
+  align-items: center;
+  vertical-align: middle;
 }
 .btn-secondary:hover {
   border-color: #000000;
@@ -185,6 +187,37 @@ h1, h2, h3, h4, h5, h6 {
 .btn-logout:hover {
   background: #000000;
   color: #ffffff;
+}
+
+/* 渐变按钮（如添加学生页“确认添加全部”）：瑞士风格用亮黄 */
+.btn-gradient {
+  background: #ffcc00 !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+.btn-gradient:hover {
+  background: #000000 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+.btn-gradient svg { stroke: currentColor; }
+
+/* “添加一行”按钮：白底黑边黑字，hover 变黄 */
+.btn-add-row {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px dashed #000000 !important;
+  border-radius: 0 !important;
+}
+.btn-add-row:hover {
+  background: #ffcc00 !important;
+  color: #000000 !important;
+  border-style: solid !important;
+}
+.form-actions-row {
+  border-top: 2px solid #000000 !important;
 }
 
 /* ---------- 表单 ---------- */
@@ -327,7 +360,6 @@ input::placeholder, textarea::placeholder { color: #a3a3a3; }
   border-color: #000000;
   box-shadow: none;
   background: #ffcc00;
-  transform: translateY(-2px);
 }
 .card-link b { color: #000000; font-weight: 700; }
 .card-link span { color: #525252; }

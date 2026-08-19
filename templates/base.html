@@ -4,10 +4,13 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>{% block title %}Ekko课评系统{% endblock %}</title>
   <link rel="icon" href="{{ url_for('static', filename='images/ekko_logo.png') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme-swiss.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}?v=6">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme-swiss.css') }}?v=6">
 </head>
 <body>
   <nav class="topnav">

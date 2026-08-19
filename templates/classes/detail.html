@@ -14,6 +14,152 @@ body > .container {
 }
 </style>
 
+<!-- 瑞士国际主义强制覆盖：detail.html 里大量内联 style 仍带暗色/圆角，用高优先级 + !important 统一压制 -->
+<style>
+.detail-layout textarea,
+.detail-layout input[type="text"],
+.detail-layout .btn-primary,
+.detail-layout .btn-secondary,
+.detail-layout .tag,
+.detail-layout .date-btn,
+.detail-layout .glass-card,
+.detail-layout .review-textarea,
+.detail-layout .student-avatar-sm,
+.detail-layout .timeline-content,
+.detail-layout .timeline-delete,
+.detail-layout .history-modal,
+.detail-layout .history-modal-close,
+.detail-layout #excellent-review-empty,
+.detail-layout #excellent-review-filled,
+.detail-layout #excellent-paste-text,
+.detail-layout #excellent-paste-box button,
+.detail-layout .student-item {
+  border-radius: 0 !important;
+}
+.detail-layout textarea,
+.detail-layout input[type="text"] {
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+}
+.detail-layout textarea:focus,
+.detail-layout input[type="text"]:focus {
+  border-color: #000000 !important;
+  box-shadow: 0 0 0 3px rgba(255, 204, 0, .35) !important;
+}
+.detail-layout .btn-primary,
+.detail-layout #btn-save-excellent {
+  background: #ffcc00 !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+.detail-layout .btn-primary:hover,
+.detail-layout #btn-save-excellent:hover {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+.detail-layout .btn-secondary,
+.detail-layout #btn-cancel-paste,
+.detail-layout #btn-remove-excellent {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+.detail-layout .btn-secondary:hover,
+.detail-layout #btn-cancel-paste:hover,
+.detail-layout #btn-remove-excellent:hover {
+  background: #ffcc00 !important;
+  color: #000000 !important;
+}
+.detail-layout .tag {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+.detail-layout .tag:hover,
+.detail-layout .tag.active {
+  background: #ffcc00 !important;
+  color: #000000 !important;
+  border-color: #000000 !important;
+}
+.detail-layout .date-btn {
+  background: #ffffff !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+.detail-layout .date-btn:hover,
+.detail-layout .date-btn.active {
+  background: #ffcc00 !important;
+  color: #000000 !important;
+}
+.detail-layout .glass-card {
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+}
+.detail-layout .student-avatar-sm {
+  background: #f3f4f6 !important;
+  color: #000000 !important;
+  border: 2px solid #000000 !important;
+}
+.detail-layout .student-item:hover,
+.detail-layout .student-item.active {
+  background: #ffcc00 !important;
+  border: 2px solid #000000 !important;
+}
+.detail-layout .timeline-content {
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+}
+.detail-layout .timeline-content:hover {
+  background: #ffcc00 !important;
+}
+.detail-layout .timeline-delete:hover {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+.detail-layout .history-modal {
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+.detail-layout .history-modal-close {
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+}
+.detail-layout .history-modal-close:hover {
+  background: #ffcc00 !important;
+}
+.detail-layout #excellent-review-empty {
+  background: #ffffff !important;
+  border: 2px dashed #000000 !important;
+  color: #000000 !important;
+}
+.detail-layout #excellent-review-empty span[style*="background:rgba(59,130,246,.1)"] {
+  background: #f3f4f6 !important;
+  border: 1px solid #000000 !important;
+  color: #000000 !important;
+}
+.detail-layout #excellent-review-filled {
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+}
+.detail-layout #excellent-preview {
+  background: #f3f4f6 !important;
+  border: 1px solid #000000 !important;
+  color: #000000 !important;
+}
+.detail-layout #excellent-paste-text {
+  background: #ffffff !important;
+  border: 2px solid #000000 !important;
+  color: #000000 !important;
+}
+.detail-layout #btn-save-excellent {
+  color: #000000 !important;
+}
+</style>
+
 <header class="detail-header">
     <a href="{{ url_for('classes.index') }}" class="back-btn">
         <span>←</span>
@@ -48,9 +194,9 @@ body > .container {
                 </div>
             </div>
             {% else %}
-            <div style="text-align:center;padding:24px;color:var(--text-secondary);font-size:13px">
+            <div style="text-align:center;padding:24px;color:#525252;font-size:13px">
                 <p style="margin-bottom:10px">暂无学生</p>
-                <a href="{{ url_for('classes.add_students', class_id=klass.id) }}" style="color:var(--accent);text-decoration:none;font-weight:600">添加第一个学生</a>
+                <a href="{{ url_for('classes.add_students', class_id=klass.id) }}" style="color:#000000;text-decoration:underline;font-weight:600">添加第一个学生</a>
             </div>
             {% endfor %}
         </div>
@@ -67,11 +213,6 @@ body > .container {
                         {{ klass.name }} · {{ today_str or '今日课堂' }}
                     </p>
                 </div>
-                <div class="date-selector">
-                    <button class="date-btn active" data-range="week">本周</button>
-                    <button class="date-btn" data-range="last-week">上周</button>
-                    <button class="date-btn" data-range="custom">自定义</button>
-                </div>
             </div>
 
             <!-- 课程内容上传/粘贴区（始终显示，是 AI 生成课评的核心数据源） -->
@@ -85,11 +226,8 @@ body > .container {
                           placeholder="在此粘贴课程内容（支持直接粘贴文本）...&#10;&#10;或点击下方按钮上传文件（txt / docx / pptx / pdf），将自动转换为 Markdown 格式。"
                           style="width:100%;min-height:120px;background:rgba(30,41,59,.6);border:1px solid var(--border);border-radius:10px;padding:12px 16px;color:var(--text);font-size:14px;line-height:1.65;resize:vertical;outline:none;font-family:inherit;transition:border-color .3s;box-sizing:border-box"></textarea>
                 <div style="display:flex;align-items:center;gap:10px;margin-top:8px;flex-wrap:wrap">
-                    <label class="btn-secondary" style="cursor:pointer;display:inline-flex;align-items:center;gap:6px;padding:6px 14px;font-size:12px;text-decoration:none">
-                        📎 上传文件
-                        <input type="file" id="course-file-input" accept=".txt,.docx,.doc,.pptx,.pdf" style="display:none">
-                    </label>
-                    <button id="btn-save-course" class="btn-secondary" style="padding:6px 14px;font-size:12px;cursor:pointer">💾 保存课程内容</button>
+                    <label class="btn-secondary" style="cursor:pointer;display:inline-block;vertical-align:middle;box-sizing:border-box;height:34px;line-height:30px;padding:0 14px;font-size:12px;text-decoration:none;white-space:nowrap;transform:translateY(-4px)">📎 上传文件<input type="file" id="course-file-input" accept=".txt,.docx,.doc,.pptx,.pdf" style="display:none"></label>
+                    <button id="btn-save-course" class="btn-secondary" type="button" style="display:inline-block;vertical-align:middle;box-sizing:border-box;height:34px;line-height:30px;padding:0 14px;font-size:12px;cursor:pointer;white-space:nowrap">💾 保存课程内容</button>
                     <span style="color:var(--text-3);font-size:12px">或把文件拖到上方文本框</span>
                     <span id="file-name-hint" style="color:var(--text-3);font-size:12px"></span>
                 </div>
@@ -146,9 +284,9 @@ body > .container {
             {% else %}
             <div style="flex:1;display:flex;align-items:center;justify-content:center;text-align:center">
                 <div>
-                    <div style="font-size:48px;margin-bottom:16px;opacity:.3">📝</div>
-                    <h3 style="font-size:18px;color:var(--text-secondary);margin-bottom:8px">暂无学生</h3>
-                    <p style="color:var(--text-secondary);font-size:14px;margin-bottom:20px">请先添加学生后再开始写课评</p>
+                    <div style="font-size:48px;margin-bottom:16px;opacity:.8">📝</div>
+                    <h3 style="font-size:18px;color:#000000;margin-bottom:8px">暂无学生</h3>
+                    <p style="color:#525252;font-size:14px;margin-bottom:20px">请先添加学生后再开始写课评</p>
                     <a href="{{ url_for('classes.add_students', class_id=klass.id) }}" class="btn-primary" style="text-decoration:none;display:inline-block">添加第一个学生</a>
                 </div>
             </div>
@@ -168,25 +306,23 @@ body > .container {
             ">
                 <div style="display:flex;align-items:center;gap:8px">
                     <span style="font-size:18px">📋</span>
-                    <span style="font-size:13px;font-weight:600;color:var(--accent)">上传优秀历史课评</span>
+                    <span style="font-size:13px;font-weight:600;color:#000000">上传优秀历史课评</span>
                 </div>
-                <div style="font-size:11px;color:var(--text-3);line-height:1.6">
-                    上传后 AI 生成课评时将<strong style="color:var(--accent)">优先结合</strong>历史优秀课评风格与本节课具体表现<br>
+                <div style="font-size:11px;color:#525252;line-height:1.6">
+                    上传后 AI 生成课评时将<strong style="color:#000000;text-decoration:underline">优先结合</strong>历史优秀课评风格与本节课具体表现<br>
                     未上传则按通用模板生成
                 </div>
                 <div style="display:flex;gap:8px;margin-top:4px">
-                    <span style="font-size:11px;padding:4px 10px;background:rgba(59,130,246,.1);border-radius:6px;color:var(--text-secondary)">📎 选择文件</span>
-                    <span style="font-size:11px;padding:4px 10px;background:rgba(59,130,246,.1);border-radius:6px;color:var(--text-secondary)">✏️ 或粘贴文本</span>
+                    <span style="font-size:11px;padding:4px 10px;background:#f3f4f6;border:1px solid #000000;color:#000000">📎 选择文件</span>
+                    <span style="font-size:11px;padding:4px 10px;background:#f3f4f6;border:1px solid #000000;color:#000000">✏️ 或粘贴文本</span>
                 </div>
                 <input type="file" id="excellent-file-input" accept=".txt,.docx,.md" style="display:none">
             </div>
-            <div id="excellent-review-filled" style="
-                display:none;background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.25);border-radius:12px;padding:14px
-            ">
+            <div id="excellent-review-filled" style="display:none;padding:14px">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
                     <div style="display:flex;align-items:center;gap:6px">
                         <span style="font-size:14px">✅</span>
-                        <span style="font-size:12px;font-weight:600;color:var(--success)">已加载优秀课评范例</span>
+                        <span style="font-size:12px;font-weight:600;color:#000000">已加载优秀课评范例</span>
                     </div>
                     <button id="btn-remove-excellent" style="
                         font-size:11px;padding:3px 10px;background:transparent;border:1px solid var(--border);
@@ -224,13 +360,12 @@ body > .container {
     </div>
 </div>
 
-<!-- ===== 直接复用 classreview.html 的全部 CSS ===== -->
+<!-- ===== 班级详情页 CSS：瑞士国际主义风格 ===== -->
 <style>
-/* ===== 班级详情页 - 复制自 classreview.html ===== */
+/* ===== 班级详情页 - 瑞士国际主义 ===== */
 .detail-header {
-    background: rgba(10, 14, 26, 0.9);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
+    background: #ffffff;
+    border-bottom: 2px solid #000000;
     padding: 0 clamp(12px, 3vw, 40px);
     height: 64px;
     display: flex;
@@ -247,22 +382,22 @@ body > .container {
     display: flex;
     align-items: center;
     gap: 6px;
-    color: var(--text-secondary);
+    color: #525252;
     cursor: pointer;
     padding: 8px 12px;
-    border-radius: 10px;
+    border-radius: 0;
     transition: all 0.3s;
     font-size: 14px;
     text-decoration: none;
     flex-shrink: 0;
     white-space: nowrap;
 }
-
-.back-btn:hover { background: rgba(59, 130, 246, 0.1); color: var(--text); }
+.back-btn:hover { background: #ffcc00; color: #000000; }
 
 .detail-title {
     font-size: clamp(15px, 1.8vw, 20px);
     font-weight: 700;
+    color: #000000;
     flex: 1;
     min-width: 0;
     overflow: hidden;
@@ -274,32 +409,36 @@ body > .container {
 .detail-actions .btn-secondary { padding: 10px 16px !important; font-size: 13px !important; white-space: nowrap; }
 
 .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--cyan));
-    color: white;
-    border: none;
+    background: #ffcc00;
+    color: #000000;
+    border: 2px solid #000000;
     padding: 12px 32px;
-    border-radius: 10px;
+    border-radius: 0;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4); }
+.btn-primary:hover { background: #000000; color: #ffffff; transform: translateY(-2px); box-shadow: none; }
 
 .btn-secondary {
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--border);
+    background: #ffffff;
+    color: #000000;
+    border: 2px solid #000000;
     padding: 10px 24px;
-    border-radius: 10px;
+    border-radius: 0;
     cursor: pointer;
     transition: all 0.3s ease;
     font-size: 14px;
+    text-decoration: none;
+    display: inline-block;
 }
 .btn-secondary:hover {
-    border-color: var(--accent);
-    color: var(--text);
-    background: rgba(59, 130, 246, 0.1);
+    border-color: #000000;
+    color: #ffffff;
+    background: #000000;
 }
 
 .detail-layout {
@@ -321,10 +460,11 @@ body > .container {
 .panel-header {
     font-size: 14px;
     font-weight: 700;
-    color: var(--text-secondary);
+    color: #000000;
     letter-spacing: 1px;
     padding-bottom: 12px;
-    border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+    border-bottom: 2px solid #000000;
+    text-transform: uppercase;
 }
 
 .student-list { overflow-y: auto; max-height: calc(100vh - 200px); }
@@ -334,67 +474,70 @@ body > .container {
     align-items: center;
     gap: 12px;
     padding: 12px;
-    border-radius: 10px;
+    border-radius: 0;
     cursor: pointer;
     transition: all 0.3s;
     margin-bottom: 4px;
+    border: 2px solid transparent;
 }
-.student-item:hover { background: rgba(59, 130, 246, 0.1); }
+.student-item:hover { background: #ffcc00; border-color: #000000; }
 .student-item.active {
-    background: rgba(59, 130, 246, 0.15);
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: #ffcc00;
+    border: 2px solid #000000;
 }
 
 .student-avatar-sm {
     width: 40px; height: 40px;
-    border-radius: 50%;
+    border-radius: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 700;
     font-size: 14px;
     flex-shrink: 0;
-    color: #fff;
+    color: #000000;
+    background: #f3f4f6;
+    border: 2px solid #000000;
 }
 
 .student-info { flex: 1; min-width: 0; }
-.student-name { font-weight: 600; font-size: 14px; margin-bottom: 2px; }
-.student-status { font-size: 12px; color: var(--text-secondary); }
+.student-name { font-weight: 700; font-size: 14px; margin-bottom: 2px; color: #000000; }
+.student-status { font-size: 12px; color: #525252; }
 
 .status-dot {
     width: 6px; height: 6px;
-    border-radius: 50%;
+    border-radius: 0;
     display: inline-block;
     margin-right: 4px;
 }
-.status-dot.done { background: var(--success); }
-.status-dot.pending { background: var(--warning); }
+.status-dot.done { background: #000000; }
+.status-dot.pending { background: #ffcc00; border: 1px solid #000000; }
 
 /* 快捷标签 */
 .quick-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 
 .tag {
     padding: 6px 14px;
-    border-radius: 20px;
+    border-radius: 0;
     font-size: 13px;
-    background: rgba(59, 130, 246, 0.1);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
+    background: #ffffff;
+    border: 2px solid #000000;
+    color: #000000;
     cursor: pointer;
     transition: all 0.3s;
 }
-.tag:hover { border-color: var(--accent); color: var(--accent); background: rgba(59, 130, 246, 0.2); }
-.tag.active { background: var(--accent); color: white; border-color: var(--accent); }
+.tag:hover { border-color: #000000; color: #000000; background: #ffcc00; }
+.tag.active { background: #ffcc00; color: #000000; border-color: #000000; }
 
 /* 文本域 */
 .review-textarea {
     width: 100%;
     min-height: clamp(120px, 20vh, 220px);
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid var(--border);
-    border-radius: 12px;
+    background: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 0;
     padding: clamp(10px, 1.5vw, 16px);
-    color: var(--text);
+    color: #000000;
     font-size: 14px;
     line-height: 1.85;
     resize: vertical;
@@ -402,12 +545,11 @@ body > .container {
     transition: all 0.3s;
     font-family: inherit;
     box-sizing: border-box;
-    /* 关键：保留 \n\n 让段落空行显示出来，否则浏览器会把多换行折叠 */
     white-space: pre-wrap;
     word-wrap: break-word;
     overflow-wrap: break-word;
 }
-.review-textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+.review-textarea:focus { border-color: #000000; box-shadow: 0 0 0 3px rgba(255, 204, 0, .35); }
 
 .textarea-footer {
     display: flex;
@@ -415,7 +557,7 @@ body > .container {
     align-items: center;
     margin-top: 10px;
     font-size: 13px;
-    color: var(--text-secondary);
+    color: #525252;
     gap: 8px;
     flex-wrap: wrap;
 }
@@ -427,7 +569,7 @@ body > .container {
     position: relative;
     padding-left: 24px;
     padding-bottom: 24px;
-    border-left: 2px solid var(--border);
+    border-left: 2px solid #000000;
 }
 .timeline-item:last-child { border-left: 2px solid transparent; }
 
@@ -435,44 +577,39 @@ body > .container {
     position: absolute;
     left: -5px; top: 4px;
     width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--accent);
-    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+    border-radius: 0;
+    background: #ffcc00;
+    border: 1px solid #000000;
+    box-shadow: none;
 }
 
-.timeline-date { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+.timeline-date { font-size: 12px; color: #525252; margin-bottom: 4px; }
 
 .timeline-content {
-    background: rgba(30, 41, 59, 0.4);
+    background: #ffffff;
     padding: 12px;
-    padding-right: 36px;  /* 给右上角删除键留位 */
-    border-radius: 10px;
+    padding-right: 36px;
+    border: 2px solid #000000;
+    border-radius: 0;
     font-size: 13px;
     line-height: 1.5;
     cursor: pointer;
     transition: all .2s;
     position: relative;
+    color: #000000;
 }
-.timeline-content:hover {
-    background: rgba(30, 41, 59, 0.7);
-    transform: translateX(2px);
-}
-.timeline-content .more-hint {
-    color: var(--accent);
-    font-size: 11px;
-    margin-left: 4px;
-    opacity: .7;
-}
+.timeline-content:hover { background: #ffcc00; transform: translateX(2px); }
+.timeline-content .more-hint { color: #000000; font-size: 11px; margin-left: 4px; opacity: .7; }
 .timeline-delete {
     position: absolute;
     right: 8px;
     top: 8px;
     width: 22px;
     height: 22px;
-    border-radius: 50%;
+    border-radius: 0;
     border: none;
     background: transparent;
-    color: var(--text-secondary);
+    color: #525252;
     cursor: pointer;
     font-size: 14px;
     line-height: 1;
@@ -485,16 +622,12 @@ body > .container {
     z-index: 2;
 }
 .timeline-content:hover .timeline-delete { opacity: 1; }
-.timeline-delete:hover {
-    background: rgba(239, 68, 68, 0.9);
-    color: #fff;
-}
+.timeline-delete:hover { background: #000000; color: #ffffff; }
 
 /* ===== 历史课评详情 modal ===== */
 .history-modal-mask {
     position: fixed; inset: 0;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
+    background: rgba(255, 255, 255, 0.92);
     z-index: 1000;
     display: none;
     align-items: center;
@@ -507,15 +640,15 @@ body > .container {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
 .history-modal {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.98), rgba(30, 41, 59, 0.98));
-    border: 1px solid var(--border);
-    border-radius: 16px;
+    background: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 0;
     max-width: 560px;
     width: 100%;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    box-shadow: none;
     animation: slideUp .25s ease;
 }
 
@@ -526,13 +659,13 @@ body > .container {
     justify-content: space-between;
     align-items: center;
     padding: 18px 24px;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid #000000;
     flex-shrink: 0;
 }
 .history-modal-title {
     font-size: 16px;
-    font-weight: 600;
-    color: var(--text);
+    font-weight: 700;
+    color: #000000;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -540,10 +673,10 @@ body > .container {
 .history-modal-title .timeline-dot { position: static; box-shadow: none; }
 .history-modal-close {
     width: 32px; height: 32px;
-    border-radius: 8px;
-    background: rgba(30, 41, 59, 0.6);
-    border: 1px solid var(--border);
-    color: var(--text-secondary);
+    border-radius: 0;
+    background: #ffffff;
+    border: 2px solid #000000;
+    color: #000000;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -551,13 +684,13 @@ body > .container {
     font-size: 18px;
     transition: all .2s;
 }
-.history-modal-close:hover { background: rgba(30, 41, 59, 0.9); color: var(--text); }
+.history-modal-close:hover { background: #ffcc00; color: #000000; }
 .history-modal-meta {
     padding: 12px 24px;
     font-size: 12px;
-    color: var(--text-secondary);
-    background: rgba(15, 23, 42, 0.4);
-    border-bottom: 1px solid var(--border);
+    color: #525252;
+    background: #f3f4f6;
+    border-bottom: 2px solid #000000;
     flex-shrink: 0;
     display: flex;
     gap: 16px;
@@ -567,7 +700,7 @@ body > .container {
 .history-modal-body {
     padding: 20px 24px;
     overflow-y: auto;
-    color: var(--text);
+    color: #000000;
     font-size: 14px;
     line-height: 1.85;
     white-space: pre-wrap;
@@ -577,7 +710,7 @@ body > .container {
 }
 .history-modal-footer {
     padding: 12px 24px;
-    border-top: 1px solid var(--border);
+    border-top: 2px solid #000000;
     display: flex;
     justify-content: flex-end;
     gap: 10px;
@@ -589,23 +722,22 @@ body > .container {
 
 .date-btn {
     padding: 8px 16px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: transparent;
-    color: var(--text-secondary);
+    border-radius: 0;
+    border: 2px solid #000000;
+    background: #ffffff;
+    color: #000000;
     cursor: pointer;
     font-size: 13px;
     transition: all 0.3s;
 }
-.date-btn:hover { border-color: var(--accent); color: var(--text); }
-.date-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+.date-btn:hover { background: #ffcc00; color: #000000; }
+.date-btn.active { background: #ffcc00; color: #000000; border-color: #000000; }
 
 /* glass-card */
 .glass-card {
-    background: rgba(17, 24, 39, 0.8);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--border);
-    border-radius: 16px;
+    background: #ffffff;
+    border: 2px solid #000000;
+    border-radius: 0;
     transition: all 0.3s ease;
 }
 /* 中间栏的 glass-card：可滚动 */
@@ -618,13 +750,13 @@ body > .container {
 }
 
 /* select focus（预留：未来若加回课次选择器时复用） */
-#lesson-select-center:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
-#lesson-select-center:hover { border-color: rgba(59, 130, 246, 0.5); }
+#lesson-select-center:focus { border-color: #000000; box-shadow: 0 0 0 3px rgba(255, 204, 0, .35); }
+#lesson-select-center:hover { border-color: #000000; }
 /* 注：当前版本已去除课次选择器 UI，以上样式为无副作用的预留。*/
 
 /* 课程上传区 */
 #course-upload-area { margin-bottom: 4px; }
-#course-content-input:focus { border-color: var(--accent) !important; box-shadow: 0 0 0 3px rgba(59,130,246,.2) !important; }
+#course-content-input:focus { border-color: #000000 !important; box-shadow: 0 0 0 3px rgba(255,204,0,.35) !important; }
 
 /* 响应式 */
 @media (max-width: 1280px) {

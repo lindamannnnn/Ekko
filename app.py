@@ -70,6 +70,8 @@ def create_app(config: dict | None = None) -> Flask:
         # 前端 fetch 非安全请求由 base 模板的全局钩子自动附带 X-CSRFToken 头。
         # 纯 JSON API（reviews 蓝图）已整体豁免（仍由 @login_required 保护）。
         WTF_CSRF_ENABLED=True,
+        # 开发期模板自动重载，避免改模板后必须重启服务
+        TEMPLATES_AUTO_RELOAD=True,
         # 写事务保持极短；绝不在事务里调 LLM（见风险 T10）
         SQLALCHEMY_ENGINE_OPTIONS={"connect_args": {"timeout": 15}},
         MAX_CONTENT_LENGTH=15 * 1024 * 1024,  # 上传上限 15MB（课件大小限制）

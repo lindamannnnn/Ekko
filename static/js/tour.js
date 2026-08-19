@@ -77,7 +77,7 @@
         },
         {
           subtitle: '❷ 写一句本节课的一句话评语',
-          body: '在「**✨ 教师对本节课的一句话评语**」框里，写一句你对本节课的总结（例如「今天节奏很好，难点在 xxx」）。这句话会**一起保存到课评里**，**必填**，每节都建议写。',
+          body: '在「**✨ 教师对本节课的一句话评语**」框里，写一句你对本节课的总结（例如「今天节奏很好，难点在 xxx」）。这句话**不会保存到最终课评里**，但会作为 AI 生成本节课评语的**参考依据**，**必填**，每节都建议写。',
           highlight: '#teacher-comment',
           scrollTo: '#teacher-comment',
         },
@@ -152,16 +152,15 @@
   }
 
   // ===================================================================
-  //  样式（一次性注入；融入暗色玻璃主题）
+  //  样式（一次性注入；瑞士国际主义：白底 / 黑字 / 亮黄 #ffcc00 / 网格 / 直角粗边框）
   // ===================================================================
   function injectStyles() {
     if (document.getElementById('tour-styles')) return;
     const css = `
-      /* 欢迎遮罩 */
+      /* 欢迎遮罩：白底 + 淡黑网格 */
       .tour-mask {
         position: fixed; inset: 0;
-        background: rgba(2, 6, 23, 0.72);
-        backdrop-filter: blur(8px);
+        background: rgba(255, 255, 255, 0.92);
         z-index: 9000;
         display: none;
         align-items: center; justify-content: center;
@@ -171,16 +170,16 @@
       .tour-mask.show { display: flex; }
       @keyframes tourFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-      /* 气泡卡（玻璃风） */
+      /* 卡片：白底、2px 黑边、无圆角 */
       .tour-card {
-        background: linear-gradient(135deg, rgba(15,23,42,.95), rgba(30,41,59,.95));
-        border: 1px solid var(--border-strong, rgba(59,130,246,.35));
-        border-radius: var(--radius, 16px);
+        background: #ffffff;
+        border: 2px solid #000000;
+        border-radius: 0;
         padding: 18px 20px;
         max-width: 460px;
         width: 100%;
-        box-shadow: 0 20px 60px rgba(0,0,0,.55), 0 0 0 1px rgba(59,130,246,.18) inset;
-        color: var(--text, #f1f5f9);
+        box-shadow: none;
+        color: #000000;
         font-size: 14px;
         line-height: 1.7;
         animation: tourSlideUp .28s ease;
@@ -195,41 +194,43 @@
       .tour-tag {
         display: inline-flex; align-items: center; gap: 6px;
         padding: 3px 10px;
-        background: linear-gradient(135deg, var(--accent, #3b82f6), var(--cyan, #06b6d4));
-        color: #fff;
-        font-size: 11px; font-weight: 600;
-        border-radius: 20px;
+        background: #ffcc00;
+        color: #000000;
+        font-size: 11px; font-weight: 700;
+        border-radius: 0;
         letter-spacing: .4px;
         margin-bottom: 10px;
+        text-transform: uppercase;
       }
       .tour-welcome-card .tour-title,
       .tour-card .tour-title {
         font-size: 16px; font-weight: 700;
-        color: var(--text, #f1f5f9);
+        color: #000000;
         margin: 0 0 6px;
       }
       .tour-welcome-card .tour-sub {
-        font-size: 13px; color: var(--text-2, #94a3b8);
+        font-size: 13px; color: #525252;
         margin: 0 0 18px;
       }
-      .tour-card .tour-body { color: var(--text-2, #94a3b8); margin: 0 0 14px; }
-      .tour-card .tour-body strong { color: var(--text, #f1f5f9); font-weight: 600; }
+      .tour-card .tour-body { color: #525252; margin: 0 0 14px; }
+      .tour-card .tour-body strong { color: #000000; font-weight: 700; }
 
       .tour-subtitle {
         font-size: 13px;
-        color: var(--accent, #3b82f6);
-        font-weight: 600;
+        color: #000000;
+        font-weight: 700;
         margin-bottom: 4px;
         letter-spacing: .3px;
       }
 
       .tour-progress {
         font-size: 11px;
-        color: var(--text-3, #64748b);
+        color: #000000;
         margin-left: 8px;
         padding: 2px 8px;
-        background: rgba(148,163,184,.10);
-        border-radius: 10px;
+        background: #ffffff;
+        border: 1px solid #000000;
+        border-radius: 0;
       }
 
       .tour-steps-list {
@@ -239,22 +240,22 @@
       .tour-steps-list li {
         display: flex; align-items: flex-start; gap: 10px;
         padding: 10px 12px;
-        background: rgba(59,130,246,.06);
-        border: 1px solid rgba(59,130,246,.20);
-        border-radius: 10px;
+        background: #ffffff;
+        border: 2px solid #000000;
+        border-radius: 0;
         font-size: 13px;
-        color: var(--text, #f1f5f9);
+        color: #000000;
       }
       .tour-steps-list li .step-dot {
         flex-shrink: 0;
         width: 20px; height: 20px;
-        background: var(--accent, #3b82f6);
-        color: #fff;
-        border-radius: 50%;
+        background: #ffcc00;
+        color: #000000;
+        border-radius: 0;
         display: flex; align-items: center; justify-content: center;
         font-size: 11px; font-weight: 700;
       }
-      .tour-steps-list li .step-text strong { color: var(--text, #f1f5f9); }
+      .tour-steps-list li .step-text strong { color: #000000; }
 
       .tour-actions {
         display: flex; gap: 8px; align-items: center;
@@ -265,51 +266,54 @@
         margin-left: auto;
         background: transparent;
         border: 0;
-        color: var(--text-3, #64748b);
+        color: #525252;
         font-size: 13px;
         cursor: pointer;
         padding: 6px 4px;
-        text-decoration: none;
+        text-decoration: underline;
+        font-weight: 600;
       }
-      .tour-actions .tour-skip:hover { color: var(--text-2, #94a3b8); }
+      .tour-actions .tour-skip:hover { color: #000000; background: #ffcc00; }
 
-      /* 步内按钮 */
+      /* 步内按钮：直角粗边框 */
       .tour-btn {
         display: inline-flex; align-items: center; gap: 6px;
         padding: 8px 16px;
-        border-radius: 10px;
-        font-size: 13px; font-weight: 600;
+        border-radius: 0;
+        font-size: 13px; font-weight: 700;
         cursor: pointer;
         text-decoration: none;
         transition: all .2s;
-        border: 1px solid transparent;
+        border: 2px solid #000000;
+        text-transform: uppercase;
+        letter-spacing: .3px;
       }
       .tour-btn-primary {
-        background: linear-gradient(135deg, var(--accent, #3b82f6), var(--cyan, #06b6d4));
-        color: #fff;
-        box-shadow: 0 4px 12px rgba(59,130,246,.3);
+        background: #ffcc00;
+        color: #000000;
+        box-shadow: none;
       }
-      .tour-btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(59,130,246,.4); }
+      .tour-btn-primary:hover { background: #000000; color: #ffffff; transform: translateY(-1px); }
       .tour-btn-ghost {
-        background: transparent;
-        color: var(--text-2, #94a3b8);
-        border-color: rgba(148,163,184,.20);
+        background: #ffffff;
+        color: #000000;
+        border-color: #000000;
       }
-      .tour-btn-ghost:hover { color: var(--text, #f1f5f9); border-color: rgba(148,163,184,.40); }
+      .tour-btn-ghost:hover { color: #000000; background: #ffcc00; border-color: #000000; }
 
-      /* 脉冲高亮（让被指引的元素发光 + 穿透遮罩可点） */
+      /* 脉冲高亮（黄黑脉冲，直角） */
       .tour-highlight {
         position: relative !important;
         z-index: 9100 !important;
         pointer-events: auto !important;
-        border-radius: 12px;
-        box-shadow: 0 0 0 3px rgba(59,130,246,.50),
-                    0 0 24px rgba(59,130,246,.40) !important;
+        border-radius: 0 !important;
+        box-shadow: 0 0 0 3px #ffcc00,
+                    0 0 24px rgba(255, 204, 0, .55) !important;
         animation: tourPulse 1.6s ease-in-out infinite;
       }
       @keyframes tourPulse {
-        0%, 100% { box-shadow: 0 0 0 3px rgba(59,130,246,.50), 0 0 24px rgba(59,130,246,.40); }
-        50%      { box-shadow: 0 0 0 5px rgba(59,130,246,.65), 0 0 36px rgba(59,130,246,.60); }
+        0%, 100% { box-shadow: 0 0 0 3px #ffcc00, 0 0 24px rgba(255, 204, 0, .55); }
+        50%      { box-shadow: 0 0 0 5px #000000, 0 0 36px rgba(255, 204, 0, .75); }
       }
 
       /* 容器：气泡卡由 JS 定位到目标按钮旁边，绝不遮挡目标 */
@@ -332,11 +336,11 @@
 
       /* 完成态 */
       .tour-done-card {
-        border-color: rgba(16,185,129,.45);
-        background: linear-gradient(135deg, rgba(6,78,59,.40), rgba(15,23,42,.95));
+        border-color: #000000;
+        background: #ffffff;
       }
-      .tour-done-tag { background: linear-gradient(135deg, var(--success, #10b981), var(--cyan, #06b6d4)); }
-      .tour-done-title { color: var(--success, #10b981) !important; }
+      .tour-done-tag { background: #ffcc00; color: #000000; }
+      .tour-done-title { color: #000000 !important; }
     `;
     const style = document.createElement('style');
     style.id = 'tour-styles';
