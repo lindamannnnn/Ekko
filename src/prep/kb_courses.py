@@ -11,7 +11,21 @@ import re
 import json
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-KB_ROOT = os.path.normpath(os.path.join(BASE_DIR, "..", "vendor", "kb"))
+# KB 知识库是系统 B（lesson-courseware）的只读数据，课前系统复用同一份。
+# prep 位于 class-review-system/src/prep，向上三级到 E:/001 再进 lesson-courseware。
+# 用候选回退，避免目录结构调整后直接崩。
+_KB_CANDIDATES = [
+    os.path.normpath(os.path.join(BASE_DIR, "..", "..", "..", "lesson-courseware", "vendor", "kb")),
+    os.path.normpath(os.path.join(BASE_DIR, "..", "..", "lesson-courseware", "vendor", "kb")),
+    os.path.normpath(os.path.join(BASE_DIR, "kb")),
+]
+KB_ROOT = None
+for _c in _KB_CANDIDATES:
+    if os.path.isdir(_c):
+        KB_ROOT = _c
+        break
+if KB_ROOT is None:
+    KB_ROOT = _KB_CANDIDATES[0]
 
 _CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩"
 

@@ -48,4 +48,66 @@
     </div>
   </form>
 </div>
+
+<div class="glass-card" style="margin-bottom: 24px;">
+  <h2>课前备课 · 生成记录</h2>
+  <p style="color: var(--text-2); margin: 8px 0 16px;">
+    文件保留 <strong>{{ prep_retention }}</strong> 天，过期后自动清理；数据库记录永久保存。
+  </p>
+  {% if prep_jobs %}
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    {% for j in prep_jobs %}
+    <div style="border:1px solid var(--border); border-radius: var(--radius); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+      <div style="min-width:0;">
+        <div style="font-weight:700;">{{ j.title or j.filename or j.topic or '未命名' }}</div>
+        <div style="color:var(--text-2); font-size:13px; margin-top:4px;">
+          {% if j.mode == 'subject' %}学科生成 · {{ j.subject }} {{ j.grade }}《{{ j.topic }}》{% else %}内容生成 · {{ j.filename }}{% endif %}
+          · 风格 {{ j.style or '—' }}
+        </div>
+        <div style="color:var(--text-2); font-size:12px; margin-top:4px;">{{ j.created_at.strftime('%Y-%m-%d %H:%M') if j.created_at }}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        {% if j.status == 'success' %}
+          <span style="color:var(--accent); font-weight:700;">成功</span>
+          {% if j.has_files %}
+            <a class="btn" href="{{ url_for('prep.result', job=j.id) }}">查看</a>
+          {% else %}
+            <span style="color:var(--text-2); font-size:13px;">文件已过期</span>
+          {% endif %}
+        {% elif j.status == 'failed' %}
+          <span style="color:var(--danger); font-weight:700;">失败</span>
+        {% else %}
+          <span style="color:var(--text-2); font-weight:700;">{{ j.status }}</span>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color: var(--text-2);">还没有生成记录，去 <a href="{{ url_for('prep.index') }}">课前备课</a> 试试吧。</p>
+  {% endif %}
+</div>
+
+<div class="glass-card">
+  <h2>课后课评 · 课评记录</h2>
+  <p style="color: var(--text-2); margin: 8px 0 16px;">课评记录永久保存，不可清理。</p>
+  {% if reviews %}
+  <div style="display:flex; flex-direction:column; gap:10px;">
+    {% for rv in reviews %}
+    <div style="border:1px solid var(--border); border-radius: var(--radius); padding:14px 16px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+        <div style="font-weight:700;">{{ rv.class_name }} · {{ rv.student_name }}</div>
+        <span style="color:var(--text-2); font-size:12px;">
+          {% if rv.status == 'confirmed' %}已确认{% elif rv.status == 'draft' %}草稿{% elif rv.status == 'pending' %}待生成{% else %}{{ rv.status }}{% endif %}
+          {% if rv.created_at %} · {{ rv.created_at.strftime('%Y-%m-%d') }}{% endif %}
+        </span>
+      </div>
+      <p style="color:var(--text-2); font-size:13px; margin:8px 0 0; line-height:1.5;">{{ rv.content or '（暂无正文）' }}</p>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <p style="color: var(--text-2);">还没有课评记录。</p>
+  {% endif %}
+</div>
 {% endblock %}

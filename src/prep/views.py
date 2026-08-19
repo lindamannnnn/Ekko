@@ -136,116 +136,118 @@ _build_demo_decks()
 
 # ---------- 学科生成后台线程 ----------
 
-def _run_subject_job(job_id: str, user_id: str):
+def _run_subject_job(job_id: str, user_id: str, app):
     """后台线程：调用系统 B orchestrator 生成教案 + 课件。"""
-    job = PrepJob.query.get(job_id)
-    user = User.query.get(user_id)
-    if not job or not user:
-        return
+    with app.app_context():
+        job = PrepJob.query.get(job_id)
+        user = User.query.get(user_id)
+        if not job or not user:
+            return
 
-    job_dir = os.path.join(PREP_ROOT, job_id)
-    lesson_path = os.path.join(job_dir, "lesson.html")
-    courseware_path = os.path.join(job_dir, "index.html")
-    os.makedirs(job_dir, exist_ok=True)
+        job_dir = os.path.join(PREP_ROOT, job_id)
+        lesson_path = os.path.join(job_dir, "lesson.html")
+        courseware_path = os.path.join(job_dir, "index.html")
+        os.makedirs(job_dir, exist_ok=True)
 
-    env = dict(os.environ)
-    # 优先使用用户自定义 key
-    if user.ai_api_key:
-        env["AI_API_KEY"] = user.ai_api_key
-    if user.ai_base_url:
-        env["AI_BASE_URL"] = user.ai_base_url
-    if user.ai_model:
-        env["AI_MODEL"] = user.ai_model
+        env = dict(os.environ)
+        # 优先使用用户自定义 key
+        if user.ai_api_key:
+            env["AI_API_KEY"] = user.ai_api_key
+        if user.ai_base_url:
+            env["AI_BASE_URL"] = user.ai_base_url
+        if user.ai_model:
+            env["AI_MODEL"] = user.ai_model
 
-    try:
-        cmd = [
-            sys.executable,
-            ORCHESTRATOR_PATH,
-            "--subject", job.subject or "",
-            "--grade", job.grade or "",
-            "--topic", job.topic or "",
-            "--duration", str(job.duration or 40),
-            "--out", job_dir,
-        ]
-        import sys
-        result = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=900)
-        if result.returncode != 0:
-            raise RuntimeError(result.stderr[:500] or "生成失败")
-
-        lesson = None
-        course = None
-        for line in (result.stdout or "").splitlines():
-            if line.startswith("教案 HTML:"):
-                lesson = line.split(":", 1)[1].strip()
-            elif line.startswith("课件 HTML:"):
-                course = line.split(":", 1)[1].strip()
-
-        out_files = os.listdir(job_dir)
-        if not lesson:
-            lesson = next((os.path.join(job_dir, f) for f in out_files if f.startswith("lesson_") or f == "lesson.html"), None)
-        if not course:
-            course = next((os.path.join(job_dir, f) for f in out_files if f.startswith("course_") or f == "index.html"), None)
-
-        # 用所选风格重新渲染
-        style = job.style or STYLE_IDS[0]
-        if style not in STYLE_IDS:
-            style = STYLE_IDS[0]
         try:
-            lesson_text = ""
-            if lesson and os.path.exists(lesson):
-                with open(lesson, "r", encoding="utf-8") as f:
-                    raw_html = f.read()
-                lesson_text = re.sub(r"<[^>]+>", " ", raw_html)
-                lesson_text = re.sub(r"\s+", "\n", lesson_text).strip()
-            if lesson_text:
-                slides = segment(lesson_text, env={}, allow_llm=False)
-                if slides:
-                    title = job.title or job.topic or "课件"
-                    courseware_html = render(slides, style, title=title)
-                    with open(courseware_path, "w", encoding="utf-8") as f:
-                        f.write(courseware_html)
-                    course = courseware_path
-        except Exception:
-            pass
+            cmd = [
+                sys.executable,
+                ORCHESTRATOR_PATH,
+                "--subject", job.subject or "",
+                "--grade", job.grade or "",
+                "--topic", job.topic or "",
+                "--duration", str(job.duration or 40),
+                "--out", job_dir,
+            ]
+            result = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=900)
+            if result.returncode != 0:
+                raise RuntimeError(result.stderr[:500] or "生成失败")
 
-        if not course and os.path.exists(courseware_path):
-            course = courseware_path
+            lesson = None
+            course = None
+            for line in (result.stdout or "").splitlines():
+                if line.startswith("教案 HTML:"):
+                    lesson = line.split(":", 1)[1].strip()
+                elif line.startswith("课件 HTML:"):
+                    course = line.split(":", 1)[1].strip()
 
-        job.status = "success"
-        job.lesson_path = lesson
-        job.courseware_path = course
-    except Exception as e:
-        job.status = "failed"
-        job.error_msg = str(e)[:500]
-    finally:
-        job.updated_at = datetime.utcnow()
-        db.session.commit()
+            out_files = os.listdir(job_dir)
+            if not lesson:
+                lesson = next((os.path.join(job_dir, f) for f in out_files if f.startswith("lesson_") or f == "lesson.html"), None)
+            if not course:
+                course = next((os.path.join(job_dir, f) for f in out_files if f.startswith("course_") or f == "index.html"), None)
+
+            # 用所选风格重新渲染
+            style = job.style or STYLE_IDS[0]
+            if style not in STYLE_IDS:
+                style = STYLE_IDS[0]
+            try:
+                lesson_text = ""
+                if lesson and os.path.exists(lesson):
+                    with open(lesson, "r", encoding="utf-8") as f:
+                        raw_html = f.read()
+                    lesson_text = re.sub(r"<[^>]+>", " ", raw_html)
+                    lesson_text = re.sub(r"\s+", "\n", lesson_text).strip()
+                if lesson_text:
+                    slides = segment(lesson_text, env={}, allow_llm=False)
+                    if slides:
+                        title = job.title or job.topic or "课件"
+                        courseware_html = render(slides, style, title=title)
+                        with open(courseware_path, "w", encoding="utf-8") as f:
+                            f.write(courseware_html)
+                        course = courseware_path
+            except Exception:
+                pass
+
+            if not course and os.path.exists(courseware_path):
+                course = courseware_path
+
+            job.status = "success"
+            job.lesson_path = lesson
+            job.courseware_path = course
+        except Exception as e:
+            job.status = "failed"
+            job.error_msg = str(e)[:500]
+        finally:
+            job.updated_at = datetime.utcnow()
+            db.session.commit()
 
 
 # ---------- 内容生成后台线程 ----------
 
-def _run_content_job(job_id: str):
-    job = PrepJob.query.get(job_id)
-    if not job:
-        return
-    try:
-        slides = segment(job.original_text or "", env=dict(os.environ))
-        if not slides:
-            raise RuntimeError("切页失败：未能将内容拆分为幻灯片")
-        title = job.title or slides[0].get("title") or "我的课件"
-        html_out = render(slides, job.style or STYLE_IDS[0], title=title)
-        out_path = os.path.join(PREP_ROOT, job_id, "index.html")
-        os.makedirs(os.path.dirname(out_path), exist_ok=True)
-        with open(out_path, "w", encoding="utf-8") as f:
-            f.write(html_out)
-        job.status = "success"
-        job.courseware_path = out_path
-    except Exception as e:
-        job.status = "failed"
-        job.error_msg = str(e)[:500]
-    finally:
-        job.updated_at = datetime.utcnow()
-        db.session.commit()
+def _run_content_job(job_id: str, app):
+    """后台线程：把上传/粘贴内容切页渲染成课件。"""
+    with app.app_context():
+        job = PrepJob.query.get(job_id)
+        if not job:
+            return
+        try:
+            slides = segment(job.original_text or "", env=dict(os.environ))
+            if not slides:
+                raise RuntimeError("切页失败：未能将内容拆分为幻灯片")
+            title = job.title or slides[0].get("title") or "我的课件"
+            html_out = render(slides, job.style or STYLE_IDS[0], title=title)
+            out_path = os.path.join(PREP_ROOT, job_id, "index.html")
+            os.makedirs(os.path.dirname(out_path), exist_ok=True)
+            with open(out_path, "w", encoding="utf-8") as f:
+                f.write(html_out)
+            job.status = "success"
+            job.courseware_path = out_path
+        except Exception as e:
+            job.status = "failed"
+            job.error_msg = str(e)[:500]
+        finally:
+            job.updated_at = datetime.utcnow()
+            db.session.commit()
 
 
 # ---------- 路由 ----------
@@ -253,6 +255,11 @@ def _run_content_job(job_id: str):
 
 @prep_bp.route("/")
 def index():
+    # 访问首页时惰性清理超过保留期的生成文件（保留数据库记录）
+    try:
+        _cleanup_expired_files()
+    except Exception:
+        pass
     return render_template("prep/index.html", styles=list_styles(), user=current_user)
 
 
@@ -316,7 +323,8 @@ def subject():
             )
             db.session.add(job)
             db.session.commit()
-            t = threading.Thread(target=_run_subject_job, args=(job.id, user.id))
+            app = current_app._get_current_object()
+            t = threading.Thread(target=_run_subject_job, args=(job.id, user.id, app))
             t.daemon = True
             t.start()
             return redirect(url_for("prep.generating", job=job.id))
@@ -411,7 +419,8 @@ def content_style(cid):
         job.style = style
         job.title = title or job.filename
         db.session.commit()
-        t = threading.Thread(target=_run_content_job, args=(cid,))
+        app = current_app._get_current_object()
+        t = threading.Thread(target=_run_content_job, args=(cid, app))
         t.daemon = True
         t.start()
         return redirect(url_for("prep.generating", job=cid))
@@ -508,21 +517,3 @@ def style_demo(style_id):
 def admin_uploads():
     """课前备课独立后台已合并到平台总后台 /admin/prep_jobs（地址随 ADMIN_PATH）。"""
     return redirect(url_for("admin_bp.prep_jobs") + "?from=prep")
-
-
-@prep_bp.route("/account")
-@login_required
-def account():
-    user = current_user
-    _cleanup_expired_files()
-    jobs = PrepJob.query.filter_by(user_id=user.id).order_by(PrepJob.created_at.desc()).all()
-    cutoff = datetime.utcnow() - timedelta(days=RETENTION_DAYS)
-    for j in jobs:
-        j.expired = j.created_at < cutoff
-        j.has_files = bool(
-            (j.courseware_path and os.path.exists(j.courseware_path)) or
-            (j.lesson_path and os.path.exists(j.lesson_path))
-        )
-    return render_template("prep/account.html", user=user, jobs=jobs,
-                           retention_days=RETENTION_DAYS, mask_key=_mask_key(user.ai_api_key or ""),
-                           now=datetime.utcnow())

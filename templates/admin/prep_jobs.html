@@ -53,9 +53,9 @@
         </td>
         <td>
           {% if j.status == 'success' %}
-            <a class="link" href="{{ url_for('prep.download', job_id=j.id) }}" target="_blank">下载课件</a>
+            <a class="link" href="{{ url_for('prep.download', job=j.id) }}" target="_blank">下载课件</a>
             {% if j.lesson_path %}
-            &middot; <a class="link" href="{{ url_for('prep.download_lesson', job_id=j.id) }}" target="_blank">教案</a>
+            &middot; <a class="link" href="{{ url_for('prep.download_lesson', job=j.id) }}" target="_blank">教案</a>
             {% endif %}
           {% elif j.status == 'failed' %}
             <span class="text-muted" title="{{ j.error_msg or '' }}">查看错误</span>

@@ -9,7 +9,6 @@
 <div class="card">
   <form method="post" id="subjectForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="row">
       <div>
         <label>学科</label>
@@ -60,7 +59,6 @@
   <p style="font-size:13px;margin:0 0 12px;">当前已配置：{{ mask_key }}</p>
   {% endif %}
   <form method="post" action="{{ url_for('prep.api_user_key') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
     <div class="row">
       <div>
