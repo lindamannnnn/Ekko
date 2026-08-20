@@ -14,6 +14,7 @@ from dotenv import load_dotenv  # 加载 .env 到 os.environ（P4 AI Key / SMTP 
 from flask import Flask
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy import event, inspect
+from sqlalchemy.exc import OperationalError
 
 # 把 src 加入 sys.path，使 extensions / models 可作为顶层包导入
 _SRC = str(Path(__file__).resolve().parent / 'src')
@@ -150,7 +151,13 @@ def create_app(config: dict | None = None) -> Flask:
     from sqlalchemy import inspect
     with app.app_context():
         # 先建表，确保后续查询 users 表时表已存在（解决 no such table: users）
-        db.create_all()
+        # Gunicorn 多 worker 并发启动时，create_all(checkfirst=True) 仍可能竞态报
+        # "table already exists"，捕获并忽略该错误即可，不影响幂等性。
+        try:
+            db.create_all()
+        except OperationalError as e:
+            if "already exists" not in str(e).lower():
+                raise
         tables = inspect(db.engine).get_table_names()
         if 'class_type_presets' in tables:
             load_class_type_presets()
@@ -227,5 +234,9 @@ def create_app(config: dict | None = None) -> Flask:
 if __name__ == '__main__':
     app = create_app()
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except OperationalError as e:
+            if "already exists" not in str(e).lower():
+                raise
     app.run(host='127.0.0.1', port=int(os.environ.get('PORT', 5000)), debug=False)
