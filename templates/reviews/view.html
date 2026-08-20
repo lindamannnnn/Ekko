@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}{{ student.name or '学生' }} · {{ lesson.title or '课次' }} · Ekko课评系统{% endblock %}
+
+{% block content %}
+<style>
+  .review-view-card {
+    max-width: 760px;
+    margin: 28px auto;
+    background: var(--surface, #fff);
+    border: 1px solid var(--border, #e5e7eb);
+    border-radius: 16px;
+    padding: 28px 32px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+  }
+  .review-view-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    padding-bottom: 18px;
+    border-bottom: 1px solid var(--border, #e5e7eb);
+  }
+  .review-view-meta h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--text, #111);
+  }
+  .review-view-meta .subtitle {
+    font-size: 14px;
+    color: var(--text-2, #666);
+    line-height: 1.6;
+  }
+  .review-view-status {
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: var(--bg-muted, #f3f4f6);
+    color: var(--text-2, #666);
+  }
+  .review-view-status.confirmed { background: #dcfce7; color: #166534; }
+  .review-view-status.draft { background: #fef3c7; color: #92400e; }
+  .review-view-status.leave { background: #e5e7eb; color: #374151; }
+  .review-view-status.failed { background: #fee2e2; color: #991b1b; }
+  .review-view-status.pending { background: #dbeafe; color: #1e40af; }
+  .review-view-body {
+    font-size: 16px;
+    line-height: 1.8;
+    color: var(--text, #111);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .review-view-body.empty {
+    color: var(--text-2, #999);
+    font-style: italic;
+  }
+  .review-view-actions {
+    margin-top: 24px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .review-view-actions a {
+    font-size: 14px;
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border, #e5e7eb);
+    color: var(--text, #111);
+    transition: background .15s;
+  }
+  .review-view-actions a:hover {
+    background: var(--bg-muted, #f3f4f6);
+  }
+</style>
+
+<div class="review-view-card">
+  <div class="review-view-header">
+    <div class="review-view-meta">
+      <h1>{{ student.name or '学生' }} 的课评</h1>
+      <div class="subtitle">
+        {{ klass.name or '班级' }} · {{ lesson.title or '课次' }}
+        {% if review.edited_at %}<br>更新于 {{ review.edited_at.strftime('%Y-%m-%d %H:%M') }}{% endif %}
+      </div>
+    </div>
+    <span class="review-view-status {{ review.status }}">
+      {% if review.status == 'confirmed' %}已确认
+      {% elif review.status == 'draft' %}草稿
+      {% elif review.status == 'pending' %}待生成
+      {% elif review.status == 'leave' %}请假
+      {% elif review.status == 'failed' %}生成失败
+      {% else %}{{ review.status }}{% endif %}
+    </span>
+  </div>
+
+  <div class="review-view-body {% if not review.content %}empty{% endif %}">
+    {% if review.content %}
+      {{ review.content }}
+    {% else %}
+      暂无课评正文。
+    {% endif %}
+  </div>
+
+  <div class="review-view-actions">
+    <a href="{{ url_for('main.account') }}">← 返回账号</a>
+    <a href="{{ url_for('classes.detail', class_id=klass.id) }}">返回班级</a>
+    <a href="{{ url_for('reviews.editor', class_id=klass.id, lesson_id=lesson.id) }}">去编辑器修改</a>
+  </div>
+</div>
+{% endblock %}
