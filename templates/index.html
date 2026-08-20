@@ -3,30 +3,27 @@
 {% block content %}
 <style>
 .hall-wrap { min-height: calc(100vh - 140px); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center; }
-.hall-brand { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 24px; }
+.hall-brand { display: flex; align-items: center; justify-content: center; gap: 18px; margin-bottom: 20px; }
 .hall-brand img { width: 64px; height: 64px; filter: drop-shadow(0 0 18px rgba(59,130,246,.35)); }
 .hall-brand h1 { font-size: 42px; margin: 0; background: var(--gradient-accent); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; letter-spacing: -1px; }
 .hall-sub { color: var(--text-2); font-size: 18px; max-width: 520px; margin: 0 auto 44px; line-height: 1.6; }
 .hall-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 28px; width: 100%; max-width: 820px; }
-.hall-card { display: block; text-decoration: none; color: inherit; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px 30px; text-align: left; transition: transform .18s, box-shadow .18s, border-color .18s; box-shadow: var(--shadow); }
+.hall-card { display: flex; flex-direction: column; text-decoration: none; color: inherit; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 36px 30px; text-align: left; transition: transform .18s, box-shadow .18s, border-color .18s; box-shadow: var(--shadow); }
 .hall-card:hover { transform: translateY(-4px); border-color: var(--border-strong); box-shadow: 0 12px 40px rgba(0,0,0,.35), 0 0 0 1px var(--border-strong); }
 .hall-card-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; font-size: 26px; }
 .hall-card.prep .hall-card-icon { background: var(--accent-soft); }
 .hall-card.review .hall-card-icon { background: var(--cyan-soft); }
 .hall-card h2 { font-size: 22px; margin: 0 0 10px; color: var(--text); }
-.hall-card p { color: var(--text-2); margin: 0 0 24px; line-height: 1.5; }
+.hall-card p { color: var(--text-2); margin: 0 0 24px; line-height: 1.5; flex: 1; }
 .hall-card .btn-line { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; color: var(--accent); }
 .hall-card:hover .btn-line { color: var(--cyan); }
 .hall-card .btn-line svg { transition: transform .18s; }
 .hall-card:hover .btn-line svg { transform: translateX(3px); }
-.hall-actions { margin-top: 36px; display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
-.hall-actions a { text-decoration: none; }
 </style>
 
 <div class="hall-wrap">
   <div class="hall-brand">
-    <img src="{{ url_for('static', filename='images/ekko_logo.png') }}" alt="Ekko">
-    <h1>大厅</h1>
+    <h1>欢迎回来，今天也要好好教书</h1>
   </div>
   <p class="hall-sub">课前智能备课，课后高效课评，一个账号打通教学全流程。</p>
 
@@ -50,17 +47,6 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </span>
     </a>
-  </div>
-
-  <div class="hall-actions">
-    {% if current_user.is_authenticated %}
-      <span style="color:var(--text-2);">当前教师：<strong style="color:var(--text);">{{ current_user.display_name or current_user.email }}</strong></span>
-      <a class="btn" href="{{ url_for('main.account') }}">账号设置</a>
-      <a class="btn" href="{{ url_for('auth.logout') }}">退出登录</a>
-    {% else %}
-      <a class="btn-gradient" href="{{ url_for('auth.login') }}">登录</a>
-      <a class="btn" href="{{ url_for('auth.register') }}">注册账号</a>
-    {% endif %}
   </div>
 </div>
 {% endblock %}

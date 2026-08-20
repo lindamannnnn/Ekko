@@ -68,6 +68,10 @@ body{
   color:var(--accent); font-weight:700; margin-bottom:1em;}
 .slide-num{position:absolute; right:5vw; bottom:4vh; font-size:13px; color:var(--muted);
   font-variant-numeric:tabular-nums;}
+/* 代码块：视觉样式由 base CSS 控制；关键格式属性（white-space/font-family）
+   在 HTML 上加了 inline style，防止未来风格 CSS 把代码块覆盖成普通文本。 */
+.code-block{margin-top:1.2em; padding:1em 1.2em; background:rgba(0,0,0,.06); border-radius:10px; overflow-x:auto; text-align:left;}
+.code-block code{font-family:var(--mono); font-size:clamp(13px,1.7vw,17px); line-height:1.55; white-space:pre; display:block;}
 /* 封面 */
 .cover .title{font-size:clamp(34px,7vw,80px);}
 .cover .sub{font-size:clamp(15px,2vw,22px); color:var(--muted); margin-top:.6em;}
@@ -211,8 +215,20 @@ def _slide_html(slide: dict, cover: bool = False, title: str = "",
     bullets = slide.get("bullets") or []
     lis = "".join(f"<li>{_esc(b)}</li>" for b in bullets if str(b).strip())
     body = f'<ul class="bullets">{lis}</ul>' if lis else ""
+    # v3 修复：渲染多行代码块
+    code = slide.get("code") or ""
+    # v3 修复：渲染多行代码块；inline style 保证即使未来风格 CSS 覆盖 .code-block，
+    # 代码的等宽字体与换行/缩进也不会丢。
+    if code.strip():
+        code_html = (
+            f'<pre class="code-block" style="white-space:pre;overflow-x:auto;">'
+            f'<code style="font-family:var(--mono);white-space:pre;display:block;">'
+            f'{_esc(code)}</code></pre>'
+        )
+    else:
+        code_html = ""
     return (f'<section class="slide"><div class="slide-inner">'
-            f'<h2 class="title">{t}</h2>{body}</div>'
+            f'<h2 class="title">{t}</h2>{body}{code_html}</div>'
             f'<div class="slide-num"></div></section>')
 
 

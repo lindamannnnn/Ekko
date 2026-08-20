@@ -213,7 +213,7 @@ def preview(review_id):
 
     # 渲染期用 AI 判定标签情感：负向标签（含老师自定义）一律不渲染。
     raw_tags = [t for t in (review.perf_tags or []) if t]
-    pos_tags = render_tags(raw_tags)   # 已过滤负向，仅保留正面 / 中性标签
+    pos_tags = render_tags(raw_tags, user=current_user)   # 已过滤负向，仅保留正面 / 中性标签
 
     # 老师没点正面标签时：优先用「生成时 AI 自己总结的亮点标签」(meta_json.ai_highlights)，
     # 没有再回退到规则提取（兼容历史课评 / 弱模型偶尔没输出标签的情况）。

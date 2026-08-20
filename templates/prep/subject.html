@@ -49,11 +49,28 @@
 </div>
 
 <div class="card" style="margin-top:24px;background:#fafafa;" id="model-info">
-  <h2 style="font-size:16px;">关于 AI 模型</h2>
+  <div style="display:flex;align-items:center;gap:10px;margin:0 0 10px;">
+    <h2 style="font-size:16px;margin:0;">关于 AI 模型</h2>
+    <button type="button" onclick="toggleHelp('subject-help')" title="查看填写说明" style="width:22px;height:22px;border-radius:50%;border:1px solid var(--border);background:#fff;color:var(--muted);font-size:13px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;padding:0;">?</button>
+  </div>
+  <div id="subject-help" style="display:none;background:#fff;border:1px dashed var(--border);border-radius:10px;padding:14px 16px;margin:0 0 14px;font-size:13.5px;color:var(--text-2);line-height:1.7;">
+    <h4 style="margin:0 0 8px;font-size:14px;color:var(--text);">如何填写自定义 AI 通道</h4>
+    <p>系统默认使用内置模型。如果你有自己的 OpenAI 兼容接口 KEY，填写后课评生成、课前备课、阶段总结等都会优先使用你的 KEY。</p>
+    <p><strong>API KEY：</strong>你从模型服务商后台复制的密钥，常见前缀如 <code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;">sk-...</code>。不要泄露给他人。</p>
+    <p><strong>接口地址：</strong>服务商提供的 OpenAI 兼容地址，必须包含 <code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;">/v1</code> 结尾。</p>
+    <p><strong>模型名：</strong>你想调用的具体模型，请和服务商文档保持一致。</p>
+    <div style="color:var(--text);margin-top:8px;">
+      <p><strong>OpenAI 示例</strong> <code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;">接口地址=https://api.openai.com/v1</code>，<code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;">模型名=gpt-4o</code></p>
+      <p><strong>智谱示例</strong> <code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;">接口地址=https://open.bigmodel.cn/api/paas/v4</code>，<code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;">模型名=glm-4-plus</code></p>
+      <p><strong>DeepSeek 示例</strong> <code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;">接口地址=https://api.deepseek.com/v1</code>，<code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;">模型名=deepseek-chat</code></p>
+      <p><strong>Kimi 示例</strong> <code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;">接口地址=https://api.moonshot.cn/v1</code>，<code style="background:#f1f5f9;padding:1px 5px;border-radius:4px;font-family:ui-monospace,monospace;">模型名=moonshot-v1-8k</code></p>
+    </div>
+    <p style="margin-top:10px;">若三项全部留空，则自动使用系统内置默认模型。</p>
+  </div>
   <p style="font-size:13px;color:var(--muted);margin:8px 0 14px;">
-    默认使用系统内置的<strong>弱模型</strong>（免费、速度快），能帮你搭出完整的教案和课件框架，
+    默认使用系统内置的<strong>弱模型</strong>（免费、速度快），能帮你搭出完整的教案、课件框架与课评，
     但遇到复杂推理、跨学科整合或创意拓展时，可能会"泛泛而谈"，偶尔出现事实偏差。
-    如果你追求更稳的事实性和更强的教学设计，可以上传自己的<strong>强模型 API KEY</strong>。
+    如果你追求更稳的事实性和更强的教学设计，可以上传自己的<strong>强模型 API KEY</strong>。配置后课评生成与课前备课都会优先使用你的 KEY。
   </p>
   {% if mask_key %}
   <p style="font-size:13px;margin:0 0 12px;">当前已配置：{{ mask_key }}</p>
@@ -100,7 +117,11 @@
 {% endblock %}
 
 {% block prep_extra_js %}
-<script>
+function toggleHelp(id) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
 document.addEventListener('DOMContentLoaded', function(){
   var courseTree = {};
   var subEl = document.getElementById('subSubject');
@@ -133,5 +154,4 @@ document.addEventListener('DOMContentLoaded', function(){
   subEl.addEventListener('change', fillGrades);
   gradeEl.addEventListener('change', fillTopics);
 });
-</script>
 {% endblock %}

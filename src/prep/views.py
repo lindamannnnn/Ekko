@@ -224,14 +224,23 @@ def _run_subject_job(job_id: str, user_id: str, app):
 
 # ---------- 内容生成后台线程 ----------
 
-def _run_content_job(job_id: str, app):
+def _run_content_job(job_id: str, user_id: str, app):
     """后台线程：把上传/粘贴内容切页渲染成课件。"""
     with app.app_context():
         job = PrepJob.query.get(job_id)
+        user = User.query.get(user_id)
         if not job:
             return
         try:
-            slides = segment(job.original_text or "", env=dict(os.environ))
+            env = dict(os.environ)
+            # 优先使用用户自定义 key
+            if user and user.ai_api_key:
+                env["AI_API_KEY"] = user.ai_api_key
+            if user and user.ai_base_url:
+                env["AI_BASE_URL"] = user.ai_base_url
+            if user and user.ai_model:
+                env["AI_MODEL"] = user.ai_model
+            slides = segment(job.original_text or "", env=env)
             if not slides:
                 raise RuntimeError("切页失败：未能将内容拆分为幻灯片")
             title = job.title or slides[0].get("title") or "我的课件"
@@ -342,12 +351,13 @@ def subject():
 @login_required
 def content():
     user = current_user
+    mask_key = _mask_key(user.ai_api_key or "")
     if request.method == "POST":
         f = request.files.get("file")
         text = (request.form.get("text") or "").strip()
         use_api_mod = request.form.get("use_api_mod") == "on"
         if not f and not text:
-            return render_template("prep/content.html", error="请上传文件或粘贴文本", user=user)
+            return render_template("prep/content.html", mask_key=mask_key, error="请上传文件或粘贴文本", user=user, styles=list_styles())
 
         raw = ""
         filename = None
@@ -356,12 +366,12 @@ def content():
             if f and f.filename:
                 ext = os.path.splitext(f.filename)[1].lower()
                 if ext not in ALLOWED_EXT:
-                    return render_template("prep/content.html", error=f"不支持的文件类型：{ext}", user=user)
+                    return render_template("prep/content.html", mask_key=mask_key, error=f"不支持的文件类型：{ext}", user=user, styles=list_styles())
                 data = f.read()
                 if len(data) > MAX_FILE_SIZE:
-                    return render_template("prep/content.html", error="文件超过 15MB 限制", user=user)
+                    return render_template("prep/content.html", mask_key=mask_key, error="文件超过 15MB 限制", user=user, styles=list_styles())
                 if not _magic_ok(data, ext):
-                    return render_template("prep/content.html", error="文件格式与扩展名不符", user=user)
+                    return render_template("prep/content.html", mask_key=mask_key, error="文件格式与扩展名不符", user=user, styles=list_styles())
                 file_size = len(data)
                 filename = _safe_filename(f.filename)
                 tmp_path = os.path.join(PREP_ROOT, "_tmp", uuid.uuid4().hex + ext)
@@ -379,14 +389,14 @@ def content():
                 raw = ingest_text(text)
                 filename = "粘贴文本"
         except Exception as e:
-            return render_template("prep/content.html", error=f"解析失败：{str(e)[:200]}", user=user)
+            return render_template("prep/content.html", mask_key=mask_key, error=f"解析失败：{str(e)[:200]}", user=user, styles=list_styles())
 
         if not raw:
-            return render_template("prep/content.html", error="未能从内容中提取到文本", user=user)
+            return render_template("prep/content.html", mask_key=mask_key, error="未能从内容中提取到文本", user=user, styles=list_styles())
 
         mod = moderate(raw, env=dict(os.environ), use_api=use_api_mod)
         if not mod["ok"]:
-            return render_template("prep/content.html", error="内容未通过合规审核：" + mod["reason"], user=user)
+            return render_template("prep/content.html", mask_key=mask_key, error="内容未通过合规审核：" + mod["reason"], user=user, styles=list_styles())
 
         job = PrepJob(
             user_id=user.id,
@@ -400,7 +410,7 @@ def content():
         db.session.commit()
         return redirect(url_for("prep.content_style", cid=job.id))
 
-    return render_template("prep/content.html", user=user)
+    return render_template("prep/content.html", mask_key=mask_key, user=user, styles=list_styles())
 
 
 @prep_bp.route("/content/<cid>/style", methods=["GET", "POST"])
@@ -420,7 +430,7 @@ def content_style(cid):
         job.title = title or job.filename
         db.session.commit()
         app = current_app._get_current_object()
-        t = threading.Thread(target=_run_content_job, args=(cid, app))
+        t = threading.Thread(target=_run_content_job, args=(cid, user.id, app))
         t.daemon = True
         t.start()
         return redirect(url_for("prep.generating", job=cid))

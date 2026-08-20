@@ -181,7 +181,7 @@ def _generate_for(review: Review) -> dict:
         excellent_review=excellent_review,
         library_example=library_example,
     )
-    client = LLMClient()
+    client = LLMClient.for_user(current_user)
     raw = client.complete(messages, timeout=120)
     text = red.restore(raw)
     # 教师未点标签时，模型会在文末附「【AI亮点标签】」区块：先解析剥离，正文只留课评
@@ -195,6 +195,12 @@ def _generate_for(review: Review) -> dict:
         (preset.length_max if preset else None) if force_two else None,
         force_two=force_two,
     )
+
+    # 用账号昵称作为教师签名追加在正文末尾，保持统一落款
+    teacher_name = current_user.display_name or '教师'
+    sign = f"\n\n——{teacher_name}"
+    if not text.rstrip().endswith(teacher_name):
+        text = text.rstrip() + sign
 
     review.content = text
     review.ai_raw = raw
@@ -281,10 +287,34 @@ def status(class_id, lesson_id):
     return jsonify(data)
 
 
+@reviews_bp.route("/<review_id>")
+@login_required
+def view_review(review_id):
+    """课评只读详情页：从账号页点击记录进入，仅展示正文，不暴露编辑器控件。"""
+    review = Review.query.filter_by(
+        id=review_id, user_id=current_user.id
+    ).first_or_404()
+    klass = Klass.query.filter_by(
+        id=review.class_id, user_id=current_user.id, deleted_at=None
+    ).first_or_404()
+    student = db.session.get(Student, review.student_id)
+    lesson = db.session.get(Lesson, review.lesson_id)
+    return render_template(
+        "reviews/view.html",
+        review=review,
+        klass=klass,
+        student=student,
+        lesson=lesson,
+    )
+
+
 @reviews_bp.route("/<review_id>/generate", methods=["POST"])
 @login_required
 def generate(review_id):
     review = _review_or_404(review_id)
+    # 请假状态直接返回固定文案，不调用 AI
+    if review.status == 'leave':
+        return jsonify({"ok": True, "status": "leave", "content": review.content})
     # 幂等锁：正在生成且未超时 -> 拒绝；超时 -> 允许重入
     if review.status == 'generating' and review.generating_since:
         elapsed = (datetime.utcnow() - review.generating_since).total_seconds()
@@ -298,6 +328,8 @@ def generate(review_id):
     db.session.commit()
     try:
         result = _generate_for(review)
+        # 回传正文，使前端生成后无需刷新即可在编辑器内显示（修复 UX 断裂）
+        result["content"] = review.content
         return jsonify(result)
     except Exception as e:  # noqa: BLE001
         review.status = 'failed'
@@ -344,8 +376,12 @@ def confirm(review_id):
 def leave(review_id):
     review = _review_or_404(review_id)
     review.status = 'leave'
+    review.content = '请假'
+    review.ai_raw = ''
+    review.generating_since = None
+    review.error_msg = None
     db.session.commit()
-    return jsonify({"ok": True, "status": "leave"})
+    return jsonify({"ok": True, "status": "leave", "content": review.content})
 
 
 @reviews_bp.route("/<review_id>/revert", methods=["POST"])
@@ -448,7 +484,7 @@ def _regenerate_with_reference(review, reference_opening):
         excellent_review=red.redact(excellent_raw) if excellent_raw else "",
         library_example=library_example,
     )
-    client = LLMClient()
+    client = LLMClient.for_user(current_user)
     raw = client.complete(messages, timeout=120)
     text = red.restore(raw)
     force_two = not bool(excellent_raw)

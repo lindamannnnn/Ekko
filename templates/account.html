@@ -2,112 +2,318 @@
 {% block title %}账号设置 - Ekko课评系统{% endblock %}
 
 {% block content %}
-<div class="page-header">
-  <div class="ph-left">
-    <h1 class="ph-title">账号设置</h1>
-    <p class="ph-sub">管理个人信息与课前备课 AI 通道</p>
+<style>
+.account-page { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
+.page-header { margin-bottom: 28px; }
+.page-header h1 { font-size: 28px; margin: 0 0 6px; letter-spacing: -0.5px; }
+.page-header .ph-sub { color: var(--text-2); font-size: 15px; margin: 0; }
+
+.account-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow);
+}
+.account-card h2 {
+  font-size: 18px;
+  margin: 0 0 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-sub {
+  color: var(--text-2);
+  font-size: 14px;
+  margin: 0 0 18px;
+  line-height: 1.5;
+}
+
+.form-row {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-bottom: 18px;
+}
+.form-row.three-col { grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 720px) {
+  .form-row.three-col { grid-template-columns: 1fr; }
+}
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 14px; font-weight: 600; color: var(--text); }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-input, rgba(255,255,255,0.03));
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1.4;
+  width: 100%;
+  box-sizing: border-box;
+}
+.form-group input:disabled {
+  background: var(--bg-muted, rgba(255,255,255,0.05));
+  color: var(--text-2);
+  cursor: not-allowed;
+}
+.input-hint {
+  font-size: 12px;
+  color: var(--text-2);
+  margin: 4px 0 0;
+  line-height: 1.4;
+}
+
+.btn-bar { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+
+.record-list { display: flex; flex-direction: column; gap: 12px; }
+.record-card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  transition: transform .15s, box-shadow .15s, border-color .15s;
+}
+.record-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,.25), 0 0 0 1px var(--border-strong);
+}
+.record-card-static { cursor: default; }
+.record-card-static:hover { transform: none; box-shadow: var(--shadow); border-color: var(--border); }
+.record-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.record-title { font-weight: 700; color: var(--text); font-size: 15px; }
+.record-meta { font-size: 13px; color: var(--text-2); white-space: nowrap; }
+.record-snippet {
+  margin: 10px 0 0;
+  color: var(--text-2);
+  font-size: 14px;
+  line-height: 1.6;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.record-snippet.empty { opacity: 0.7; font-style: italic; }
+.record-actions { margin-top: 10px; }
+
+.empty-tip { color: var(--text-2); font-size: 14px; margin: 4px 0 0; }
+.status-pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-confirmed { background: var(--accent-soft); color: var(--accent); }
+.status-draft { background: rgba(234,179,8,.12); color: #eab308; }
+.status-pending { background: rgba(148,163,184,.12); color: #94a3b8; }
+.status-failed { background: rgba(239,68,68,.12); color: #ef4444; }
+
+.card-title-row { display:flex; align-items:center; gap:10px; margin:0 0 12px; }
+.card-title-row h2 { margin:0; }
+.help-btn {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--bg-soft); color: var(--text-2);
+  font-size: 13px; line-height: 1; cursor: pointer; display:inline-flex;
+  align-items:center; justify-content:center; padding:0;
+}
+.help-btn:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.help-panel {
+  background: #f8fafc; border: 1px dashed var(--border); border-radius: 10px;
+  padding: 14px 16px; margin: 0 0 16px; font-size: 13.5px; color: var(--text-2);
+  line-height: 1.7;
+}
+.help-panel h4 { margin: 0 0 8px; font-size: 14px; color: var(--text); }
+.help-panel p { margin: 6px 0; }
+.help-panel code {
+  background: #eef2f7; padding: 1px 5px; border-radius: 4px;
+  font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  color: var(--text);
+}
+.help-panel .example { color: var(--text); margin-top: 8px; }
+.help-panel .example strong { display:inline-block; min-width: 4.5em; }
+</style>
+
+<div class="account-page">
+  <div class="page-header">
+    <h1>账号设置</h1>
+    <p class="ph-sub">管理个人信息、修改密码与 AI 通道</p>
   </div>
-</div>
 
-<div class="glass-card" style="margin-bottom: 24px;">
-  <h2>基本信息</h2>
-  <div style="margin-top: 12px; color: var(--text-2);">
-    <p><strong>邮箱：</strong>{{ user.email or '-' }}</p>
-    <p><strong>显示名：</strong>{{ user.display_name or '-' }}</p>
-  </div>
-</div>
-
-<div class="glass-card" id="prep-key">
-  <h2>课前备课 API KEY</h2>
-  <p style="color: var(--text-2); margin: 8px 0 18px;">
-    默认使用系统内置模型。上传自己的强模型 KEY 后，课前备课的学科生成会优先使用你的 KEY。
-  </p>
-  {% if user.ai_api_key %}
-  <p style="margin: 0 0 12px;">当前已配置：{{ user.ai_api_key[-4:] if user.ai_api_key|length > 4 else '****' }}</p>
-  {% endif %}
-  <form method="post" action="{{ url_for('main.account') }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input type="hidden" name="action" value="prep_key">
-    <div style="display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
-      <div>
-        <label for="ai_api_key">API KEY</label>
-        <input type="text" id="ai_api_key" name="ai_api_key" placeholder="sk-... 留空则清空" autocomplete="off">
-      </div>
-      <div>
-        <label for="ai_base_url">接口地址（可选）</label>
-        <input type="text" id="ai_base_url" name="ai_base_url" value="{{ user.ai_base_url or '' }}" placeholder="https://api.openai.com/v1">
-      </div>
-      <div>
-        <label for="ai_model">模型名（可选）</label>
-        <input type="text" id="ai_model" name="ai_model" value="{{ user.ai_model or '' }}" placeholder="gpt-4o">
-      </div>
-    </div>
-    <div style="margin-top: 18px; display: flex; gap: 12px;">
-      <button type="submit" class="btn">保存 API KEY</button>
-      <button type="submit" name="ai_api_key" value="" class="btn btn-secondary">清空</button>
-    </div>
-  </form>
-</div>
-
-<div class="glass-card" style="margin-bottom: 24px;">
-  <h2>课前备课 · 生成记录</h2>
-  <p style="color: var(--text-2); margin: 8px 0 16px;">
-    文件保留 <strong>{{ prep_retention }}</strong> 天，过期后自动清理；数据库记录永久保存。
-  </p>
-  {% if prep_jobs %}
-  <div style="display:flex; flex-direction:column; gap:10px;">
-    {% for j in prep_jobs %}
-    <div style="border:1px solid var(--border); border-radius: var(--radius); padding:14px 16px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-      <div style="min-width:0;">
-        <div style="font-weight:700;">{{ j.title or j.filename or j.topic or '未命名' }}</div>
-        <div style="color:var(--text-2); font-size:13px; margin-top:4px;">
-          {% if j.mode == 'subject' %}学科生成 · {{ j.subject }} {{ j.grade }}《{{ j.topic }}》{% else %}内容生成 · {{ j.filename }}{% endif %}
-          · 风格 {{ j.style or '—' }}
+  <div class="account-card">
+    <h2>账号资料</h2>
+    <p class="section-sub">邮箱不可更改，可修改显示昵称。</p>
+    <form method="post" action="{{ url_for('main.account') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="profile">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="acc_email">邮箱</label>
+          <input type="email" id="acc_email" value="{{ user.email or '-' }}" disabled>
         </div>
-        <div style="color:var(--text-2); font-size:12px; margin-top:4px;">{{ j.created_at.strftime('%Y-%m-%d %H:%M') if j.created_at }}</div>
+        <div class="form-group">
+          <label for="display_name">显示名（昵称）</label>
+          <input type="text" id="display_name" name="display_name" value="{{ user.display_name or '' }}" placeholder="例如：林老师" maxlength="40">
+          <p class="input-hint">这个字段会直接显示在课评的教师签名里。</p>
+        </div>
       </div>
-      <div style="display:flex; align-items:center; gap:10px;">
-        {% if j.status == 'success' %}
-          <span style="color:var(--accent); font-weight:700;">成功</span>
-          {% if j.has_files %}
-            <a class="btn" href="{{ url_for('prep.result', job=j.id) }}">查看</a>
-          {% else %}
-            <span style="color:var(--text-2); font-size:13px;">文件已过期</span>
-          {% endif %}
-        {% elif j.status == 'failed' %}
-          <span style="color:var(--danger); font-weight:700;">失败</span>
-        {% else %}
-          <span style="color:var(--text-2); font-weight:700;">{{ j.status }}</span>
-        {% endif %}
+      <div class="btn-bar">
+        <button type="submit" class="btn">保存昵称</button>
       </div>
-    </div>
-    {% endfor %}
+    </form>
   </div>
-  {% else %}
-  <p style="color: var(--text-2);">还没有生成记录，去 <a href="{{ url_for('prep.index') }}">课前备课</a> 试试吧。</p>
-  {% endif %}
-</div>
 
-<div class="glass-card">
-  <h2>课后课评 · 课评记录</h2>
-  <p style="color: var(--text-2); margin: 8px 0 16px;">课评记录永久保存，不可清理。</p>
-  {% if reviews %}
-  <div style="display:flex; flex-direction:column; gap:10px;">
-    {% for rv in reviews %}
-    <div style="border:1px solid var(--border); border-radius: var(--radius); padding:14px 16px;">
-      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-        <div style="font-weight:700;">{{ rv.class_name }} · {{ rv.student_name }}</div>
-        <span style="color:var(--text-2); font-size:12px;">
-          {% if rv.status == 'confirmed' %}已确认{% elif rv.status == 'draft' %}草稿{% elif rv.status == 'pending' %}待生成{% else %}{{ rv.status }}{% endif %}
-          {% if rv.created_at %} · {{ rv.created_at.strftime('%Y-%m-%d') }}{% endif %}
-        </span>
+  <div class="account-card">
+    <h2>修改密码</h2>
+    <form method="post" action="{{ url_for('main.account') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="password">
+      <div class="form-row three-col">
+        <div class="form-group">
+          <label for="current_password">当前密码</label>
+          <input type="password" id="current_password" name="current_password" placeholder="输入当前密码" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label for="new_password">新密码</label>
+          <input type="password" id="new_password" name="new_password" placeholder="至少 6 位" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label for="confirm_password">确认新密码</label>
+          <input type="password" id="confirm_password" name="confirm_password" placeholder="再次输入新密码" required minlength="6">
+        </div>
       </div>
-      <p style="color:var(--text-2); font-size:13px; margin:8px 0 0; line-height:1.5;">{{ rv.content or '（暂无正文）' }}</p>
-    </div>
-    {% endfor %}
+      <div class="btn-bar">
+        <button type="submit" class="btn">修改密码</button>
+      </div>
+    </form>
   </div>
-  {% else %}
-  <p style="color: var(--text-2);">还没有课评记录。</p>
-  {% endif %}
+
+  <div class="account-card" id="prep-key">
+    <div class="card-title-row">
+      <h2>AI API KEY</h2>
+      <button type="button" class="help-btn" onclick="toggleHelp('account-help')" title="查看填写说明">?</button>
+    </div>
+    <div id="account-help" class="help-panel" style="display:none;">
+      <h4>如何填写自定义 AI 通道</h4>
+      <p>系统默认使用内置模型。如果你有自己的 OpenAI 兼容接口 KEY，填写后课评生成、课前备课、阶段总结等都会优先使用你的 KEY。</p>
+      <p><strong>API KEY：</strong>你从模型服务商后台复制的密钥，常见前缀如 <code>sk-...</code>。不要泄露给他人。</p>
+      <p><strong>接口地址：</strong>服务商提供的 OpenAI 兼容地址，必须包含 <code>/v1</code> 结尾。</p>
+      <p><strong>模型名：</strong>你想调用的具体模型，请和服务商文档保持一致。</p>
+      <div class="example">
+        <p><strong>OpenAI 示例</strong><code>接口地址=https://api.openai.com/v1</code>，<code>模型名=gpt-4o</code></p>
+        <p><strong>智谱示例</strong><code>接口地址=https://open.bigmodel.cn/api/paas/v4</code>，<code>模型名=glm-4-plus</code></p>
+        <p><strong>DeepSeek 示例</strong><code>接口地址=https://api.deepseek.com/v1</code>，<code>模型名=deepseek-chat</code></p>
+        <p><strong>Kimi 示例</strong><code>接口地址=https://api.moonshot.cn/v1</code>，<code>模型名=moonshot-v1-8k</code></p>
+      </div>
+      <p style="margin-top:10px;">若三项全部留空，则自动使用系统内置默认模型。</p>
+    </div>
+    <p class="section-sub">默认使用系统内置模型。上传自己的 KEY 后，课评生成与课前备课会优先使用你的 KEY。</p>
+    {% if user.ai_api_key %}
+    <p class="section-sub" style="margin-top:-8px; margin-bottom:12px; color:var(--text);">当前已配置：{{ user.ai_api_key[-4:] if user.ai_api_key|length > 4 else '****' }}</p>
+    {% endif %}
+    <form method="post" action="{{ url_for('main.account') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="hidden" name="action" value="prep_key">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="ai_api_key">API KEY</label>
+          <input type="text" id="ai_api_key" name="ai_api_key" placeholder="sk-... 留空则清空" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label for="ai_base_url">接口地址（可选）</label>
+          <input type="text" id="ai_base_url" name="ai_base_url" value="{{ user.ai_base_url or '' }}" placeholder="https://api.openai.com/v1">
+        </div>
+        <div class="form-group">
+          <label for="ai_model">模型名（可选）</label>
+          <input type="text" id="ai_model" name="ai_model" value="{{ user.ai_model or '' }}" placeholder="gpt-4o">
+        </div>
+      </div>
+      <div class="btn-bar">
+        <button type="submit" class="btn">保存 API KEY</button>
+        <button type="submit" name="ai_api_key" value="" class="btn btn-secondary">清空</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="account-card">
+    <h2>课前备课 · 生成记录</h2>
+    <p class="section-sub">文件保留 <strong>{{ prep_retention }}</strong> 天，过期后自动清理；数据库记录永久保存。</p>
+    {% if prep_jobs %}
+    <div class="record-list">
+      {% for j in prep_jobs %}
+      <div class="record-card record-card-static">
+        <div class="record-header">
+          <span class="record-title">{{ j.title or j.filename or j.topic or '未命名' }}</span>
+          <span class="record-meta">
+            {% if j.status == 'success' %}<span class="status-pill status-confirmed">成功</span>
+            {% elif j.status == 'failed' %}<span class="status-pill status-failed">失败</span>
+            {% else %}<span class="status-pill status-pending">{{ j.status }}</span>{% endif %}
+            · {{ j.created_at.strftime('%Y-%m-%d %H:%M') if j.created_at }}
+          </span>
+        </div>
+        <div class="record-snippet">
+          {% if j.mode == 'subject' %}学科生成 · {{ j.subject }} {{ j.grade }}《{{ j.topic }}》{% else %}内容生成 · {{ j.filename }}{% endif %} · 风格 {{ j.style or '—' }}
+        </div>
+        <div class="record-actions">
+          {% if j.status == 'success' and j.has_files %}
+            <a class="btn btn-sm" href="{{ url_for('prep.result', job=j.id) }}">查看</a>
+          {% elif j.status == 'success' %}
+            <span class="record-meta">文件已过期</span>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-tip">还没有生成记录，去 <a href="{{ url_for('prep.index') }}">课前备课</a> 试试吧。</p>
+    {% endif %}
+  </div>
+
+  <div class="account-card">
+    <h2>课后课评 · 课评记录</h2>
+    <p class="section-sub">课评记录永久保存，不可清理。每个班级展示最近 3 条，点击可查看这篇课评。</p>
+    {% if reviews %}
+    <div class="record-list">
+      {% for rv in reviews %}
+      <a class="record-card" href="{{ url_for('reviews.view_review', review_id=rv.review_id) }}">
+        <div class="record-header">
+          <span class="record-title">{{ rv.class_name }} · {{ rv.student_name }}</span>
+          <span class="record-meta">
+            {% if rv.status == 'confirmed' %}<span class="status-pill status-confirmed">已确认</span>
+            {% elif rv.status == 'draft' %}<span class="status-pill status-draft">草稿</span>
+            {% elif rv.status == 'pending' %}<span class="status-pill status-pending">待生成</span>
+            {% elif rv.status == 'failed' %}<span class="status-pill status-failed">失败</span>
+            {% else %}<span class="status-pill">{{ rv.status }}</span>{% endif %}
+            {% if rv.created_at %} · {{ rv.created_at.strftime('%Y-%m-%d') }}{% endif %}
+          </span>
+        </div>
+        <p class="record-snippet {% if not rv.content %}empty{% endif %}">{{ rv.content or '（暂无正文）' }}</p>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-tip">还没有课评记录。</p>
+    {% endif %}
+  </div>
 </div>
+<script>
+function toggleHelp(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+</script>
 {% endblock %}

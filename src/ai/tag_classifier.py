@@ -48,7 +48,7 @@ def _rule_fallback(tag: str) -> str:
     return _classify_tag(tag)
 
 
-def classify_tag(tag) -> str:
+def classify_tag(tag, user=None) -> str:
     """返回 'negative' / 'positive' / 'neutral'。负向标签在卡片图片中不渲染。"""
     if not tag:
         return "neutral"
@@ -63,10 +63,10 @@ def classify_tag(tag) -> str:
         _cache[t] = "negative"
         return "negative"
 
-    # 2) 交给 AI 判定
+    # 2) 交给 AI 判定（优先使用用户自定义 API）
     result = None
     try:
-        client = LLMClient()
+        client = LLMClient.for_user(user)
         resp = client.complete(
             [
                 {"role": "system", "content": _SYSTEM},
@@ -91,7 +91,7 @@ def classify_tag(tag) -> str:
     return result
 
 
-def render_tags(tags) -> list[str]:
+def render_tags(tags, user=None) -> list[str]:
     """过滤掉负向标签，返回应在卡片「本次亮点」中渲染的标签列表。"""
     out = []
     for t in (tags or []):
@@ -100,6 +100,6 @@ def render_tags(tags) -> list[str]:
         t = str(t).strip()
         if not t:
             continue
-        if classify_tag(t) != "negative":
+        if classify_tag(t, user=user) != "negative":
             out.append(t)
     return out

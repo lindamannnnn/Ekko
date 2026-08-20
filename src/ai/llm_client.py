@@ -23,6 +23,17 @@ class LLMClient:
             {"http": proxy_url, "https": proxy_url} if proxy_url else {"http": None, "https": None}
         )
 
+    @classmethod
+    def for_user(cls, user):
+        """优先使用用户自定义 API；未配置则回退平台默认。"""
+        if user is None:
+            return cls()
+        return cls(
+            api_key=user.ai_api_key or None,
+            base_url=user.ai_base_url or None,
+            model=user.ai_model or None,
+        )
+
     def complete(self, messages, temperature=0.7, timeout=120, max_tokens=None):
         """同步调用，返回纯文本。失败时抛异常交由调用方处理。"""
         headers = {

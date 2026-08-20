@@ -8,31 +8,28 @@
 ## [Unreleased]
 
 ### Added
-- 初始项目架构搭建
-- 支持 Kitten、C++、AI 三种课程类型的课评生成
-- Web界面简化设计（选择课程→输入表现→生成课评→保存）
-- 学生档案使用 Markdown + YAML 格式存储
-- AI 课评生成（Kimi API）
-- 30名学生档案（AICODE01, AICODE03, CSP01, CSP04, K2, K4）
-- 122个课程文件（C++ 26 + Kitten 96）
+- 课前备课：按学科自动生成教案 + 课件，支持 11 种风格离线 HTML 渲染。
+- 课前备课内容生成：上传任意教学内容（txt/docx/pptx/pdf）生成课件，支持代码块保留、特殊符号、无围栏代码标记。
+- 用户自定义 API KEY：账号页填入 OpenAI 兼容 KEY 后，课评生成、课前备课、学生阶段总结、卡片标签情感判定均优先使用用户 KEY。
+- 班级详情页快捷编辑、历史课评时间线、优秀课评范例上传。
+- 课评编辑器批量生成、同班去重、状态机（pending / generating / draft / confirmed / leave / failed）。
+- 家长群分享卡片生成（图片导出）。
+- 平台总后台：用户 / 班级 / 课件 / 课评 / 课前备课任务管理。
 
 ### Changed
-- API 从 Claude 迁移至 Kimi (Moonshot)
-- API 密钥管理改为环境变量 + .env 文件方式
-- 课评直接保存到学生档案，不再使用 output/ 目录
-- 清理重复课程文件（CSP04 删除12个重复文件）
+- 请假课评行为：点击「请假」后直接写入 `content = "请假"` 且不调用 AI；再次生成仍返回「请假」。
+- 用户 API KEY 文案统一：账号页与课前备课页从「课前备课 API KEY」改为「AI API KEY」。
+- AI 客户端代理策略：默认直连，仅当 `.env` 设 `AI_PROXY` 时才走代理。
 
-### Removed
-- output/ 目录（课评直接保存到学生档案）
-- Python 缓存文件 (__pycache__)
-- 测试文件 (debug_prompt.py, test_*.py)
-- 临时数据文件 (student_answers.json, web.log)
-- 重复的课程文件
+### Fixed
+- 用户自定义 API KEY 对课评生成不生效（此前仅课前备课使用）。
+- 课前备课内容生成丢失多行代码块、缩进、语言标记污染 bullet 等问题。
+- 请假状态下编辑器「已完成」计数未包含 leave。
 
 ### Security
-- API 密钥从明文存储改为环境变量方式
-- 添加 .gitignore 保护 .env 文件
-- config.yaml 使用占位符 ${KIMI_API_KEY}
+- API 密钥从明文存储改为环境变量 / 用户数据库字段方式。
+- 添加 .gitignore 保护 .env 文件与上传目录。
+- CSRF 全局开启，reviews 纯 JSON API 蓝图豁免并由 `@login_required` 鉴权。
 
 ## [0.1.0] - 2026-03-25
 

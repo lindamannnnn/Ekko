@@ -220,7 +220,7 @@
 
   function updateProgress() {
     const all = Object.values(state);
-    const done = all.filter((r) => r.status === 'confirmed' || r.status === 'draft').length;
+    const done = all.filter((r) => r.status === 'confirmed' || r.status === 'draft' || r.status === 'leave').length;
     $('#progress').textContent = `已完成 ${done} / ${all.length}`;
   }
 

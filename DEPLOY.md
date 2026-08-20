@@ -11,9 +11,18 @@ python run.py         # 启动，访问 http://127.0.0.1:5000
 
 ## 配置 .env
 复制 `.env.example` 为 `.env` 并填入：
-- `AI_API_KEY`：智谱 GLM-4-Flash 的 API Key（https://open.bigmodel.cn/usercenter/apikeys 获取）
+- `AI_API_KEY`：智谱 GLM-4-Flash 的 API Key（https://open.bigmodel.cn/usercenter/apikeys 获取），作为平台默认 KEY
 - `AI_BASE_URL` / `AI_MODEL`：默认 `https://open.bigmodel.cn/api/paas/v4` / `glm-4-flash`
 - `MAIL_*`：发信邮箱（可选，不填则 dev 模式控制台打印链接）
+
+### 用户自定义 API KEY（可选）
+老师在「账号设置 → AI API KEY」或「课前备课 → API KEY 管理」填入自己的 OpenAI 兼容 KEY（可配 base_url / model）后：
+- **课评生成**（班级编辑器一键生成 / 单人生成）
+- **课前备课学科生成**
+- **课前备课内容生成**
+- **学生阶段总结**
+- **卡片标签情感判定**
+都会优先使用用户 KEY；未配置或清空时回退到平台默认 `.env` 中的 KEY。
 
 ## Docker 部署
 ```bash
@@ -47,6 +56,20 @@ docker compose exec web flask seed
 - [ ] 68 个本地改动提交入库（含旧系统清理），保留可追溯历史。
 
 ---
+
+## 部署补充（2026-08-20 上线准备）
+
+### 1. 用户自定义 API KEY 现已覆盖课评生成（2026-08-20）
+- 此前用户填写的 `ai_api_key` 只在课前备课生效；本次修复后，课评生成、去重重写、学生阶段总结、卡片标签情感判定均会优先使用用户 KEY。
+- 账号页与课前备课页的 UI 文案已同步更新为「AI API KEY」。
+
+### 2. 请假课评行为（2026-08-20）
+- 编辑器中点击「请假」后，系统直接写入 `content = "请假"` 并将状态置为 `leave`，**不再调用 AI**。
+- 对 `leave` 状态再次点击「生成」会直接返回「请假」，不消耗 token。
+- `leave` 状态会计入编辑器顶部「已完成」计数。
+
+### 3. 课前备课内容生成支持代码块（2026-08-20）
+- 上传内容生成课件时，标准 Markdown 围栏代码块与 `python`/`plaintext`/`scratch` 等无围栏代码块会被保留并渲染为 `<pre><code>`，保留原始缩进，避免语言标记污染 bullet。
 
 ## 部署补充（2026-08-05 上线准备）
 

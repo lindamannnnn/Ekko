@@ -75,7 +75,7 @@ def generate_summary(student_id):
     period = request.form.get("period_label", "本学期")
     messages = build_summary_messages(preset, red.redact(student.name), snippets, period)
     try:
-        text = LLMClient().complete(messages, timeout=120)
+        text = LLMClient.for_user(current_user).complete(messages, timeout=120)
         text = red.restore(text)
     except Exception as e:  # noqa: BLE001
         return jsonify({"ok": False, "error": str(e)}), 500
