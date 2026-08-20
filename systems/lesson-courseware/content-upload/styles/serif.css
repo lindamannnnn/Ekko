@@ -1,0 +1,15 @@
+/* 9. 极简衬线 —— 经典衬线 + 细分割线，优雅 */
+:root{
+  --bg:#ffffff; --fg:#222222; --muted:#9a9a9a; --accent:#8a6d3b;
+  --font: Georgia, "Times New Roman", "Songti SC", "Noto Serif SC", "SimSun", serif;
+}
+.slide{ font-family:var(--font); }
+.kicker{ letter-spacing:.22em; color:var(--accent); }
+.title{ font-weight:600; font-style:normal; letter-spacing:.01em; }
+.title::after{ content:""; display:block; width:48px; height:2px; background:var(--accent);
+  margin-top:.5em; }
+.bullets li{ font-weight:400; }
+.bullets li::before{ background:var(--accent); border-radius:50%; width:.4em; height:.4em; top:.72em; }
+.slide-num{ color:var(--muted); font-style:italic; }
+.cover .title{ font-style:italic; }
+.cover .sub{ color:var(--muted); font-style:italic; }

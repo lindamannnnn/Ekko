@@ -1,0 +1,252 @@
+{
+  "subject": "语文",
+  "grade": "四年级下",
+  "bundle": true,
+  "lessons": {
+    "四时田园杂兴（其二十五）": {
+      "author": "范成大",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "田园·夏日",
+      "key_text": ""
+    },
+    "宿新市徐公店": {
+      "author": "杨万里",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "田园·童趣",
+      "key_text": ""
+    },
+    "清平乐·村居": {
+      "author": "辛弃疾",
+      "dynasty": "宋",
+      "genre": "古诗(词)",
+      "theme": "田园·人情",
+      "key_text": ""
+    },
+    "乡下人家": {
+      "author": "陈醉云",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "乡村·生活",
+      "key_text": ""
+    },
+    "三月桃花水": {
+      "author": "刘湛秋",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "春天·水",
+      "key_text": ""
+    },
+    "琥珀": {
+      "author": "（德）柏吉尔",
+      "dynasty": "",
+      "genre": "科普文",
+      "theme": "科学·推测",
+      "key_text": ""
+    },
+    "飞向蓝天的恐龙": {
+      "author": "徐星",
+      "dynasty": "",
+      "genre": "科普文",
+      "theme": "科学·演化",
+      "key_text": ""
+    },
+    "纳米技术就在我们身边": {
+      "author": "刘忠范",
+      "dynasty": "",
+      "genre": "科普文",
+      "theme": "科技·生活",
+      "key_text": ""
+    },
+    "千年梦圆在今朝": {
+      "author": "蔡桂林",
+      "dynasty": "",
+      "genre": "叙事文",
+      "theme": "航天·奋斗",
+      "key_text": ""
+    },
+    "繁星（七一）": {
+      "author": "冰心",
+      "dynasty": "现代",
+      "genre": "现代诗",
+      "theme": "母爱·回忆",
+      "key_text": ""
+    },
+    "繁星（一三一）": {
+      "author": "冰心",
+      "dynasty": "现代",
+      "genre": "现代诗",
+      "theme": "大海·情感",
+      "key_text": ""
+    },
+    "繁星（一五九）": {
+      "author": "冰心",
+      "dynasty": "现代",
+      "genre": "现代诗",
+      "theme": "母爱·庇护",
+      "key_text": ""
+    },
+    "绿": {
+      "author": "艾青",
+      "dynasty": "现代",
+      "genre": "现代诗",
+      "theme": "自然·色彩",
+      "key_text": ""
+    },
+    "白桦": {
+      "author": "（俄）叶赛宁",
+      "dynasty": "",
+      "genre": "外国诗",
+      "theme": "自然·高洁",
+      "key_text": ""
+    },
+    "在天晴了的时候": {
+      "author": "戴望舒",
+      "dynasty": "",
+      "genre": "现代诗",
+      "theme": "自然·清新",
+      "key_text": ""
+    },
+    "猫": {
+      "author": "老舍",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "动物·性情",
+      "key_text": ""
+    },
+    "母鸡": {
+      "author": "老舍",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "动物·母爱",
+      "key_text": ""
+    },
+    "白鹅": {
+      "author": "丰子恺",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "动物·趣味",
+      "key_text": ""
+    },
+    "海上日出": {
+      "author": "巴金",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "自然·壮美",
+      "key_text": ""
+    },
+    "记金华的双龙洞": {
+      "author": "叶圣陶",
+      "dynasty": "",
+      "genre": "游记",
+      "theme": "游记·见闻",
+      "key_text": ""
+    },
+    "囊萤夜读": {
+      "author": "（选自《晋书·车胤传》）",
+      "dynasty": "晋",
+      "genre": "文言文",
+      "theme": "勤学",
+      "key_text": ""
+    },
+    "铁杵成针": {
+      "author": "（选自《方舆胜览》）",
+      "dynasty": "宋",
+      "genre": "文言文(改写)",
+      "theme": "勤学·恒心",
+      "key_text": ""
+    },
+    "小英雄雨来（节选）": {
+      "author": "管桦",
+      "dynasty": "",
+      "genre": "小说",
+      "theme": "抗日·少年",
+      "key_text": ""
+    },
+    "我们家的男子汉": {
+      "author": "王安忆",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "成长·独立",
+      "key_text": ""
+    },
+    "芦花鞋": {
+      "author": "曹文轩",
+      "dynasty": "",
+      "genre": "小说",
+      "theme": "善良·苦难",
+      "key_text": ""
+    },
+    "芙蓉楼送辛渐": {
+      "author": "王昌龄",
+      "dynasty": "唐",
+      "genre": "古诗",
+      "theme": "送别·品格",
+      "key_text": ""
+    },
+    "塞下曲": {
+      "author": "卢纶",
+      "dynasty": "唐",
+      "genre": "古诗",
+      "theme": "边塞·将士",
+      "key_text": ""
+    },
+    "墨梅": {
+      "author": "王冕",
+      "dynasty": "元",
+      "genre": "古诗",
+      "theme": "咏物·品格",
+      "key_text": ""
+    },
+    "黄继光": {
+      "author": "（战地通讯改写）",
+      "dynasty": "",
+      "genre": "叙事文",
+      "theme": "英雄·牺牲",
+      "key_text": ""
+    },
+    "诺曼底号遇难记": {
+      "author": "（法）雨果",
+      "dynasty": "",
+      "genre": "小说",
+      "theme": "英雄·职守",
+      "key_text": ""
+    },
+    "挑山工": {
+      "author": "冯骥才",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "哲理·踏实",
+      "key_text": ""
+    },
+    "宝葫芦的秘密（节选）": {
+      "author": "张天翼",
+      "dynasty": "",
+      "genre": "童话",
+      "theme": "童话·幻想",
+      "key_text": ""
+    },
+    "巨人的花园": {
+      "author": "（英）王尔德",
+      "dynasty": "",
+      "genre": "童话",
+      "theme": "童话·分享",
+      "key_text": ""
+    },
+    "海的女儿": {
+      "author": "（丹）安徒生",
+      "dynasty": "",
+      "genre": "童话",
+      "theme": "童话·牺牲",
+      "key_text": ""
+    },
+    "天窗": {
+      "author": "茅盾",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "童年·想象",
+      "key_text": ""
+    }
+  }
+}

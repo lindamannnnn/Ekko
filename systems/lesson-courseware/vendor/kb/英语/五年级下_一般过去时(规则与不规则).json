@@ -1,0 +1,17 @@
+{
+  "subject": "英语",
+  "grade": "五年级下",
+  "topic": "一般过去时(规则与不规则)",
+  "source": "人教版(PEP)小学英语（三年级起点，3-6年级）语法与功能句型体系",
+  "original_text": "一般过去时表示过去某个时间发生的动作或存在的状态。结构：主语+was/were/动词过去式。规则变化加 -ed（play→played, watch→watched）；不规则动词需特殊记忆：go→went, eat→ate, see→saw, have→had。标志词：yesterday, last week, ...ago, just now。",
+  "key_points": [
+    "结构：主语+动词过去式",
+    "be过去：was/were",
+    "规则：+ed；不规则：go-went, eat-ate, see-saw, buy-bought",
+    "标志词：yesterday, last week, ...ago"
+  ],
+  "formulas": [
+    "示例：I watched TV yesterday. / She went to the park. / He was happy."
+  ],
+  "cautions": "①规则动词忘加 -ed；②不规则动词错用原形（如 go 过去式写成 go）；③疑问句 Did 后动词用原形（误加 ed）；④was/were 与人称搭配错（I/he 用 was，you/we/they 用 were）。"
+}

@@ -1,0 +1,19 @@
+/* 10. 商务专业 —— 藏青 + 金，企业感 */
+:root{
+  --bg:#ffffff; --fg:#1f2937; --muted:#6b7280; --accent:#1f3a5f; --accent2:#c9a227;
+  --font: "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", sans-serif;
+}
+body{ --navy:var(--accent); }
+.slide{ font-family:var(--font); }
+.slide::before{ content:""; position:absolute; left:0; top:0; width:100%; height:8px;
+  background:linear-gradient(90deg, var(--navy), var(--accent2)); }
+.kicker{ color:var(--accent2); letter-spacing:.2em; }
+.title{ color:var(--navy); font-weight:700; letter-spacing:-.3px; }
+.bullets li{ color:#1f2937; }
+.bullets li::before{ background:var(--navy); width:.5em; height:.5em; top:.62em; }
+.bullets li:nth-child(even)::before{ background:var(--accent2); }
+.slide-num{ color:var(--muted); }
+.cover{ background:var(--navy); color:#fff; }
+.cover .title{ color:#fff; }
+.cover .sub{ color:rgba(255,255,255,.85); }
+.cover .slide::before, .cover::before{ background:var(--accent2); }

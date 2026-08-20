@@ -1,0 +1,238 @@
+{
+  "subject": "语文",
+  "grade": "五年级上",
+  "bundle": true,
+  "lessons": {
+    "白鹭": {
+      "author": "郭沫若",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "借白鹭赞美清新淡雅的自然之美",
+      "key_text": ""
+    },
+    "落花生": {
+      "author": "许地山",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "借花生‘朴实有用’喻做人要做有用的人",
+      "key_text": ""
+    },
+    "桂花雨": {
+      "author": "琦君",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "童年摇桂花，寄托对故乡与童年的思念",
+      "key_text": ""
+    },
+    "珍珠鸟": {
+      "author": "冯骥才",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "人与鸟由怕到信赖，信赖创造美好境界",
+      "key_text": ""
+    },
+    "搭石": {
+      "author": "刘章",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "摆石、走石见乡亲互助礼让之美",
+      "key_text": ""
+    },
+    "将相和": {
+      "author": "据《史记·廉颇蔺相如列传》改写",
+      "dynasty": "",
+      "genre": "历史故事",
+      "theme": "完璧归赵、渑池之会、负荆请罪，将相和",
+      "key_text": ""
+    },
+    "什么比猎豹的速度更快": {
+      "author": "[美]罗伯特·E·韦尔斯 著，矫健 译",
+      "dynasty": "",
+      "genre": "说明文",
+      "theme": "由慢到快比较速度，光最快",
+      "key_text": ""
+    },
+    "冀中的地道战": {
+      "author": "周而复",
+      "dynasty": "",
+      "genre": "纪实/说明",
+      "theme": "地道战是抗日的奇迹",
+      "key_text": ""
+    },
+    "猎人海力布": {
+      "author": "民间故事（选自《中国民间故事》）",
+      "dynasty": "",
+      "genre": "民间故事",
+      "theme": "海力布舍己救人的善良与牺牲",
+      "key_text": ""
+    },
+    "牛郎织女（一）": {
+      "author": "民间故事，叶圣陶整理",
+      "dynasty": "",
+      "genre": "民间故事",
+      "theme": "牛郎与织女相遇成婚",
+      "key_text": ""
+    },
+    "牛郎织女（二）": {
+      "author": "民间故事，叶圣陶整理",
+      "dynasty": "",
+      "genre": "民间故事",
+      "theme": "被天河隔断，七夕鹊桥相会",
+      "key_text": ""
+    },
+    "古诗三首": {
+      "author": "陆游/林升/龚自珍",
+      "dynasty": "宋/宋/清",
+      "genre": "古诗",
+      "theme": "第四单元爱国诗三首",
+      "key_text": ""
+    },
+    "示儿": {
+      "author": "陆游",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "临终盼国家统一",
+      "key_text": ""
+    },
+    "题临安邸": {
+      "author": "林升",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "讽刺南宋偏安苟且",
+      "key_text": ""
+    },
+    "己亥杂诗": {
+      "author": "龚自珍",
+      "dynasty": "清",
+      "genre": "古诗",
+      "theme": "期盼风雷变革、不拘一格降人材",
+      "key_text": ""
+    },
+    "少年中国说（节选）": {
+      "author": "梁启超",
+      "dynasty": "清",
+      "genre": "文言文(议论)",
+      "theme": "少年智则国智，少年强则国强",
+      "key_text": ""
+    },
+    "圆明园的毁灭": {
+      "author": "王英琦",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "辉煌与毁灭，不忘国耻振兴中华",
+      "key_text": ""
+    },
+    "小岛": {
+      "author": "陆颖墨",
+      "dynasty": "",
+      "genre": "现代小说",
+      "theme": "守岛战士爱岛如家、官兵互爱",
+      "key_text": ""
+    },
+    "太阳": {
+      "author": "张姞民",
+      "dynasty": "",
+      "genre": "说明文",
+      "theme": "太阳‘远、大、热’及与人类密切关系",
+      "key_text": ""
+    },
+    "松鼠": {
+      "author": "[法]布封 著，翻译",
+      "dynasty": "",
+      "genre": "说明文",
+      "theme": "松鼠漂亮、驯良、乖巧",
+      "key_text": ""
+    },
+    "慈母情深": {
+      "author": "梁晓声",
+      "dynasty": "",
+      "genre": "现代小说",
+      "theme": "母亲在贫困中支持孩子读书的慈爱",
+      "key_text": ""
+    },
+    "父爱之舟": {
+      "author": "吴冠中",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "以小渔船为线，写深沉父爱",
+      "key_text": ""
+    },
+    "“精彩极了”和“糟糕透了”": {
+      "author": "[美]巴德·舒尔伯格 著，翻译",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "两种评价皆源于爱",
+      "key_text": ""
+    },
+    "古诗词三首": {
+      "author": "王维/张继/纳兰性德",
+      "dynasty": "唐/唐/清",
+      "genre": "古诗/词",
+      "theme": "秋景、羁旅与思乡",
+      "key_text": ""
+    },
+    "山居秋暝": {
+      "author": "王维",
+      "dynasty": "唐",
+      "genre": "古诗",
+      "theme": "秋雨初晴山村黄昏的清幽",
+      "key_text": ""
+    },
+    "枫桥夜泊": {
+      "author": "张继",
+      "dynasty": "唐",
+      "genre": "古诗",
+      "theme": "夜泊枫桥的羁旅愁思",
+      "key_text": ""
+    },
+    "长相思": {
+      "author": "纳兰性德",
+      "dynasty": "清",
+      "genre": "词",
+      "theme": "跋涉塞外、风雪思乡",
+      "key_text": ""
+    },
+    "四季之美": {
+      "author": "[日]清少纳言 著，卞立强 译",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "四季中最美时段的细腻感受",
+      "key_text": ""
+    },
+    "鸟的天堂": {
+      "author": "巴金",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "大榕树与群鸟的生机",
+      "key_text": ""
+    },
+    "月迹": {
+      "author": "贾平凹",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "孩童中秋寻月的童真童趣",
+      "key_text": ""
+    },
+    "古人谈读书": {
+      "author": "《论语》/朱熹/曾国藩",
+      "dynasty": "",
+      "genre": "文言文",
+      "theme": "读书态度与方法（求实、三到、志识恒）",
+      "key_text": ""
+    },
+    "忆读书": {
+      "author": "冰心",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "读书好，多读书，读好书",
+      "key_text": ""
+    },
+    "我的“长生果”": {
+      "author": "叶文玲",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "阅读滋养写作，作文贵在真情实感与创造",
+      "key_text": ""
+    }
+  }
+}

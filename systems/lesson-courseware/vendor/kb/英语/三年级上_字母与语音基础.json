@@ -1,0 +1,16 @@
+{
+  "subject": "英语",
+  "grade": "三年级上",
+  "topic": "字母与语音基础",
+  "source": "人教版(PEP)小学英语（三年级起点，3-6年级）语法与功能句型体系",
+  "original_text": "三年级上册学习字母 Aa, Bb, Cc, Dd 的书写与发音。Aa 在开音节发 /eɪ/（cake, name），闭音节发 /æ/（cat, map）；Bb 发 /b/（book, bag）；Cc 一般发 /k/（cat, cake），在 e,i,y 前发 /s/（city, nice）；Dd 发 /d/（dog, bed）。",
+  "key_points": [
+    "字母：26个，大小写",
+    "元音：a e i o u",
+    "发音：字母在单词中的常见发音"
+  ],
+  "formulas": [
+    "示例：a-/æ/(cat), e-/e/(bed)"
+  ],
+  "cautions": "①字母大小写混淆（如把 Aa 写成 aA）；②Cc 在 e/i/y 前发 /s/ 易错；③字母书写占格（上中下格）错误；④音形对应记错（看见 cat 不知发 /k/）。"
+}

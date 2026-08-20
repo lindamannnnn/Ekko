@@ -1,0 +1,16 @@
+{
+  "subject": "英语",
+  "grade": "三年级上",
+  "topic": "名词单复数(规则)与 be 动词",
+  "source": "人教版(PEP)小学英语（三年级起点，3-6年级）语法与功能句型体系",
+  "original_text": "名词单数变复数规则变化：一般情况加-s（book→books）；以 s,x,sh,ch 结尾加-es（box→boxes, dish→dishes）；辅音字母+y 结尾，变y为i再加-es（city→cities）；以 o 结尾部分加-es（tomato→tomatoes, potato→potatoes）。be 动词用法：I 用 am，you 用 are，is 连 he/she/it；单数名词用 is，复数名词用 are。",
+  "key_points": [
+    "复数：一般加s（cats, books）",
+    "be动词：I am / you are / he is",
+    "缩写：I'm, you're, he's"
+  ],
+  "formulas": [
+    "示例：I am a student. / He is a boy. / They are books."
+  ],
+  "cautions": "①a book 误写成 a books（a 后必须单数）；②名词复数忘加 s；③he/she/it 后误用 am/are（应用 is）；④There is 后误接复数名词（应用 There are）。"
+}

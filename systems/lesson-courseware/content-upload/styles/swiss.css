@@ -1,0 +1,28 @@
+/* 2. 瑞士国际主义 —— 无衬线 + 网格 + IKB蓝/柠檬黄/安全橙 */
+:root{
+  --bg:#ffffff; --fg:#111111; --muted:#8a8a8a; --accent:#0061ff;
+  --font: "Helvetica Neue", Helvetica, Inter, "PingFang SC", "Microsoft YaHei", Arial, sans-serif;
+}
+body{ --grid: rgba(0,0,0,.06); }
+.slide{
+  font-family:var(--font);
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 48px 48px;
+  background-position: -1px -1px;
+}
+.slide-inner{ position:relative; }
+.title{ text-transform:uppercase; font-weight:800; letter-spacing:-1px; }
+.title::after{ content:""; display:block; width:80px; height:6px; background:var(--accent);
+  margin-top:.3em; }
+.kicker{ color:var(--accent); }
+.bullets li{ font-weight:500; }
+.bullets li::before{ background:var(--accent); border-radius:0; width:.5em; height:.5em; top:.62em; }
+/* 偶数页点缀柠檬黄 / 安全橙 */
+.slide:nth-child(even) .bullets li:nth-child(3n)::before{ background:#f8e000; }
+.slide:nth-child(even) .bullets li:nth-child(3n+1)::before{ background:#ff5a00; }
+.cover{ background:var(--accent); color:#fff; }
+.cover .title{ color:#fff; }
+.cover .sub{ color:rgba(255,255,255,.85); }
+.cover .title::after{ background:#f8e000; }

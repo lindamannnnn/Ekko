@@ -1,0 +1,37 @@
+# ===== 密钥 / 环境 =====
+.env
+.env.*
+!.env.example
+
+# ===== 生成产物（课件 HTML，按需本地重新生成）=====
+out/
+*.html
+
+# ===== content-upload 本地运行产物 =====
+content-upload/uploads.db
+content-upload/_screenshot*.png
+content-upload/tmp_*.png
+content-upload/tmp_*.html
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+build/
+dist/
+
+# ===== 日志 =====
+*.log
+
+# ===== 系统 / 编辑器 =====
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# ===== 虚拟环境 =====
+venv/
+.venv/
+env/

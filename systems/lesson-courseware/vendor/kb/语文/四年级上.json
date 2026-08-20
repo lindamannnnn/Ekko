@@ -1,0 +1,231 @@
+{
+  "subject": "语文",
+  "grade": "四年级上",
+  "bundle": true,
+  "lessons": {
+    "观潮": {
+      "author": "赵宗成、朱明元",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "自然奇观",
+      "key_text": ""
+    },
+    "走月亮": {
+      "author": "吴然",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "亲情·自然",
+      "key_text": ""
+    },
+    "秋晚的江上": {
+      "author": "刘大白",
+      "dynasty": "现代",
+      "genre": "现代诗",
+      "theme": "自然·归鸟",
+      "key_text": ""
+    },
+    "花牛歌": {
+      "author": "徐志摩",
+      "dynasty": "现代",
+      "genre": "现代诗",
+      "theme": "童趣·自然",
+      "key_text": ""
+    },
+    "繁星": {
+      "author": "巴金",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "自然·回忆",
+      "key_text": ""
+    },
+    "夜间飞行的秘密": {
+      "author": "（教材编写组改编）",
+      "dynasty": "",
+      "genre": "科普文",
+      "theme": "科学·仿生",
+      "key_text": ""
+    },
+    "呼风唤雨的世纪": {
+      "author": "路甬祥",
+      "dynasty": "",
+      "genre": "科普文",
+      "theme": "科技·变化",
+      "key_text": ""
+    },
+    "蝴蝶的家": {
+      "author": "燕志俊",
+      "dynasty": "",
+      "genre": "散文",
+      "theme": "自然·关爱",
+      "key_text": ""
+    },
+    "暮江吟": {
+      "author": "白居易",
+      "dynasty": "唐",
+      "genre": "古诗",
+      "theme": "写景",
+      "key_text": ""
+    },
+    "题西林壁": {
+      "author": "苏轼",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "哲理",
+      "key_text": ""
+    },
+    "雪梅": {
+      "author": "卢钺",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "咏物·哲理",
+      "key_text": ""
+    },
+    "爬山虎的脚": {
+      "author": "叶圣陶",
+      "dynasty": "",
+      "genre": "说明文",
+      "theme": "观察·植物",
+      "key_text": ""
+    },
+    "蟋蟀的住宅": {
+      "author": "（法）法布尔",
+      "dynasty": "",
+      "genre": "说明文",
+      "theme": "观察·动物",
+      "key_text": ""
+    },
+    "盘古开天地": {
+      "author": "（神话，教材编写组改写）",
+      "dynasty": "",
+      "genre": "神话",
+      "theme": "神话·创世",
+      "key_text": ""
+    },
+    "精卫填海": {
+      "author": "（选自《山海经·北山经》）",
+      "dynasty": "上古",
+      "genre": "文言文",
+      "theme": "神话·坚韧",
+      "key_text": ""
+    },
+    "普罗米修斯": {
+      "author": "（古希腊神话，教材编写组改写）",
+      "dynasty": "",
+      "genre": "神话",
+      "theme": "神话·献身",
+      "key_text": ""
+    },
+    "女娲补天": {
+      "author": "（神话，教材编写组改写）",
+      "dynasty": "",
+      "genre": "神话",
+      "theme": "神话·救世",
+      "key_text": ""
+    },
+    "麻雀": {
+      "author": "（俄）屠格涅夫",
+      "dynasty": "",
+      "genre": "小说",
+      "theme": "动物·母爱",
+      "key_text": ""
+    },
+    "爬天都峰": {
+      "author": "黄亦波",
+      "dynasty": "",
+      "genre": "叙事文",
+      "theme": "成长·勇气",
+      "key_text": ""
+    },
+    "牛和鹅": {
+      "author": "任大霖",
+      "dynasty": "",
+      "genre": "叙事文",
+      "theme": "成长·认知",
+      "key_text": ""
+    },
+    "一只窝囊的大老虎": {
+      "author": "叶至善",
+      "dynasty": "",
+      "genre": "叙事文",
+      "theme": "成长·经历",
+      "key_text": ""
+    },
+    "陀螺": {
+      "author": "高洪波",
+      "dynasty": "",
+      "genre": "叙事文",
+      "theme": "童年·感悟",
+      "key_text": ""
+    },
+    "出塞": {
+      "author": "王昌龄",
+      "dynasty": "唐",
+      "genre": "古诗",
+      "theme": "边塞·爱国",
+      "key_text": ""
+    },
+    "凉州词": {
+      "author": "王翰",
+      "dynasty": "唐",
+      "genre": "古诗",
+      "theme": "边塞·豪情",
+      "key_text": ""
+    },
+    "夏日绝句": {
+      "author": "李清照",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "咏史·气节",
+      "key_text": ""
+    },
+    "为中华之崛起而读书": {
+      "author": "余心言",
+      "dynasty": "",
+      "genre": "叙事文",
+      "theme": "志向·爱国",
+      "key_text": ""
+    },
+    "梅兰芳蓄须": {
+      "author": "李大同",
+      "dynasty": "",
+      "genre": "叙事文",
+      "theme": "气节·爱国",
+      "key_text": ""
+    },
+    "延安,我把你追寻": {
+      "author": "祁念曾",
+      "dynasty": "",
+      "genre": "现代诗",
+      "theme": "革命·精神",
+      "key_text": ""
+    },
+    "王戎不取道旁李": {
+      "author": "（选自《世说新语·雅量》）",
+      "dynasty": "南朝宋",
+      "genre": "文言文",
+      "theme": "智慧·判断",
+      "key_text": ""
+    },
+    "西门豹治邺": {
+      "author": "（选自《史记·滑稽列传》）",
+      "dynasty": "汉",
+      "genre": "文言文(改写)",
+      "theme": "历史·智除",
+      "key_text": ""
+    },
+    "扁鹊治病": {
+      "author": "（选自《韩非子·喻老》）",
+      "dynasty": "战国",
+      "genre": "文言文(改写)",
+      "theme": "寓言·劝诫",
+      "key_text": ""
+    },
+    "纪昌学射": {
+      "author": "（选自《列子·汤问》）",
+      "dynasty": "战国",
+      "genre": "文言文(改写)",
+      "theme": "寓言·苦练",
+      "key_text": ""
+    }
+  }
+}

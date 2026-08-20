@@ -1,0 +1,17 @@
+/* 8. 霓虹暗夜 dracula —— dracula 配色 + 发光文字 */
+:root{
+  --bg:#282a36; --fg:#f8f8f2; --muted:#6272a4; --accent:#bd93f9; --accent2:#8be9fd;
+  --font: "Fira Code", "JetBrains Mono", "Courier New", Consolas, monospace;
+}
+body{ background:var(--bg); }
+.slide{ font-family:var(--font); }
+.title{ color:#bd93f9; text-shadow:0 0 18px rgba(189,147,249,.5); font-weight:700; letter-spacing:-.5px; }
+.kicker{ color:#8be9fd; letter-spacing:.15em; }
+.bullets li{ color:#f8f8f2; }
+.bullets li::before{ background:#50fa7b; border-radius:50%; top:.65em;
+  box-shadow:0 0 8px rgba(80,250,123,.7); }
+.bullets li:nth-child(even)::before{ background:#ff79c6; box-shadow:0 0 8px rgba(255,121,198,.7); }
+.bullets li:nth-child(3n)::before{ background:#8be9fd; box-shadow:0 0 8px rgba(139,233,253,.7); }
+.slide-num{ color:#6272a4; }
+.cover .title{ color:#bd93f9; font-size:clamp(34px,7vw,80px); }
+.cover .sub{ color:#6272a4; }

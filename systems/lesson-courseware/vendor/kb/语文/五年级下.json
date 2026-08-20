@@ -1,0 +1,238 @@
+{
+  "subject": "语文",
+  "grade": "五年级下",
+  "bundle": true,
+  "lessons": {
+    "古诗三首": {
+      "author": "王昌龄/陆游/杜甫",
+      "dynasty": "唐/宋/唐",
+      "genre": "古诗",
+      "theme": "第四单元爱国诗三首",
+      "key_text": ""
+    },
+    "四时田园杂兴（其三十一）": {
+      "author": "范成大",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "夏日农忙与孩童学种瓜",
+      "key_text": ""
+    },
+    "稚子弄冰": {
+      "author": "杨万里",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "孩童冬日弄冰的童趣",
+      "key_text": ""
+    },
+    "村晚": {
+      "author": "雷震",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "乡村傍晚牧童吹笛的闲适",
+      "key_text": ""
+    },
+    "祖父的园子": {
+      "author": "萧红（选自《呼兰河传》）",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "园中自由快乐的童年",
+      "key_text": ""
+    },
+    "月是故乡明": {
+      "author": "季羡林",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "故乡月亮最明，思乡之情",
+      "key_text": ""
+    },
+    "梅花魂": {
+      "author": "陈慧瑛",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "外祖父爱梅，眷恋祖国",
+      "key_text": ""
+    },
+    "草船借箭": {
+      "author": "据《三国演义》改写（罗贯中）",
+      "dynasty": "",
+      "genre": "古典小说",
+      "theme": "诸葛亮神机妙算借箭",
+      "key_text": ""
+    },
+    "景阳冈": {
+      "author": "据《水浒传》改写（施耐庵）",
+      "dynasty": "",
+      "genre": "古典小说",
+      "theme": "武松打虎的勇武",
+      "key_text": ""
+    },
+    "猴王出世": {
+      "author": "据《西游记》改写（吴承恩）",
+      "dynasty": "",
+      "genre": "古典小说",
+      "theme": "石猴探水帘洞称美猴王",
+      "key_text": ""
+    },
+    "红楼春趣": {
+      "author": "据《红楼梦》改写（曹雪芹）",
+      "dynasty": "",
+      "genre": "古典小说",
+      "theme": "大观园春日放风筝趣事",
+      "key_text": ""
+    },
+    "从军行": {
+      "author": "王昌龄",
+      "dynasty": "唐",
+      "genre": "古诗",
+      "theme": "戍边将士誓破敌报国",
+      "key_text": ""
+    },
+    "秋夜将晓出篱门迎凉有感": {
+      "author": "陆游",
+      "dynasty": "宋",
+      "genre": "古诗",
+      "theme": "山河壮美而遗民悲苦",
+      "key_text": ""
+    },
+    "闻官军收河南河北": {
+      "author": "杜甫",
+      "dynasty": "唐",
+      "genre": "古诗",
+      "theme": "闻收复失地的狂喜",
+      "key_text": ""
+    },
+    "青山处处埋忠骨": {
+      "author": "晓年",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "主席忍痛葬子于朝鲜的胸襟",
+      "key_text": ""
+    },
+    "军神": {
+      "author": "毕必成",
+      "dynasty": "",
+      "genre": "现代小说",
+      "theme": "刘伯承拒麻醉手术的坚忍",
+      "key_text": ""
+    },
+    "清贫": {
+      "author": "方志敏",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "革命者甘于清贫的美德",
+      "key_text": ""
+    },
+    "人物描写一组": {
+      "author": "徐光耀/老舍/吴敬梓",
+      "dynasty": "",
+      "genre": "小说/散文",
+      "theme": "第五单元人物描写三则",
+      "key_text": ""
+    },
+    "摔跤": {
+      "author": "徐光耀（选自《小兵张嘎》）",
+      "dynasty": "",
+      "genre": "现代小说",
+      "theme": "小嘎子摔跤的机灵",
+      "key_text": ""
+    },
+    "他像一棵挺脱的树": {
+      "author": "老舍（选自《骆驼祥子》）",
+      "dynasty": "",
+      "genre": "现代小说",
+      "theme": "年轻祥子的结实硬棒",
+      "key_text": ""
+    },
+    "两茎灯草": {
+      "author": "吴敬梓（选自《儒林外史》）",
+      "dynasty": "",
+      "genre": "古典小说",
+      "theme": "严监生临死吝啬的细节",
+      "key_text": ""
+    },
+    "刷子李": {
+      "author": "冯骥才",
+      "dynasty": "",
+      "genre": "现代小说",
+      "theme": "刷子李黑衣无白点的绝活",
+      "key_text": ""
+    },
+    "自相矛盾": {
+      "author": "选自《韩非子·难一》",
+      "dynasty": "",
+      "genre": "文言文",
+      "theme": "说话做事不可自相抵触",
+      "key_text": ""
+    },
+    "田忌赛马": {
+      "author": "据《史记·孙子吴起列传》改写",
+      "dynasty": "",
+      "genre": "历史故事",
+      "theme": "孙膑调换顺序以弱胜强",
+      "key_text": ""
+    },
+    "跳水": {
+      "author": "[俄]列夫·托尔斯泰 著，翻译",
+      "dynasty": "",
+      "genre": "现代小说",
+      "theme": "船长当机立断救子",
+      "key_text": ""
+    },
+    "威尼斯的小艇": {
+      "author": "[美]马克·吐温 著，翻译",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "小艇与威尼斯人生活",
+      "key_text": ""
+    },
+    "牧场之国": {
+      "author": "[捷克]卡雷尔·恰佩克 著，翻译",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "荷兰牧场的宁静之美",
+      "key_text": ""
+    },
+    "金字塔": {
+      "author": "穆青/说明性资料",
+      "dynasty": "",
+      "genre": "散文/说明",
+      "theme": "第七单元金字塔主题（夕照+资料）",
+      "key_text": ""
+    },
+    "金字塔夕照": {
+      "author": "穆青",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "夕照中金字塔的雄浑",
+      "key_text": ""
+    },
+    "不可思议的金字塔": {
+      "author": "说明性资料（非连续性文本）",
+      "dynasty": "",
+      "genre": "说明文",
+      "theme": "胡夫金字塔的数据与建造之谜",
+      "key_text": ""
+    },
+    "杨氏之子": {
+      "author": "选自《世说新语·言语》",
+      "dynasty": "",
+      "genre": "文言文",
+      "theme": "杨氏子机智应对",
+      "key_text": ""
+    },
+    "手指": {
+      "author": "丰子恺",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "五指各有所长，团结有力",
+      "key_text": ""
+    },
+    "童年的发现": {
+      "author": "[俄]费奥多罗夫 著，翻译",
+      "dynasty": "",
+      "genre": "现代散文",
+      "theme": "童年独立发现胚胎规律",
+      "key_text": ""
+    }
+  }
+}

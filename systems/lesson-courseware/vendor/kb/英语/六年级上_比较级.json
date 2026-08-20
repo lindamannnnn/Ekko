@@ -1,0 +1,16 @@
+{
+  "subject": "英语",
+  "grade": "六年级上",
+  "topic": "比较级",
+  "source": "人教版(PEP)小学英语（三年级起点，3-6年级）语法与功能句型体系",
+  "original_text": "形容词比较级：一般在词尾加 -er（tall→taller, short→shorter）；以不发音 e 结尾加 -r（large→larger）；辅元辅双写加 -er（big→bigger, hot→hotter）；辅音+y 变 i 加 -er（happy→happier）；多音节词加 more。句型：A is taller than B.",
+  "key_points": [
+    "规则：+er（tall-taller, big-bigger）",
+    "不规则：good/well-better, bad-worse, far-farther",
+    "结构：A+比较级+than+B"
+  ],
+  "formulas": [
+    "示例：He is taller than me. / This book is better."
+  ],
+  "cautions": "①双写规则错（big→biger 应为 bigger）；②比较级+than 结构，than 后接比较对象；③以 e 结尾误加 -er（large→larger 非 larger）；④多音节词误加 -er（应用 more）。"
+}

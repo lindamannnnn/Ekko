@@ -1,0 +1,29 @@
+{
+  "subject": "语文",
+  "grade": "六年级下",
+  "bundle": true,
+  "lessons": {
+    "北京的春节": {"author": "老舍", "dynasty": "", "genre": "散文", "theme": "老北京春节民俗", "key_text": ""},
+    "腊八粥": {"author": "沈从文", "dynasty": "", "genre": "散文", "theme": "腊八民俗与童真亲情", "key_text": ""},
+    "寒食": {"author": "韩翃", "dynasty": "唐", "genre": "古诗（七言绝句）", "theme": "寒食风俗与委婉讽喻", "key_text": ""},
+    "迢迢牵牛星": {"author": "", "dynasty": "", "genre": "古诗（《古诗十九首》）", "theme": "牛郎织女相思离愁", "key_text": ""},
+    "十五夜望月": {"author": "王建", "dynasty": "唐", "genre": "古诗（七言绝句）", "theme": "中秋望月与秋思", "key_text": ""},
+    "藏戏": {"author": "马晨明", "dynasty": "", "genre": "说明性散文", "theme": "藏戏起源与艺术特色", "key_text": ""},
+    "鲁滨逊漂流记（节选）": {"author": "丹尼尔·笛福", "dynasty": "英", "genre": "小说（节选）", "theme": "荒岛生存与顽强意志", "key_text": ""},
+    "骑鹅旅行记（节选）": {"author": "塞尔玛·拉格洛芙", "dynasty": "瑞典", "genre": "童话（节选）", "theme": "奇遇与成长", "key_text": ""},
+    "汤姆·索亚历险记（节选）": {"author": "马克·吐温", "dynasty": "美", "genre": "小说（节选）", "theme": "山洞脱险与机智勇敢", "key_text": ""},
+    "匆匆": {"author": "朱自清", "dynasty": "", "genre": "散文", "theme": "时光匆匆、珍惜时间", "key_text": ""},
+    "那个星期天": {"author": "史铁生", "dynasty": "", "genre": "散文", "theme": "童年等待中的期待与失望", "key_text": ""},
+    "马诗（其五）": {"author": "李贺", "dynasty": "唐", "genre": "古诗（五言绝句）", "theme": "怀才不遇、盼望建功", "key_text": ""},
+    "石灰吟": {"author": "于谦", "dynasty": "明", "genre": "古诗（七言绝句）", "theme": "托物言志、坚守清白", "key_text": ""},
+    "竹石": {"author": "郑燮", "dynasty": "清", "genre": "古诗（七言绝句）", "theme": "坚韧不拔、坚守气节", "key_text": ""},
+    "十六年前的回忆": {"author": "李星华", "dynasty": "", "genre": "回忆散文", "theme": "李大钊忠于革命、坚贞不屈", "key_text": ""},
+    "为人民服务": {"author": "毛泽东", "dynasty": "", "genre": "演讲稿", "theme": "【跳过：政治演讲全文】", "key_text": ""},
+    "董存瑞舍身炸暗堡": {"author": "根据真实历史事件编写", "dynasty": "", "genre": "革命故事", "theme": "解放战争舍身炸暗堡", "key_text": ""},
+    "学弈": {"author": "", "dynasty": "", "genre": "文言文（《孟子·告子上》）", "theme": "专心致志、不可分心", "key_text": ""},
+    "两小儿辩日": {"author": "", "dynasty": "", "genre": "文言文（《列子·汤问》）", "theme": "辩证求知、学无止境", "key_text": ""},
+    "真理诞生于一百个问号之后": {"author": "叶永烈", "dynasty": "", "genre": "说理文", "theme": "见微知著、科学探索", "key_text": ""},
+    "表里的生物": {"author": "冯至", "dynasty": "", "genre": "散文", "theme": "童年好奇与求知欲", "key_text": ""},
+    "他们那时候多有趣啊": {"author": "艾萨克·阿西莫夫", "dynasty": "美", "genre": "科幻小说", "theme": "教育方式的思考", "key_text": ""}
+  }
+}

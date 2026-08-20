@@ -1,0 +1,9 @@
+# 核心依赖（必装）
+flask>=3.0
+python-dotenv>=1.0
+
+# 可选依赖（未安装时自动降级，不影响核心生成流程）：
+#   pypinyin    —— 语文生字词拼音标注
+#   strokes     —— 汉字笔画数
+#   eng_to_ipa  —— 英语单词音标（内置修正表，命不中时回退）
+# 安装：pip install pypinyin strokes eng_to_ipa
