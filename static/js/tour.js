@@ -666,23 +666,15 @@
       }, 120);
     });
 
-    if (isOnboarded() && !inTour()) return;        // 已完成 + 不在流程中 → 啥也不做
+    // 新手引导不再自动弹出；仅在用户主动触发时由调用方（如首页「课后课评」卡片）
+    // 调用 Tour.start() 打开欢迎遮罩。这里只处理 URL 显式带 tour=1&step=N 的情况。
+    if (!inTour()) return;
 
-    if (inTour()) {
-      // 已在引导流程中
-      const t = findStep();
-      if (t) {
-        state.step = getStep();
-        state.subStep = 0;
-        renderStep(t);
-      }
-      return;
+    const t = findStep();
+    if (t) {
+      state.step = getStep();
+      state.subStep = 0;
+      renderStep(t);
     }
-
-    // 未完成 + 已登录 → 自动欢迎遮罩
-    // 判定已登录：导航栏有 .teacher-name 或 .topnav 的 logout 链接
-    const loggedIn = !!document.querySelector('.teacher-name')
-                  || !!document.querySelector('.topnav a.logout');
-    if (loggedIn) renderWelcome();
   });
 })();

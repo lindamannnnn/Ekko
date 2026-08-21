@@ -59,6 +59,14 @@ def index():
     return render_template("classes/index.html", klasses=klasses, stu_map=stu_map)
 
 
+@classes_bp.route("/has-classes")
+@login_required
+def has_classes():
+    """返回当前用户是否已有班级（用于首页「课后课评」新手引导判定）。"""
+    count = Klass.query.filter_by(user_id=current_user.id, deleted_at=None).count()
+    return jsonify({"has_classes": count > 0, "count": count})
+
+
 @classes_bp.route("/new", methods=["GET", "POST"])
 @login_required
 def new():

@@ -38,7 +38,7 @@
       </span>
     </a>
 
-    <a href="{{ url_for('classes.index') }}" class="hall-card review">
+    <a href="{{ url_for('classes.index') }}" class="hall-card review" id="hall-review-card">
       <div class="hall-card-icon">📝</div>
       <h2>课后课评</h2>
       <p>管理班级与学生，快速撰写、导出精美课评卡片，沉淀学期总结。</p>
@@ -49,4 +49,32 @@
     </a>
   </div>
 </div>
+
+<script>
+(function () {
+  var card = document.getElementById('hall-review-card');
+  if (!card) return;
+
+  card.addEventListener('click', function (e) {
+    // 如果没有 Tour 对象，正常跳转
+    if (!window.Tour || typeof window.Tour.start !== 'function') return;
+
+    e.preventDefault();
+
+    fetch('{{ url_for("classes.has_classes") }}', { credentials: 'same-origin' })
+      .then(function (r) { return r.ok ? r.json() : { has_classes: true }; })
+      .then(function (d) {
+        if (d.has_classes) {
+          window.location.href = '{{ url_for("classes.index") }}';
+        } else {
+          window.Tour.start();
+        }
+      })
+      .catch(function () {
+        // 接口失败时保守处理：直接进班级列表页
+        window.location.href = '{{ url_for("classes.index") }}';
+      });
+  });
+})();
+</script>
 {% endblock %}
