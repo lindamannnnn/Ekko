@@ -20,6 +20,7 @@ tools/
 output/
 data/
 references/
+!systems/lesson-courseware/references/
 123/
 
 # 平台无关

@@ -1,0 +1,322 @@
+{
+  "shared": {
+    "grade": "六年级（小学第三学段）",
+    "subject": "数学",
+    "duration": 50,
+    "standard_code": "课标2022·第三学段·数与运算·比和比例",
+    "standard_text": "理解比的意义，能解决按比分配的实际问题。理解单位比的含义并能在具体情境中应用。",
+    "anchor_task": {
+      "teacher": [
+        "把下面两种促销方案写在黑板上；先盖住问题。",
+        "举手投票，然后同桌讨论：写一个数学问题来帮助你判断哪个更划算。",
+        "先不揭晓答案。收集学生的问题，放大学生提出的'每瓶多少钱'类的思路。"
+      ],
+      "student": {
+        "type": "callout",
+        "kind": "student-task",
+        "label": "一起试试",
+        "text": "两家超市卖矿泉水。甲超市：2瓶6元。乙超市：4瓶10元。圈出更划算的选项，然后写一个数学问题来帮助你确定。"
+      }
+    },
+    "showdown_prices": {
+      "type": "data_table",
+      "headers": [
+        "商品",
+        "好又鲜超市",
+        "惠买超市"
+      ],
+      "rows": [
+        [
+          "饼干",
+          "6包 9元",
+          "8包 10.4元"
+        ],
+        [
+          "果汁",
+          "4瓶 12元",
+          "5瓶 14元"
+        ],
+        [
+          "大米",
+          "5kg 25元",
+          "8kg 36元"
+        ]
+      ]
+    },
+    "showdown_workspace": {
+      "type": "workspace",
+      "height_pt": 160
+    },
+    "standards_then_vocab": "先讨论标准1.a和1.b（比较两个提示）。然后词汇：\n1. **比** — 两个量之间的关系。\n2. **单位比** — 每1个单位的量对应的数值。\n3. **比例关系** — 两个量增大或减小保持相同比值的规律。",
+    "sentence_frames": {
+      "type": "labeled",
+      "label": "句子支架",
+      "text": "我发现____和____。\n我知道____是____的____倍。\n我的策略是____因为____。"
+    },
+    "exit_ticket": {
+      "type": "paragraph",
+      "text": "一家超市做促销：6本笔记本 15元。另一个品牌 4本 10元。哪个更划算？画图或列式说明你的推理过程。"
+    },
+    "reflect_prompt": "你用了什么方法来判断哪种商品更划算？为什么这种方法有效？"
+  },
+  "theme": {
+    "primary": "#2563EB"
+  },
+  "documents": [
+    {
+      "id": "lesson_plan",
+      "audience": "teacher",
+      "eyebrow": "六年级数学 · 课时方案",
+      "title": "比较促销方案——理解单位比",
+      "meta": "课标2022·第三学段·比和比例 · 50分钟",
+      "sections": [
+        {
+          "heading": "学习目标",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "学生能通过计算单位比来比较不同方案，理解比例关系并做出合理判断。"
+            }
+          ]
+        },
+        {
+          "heading": "导入（全班，10分钟）",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "展示两种促销方案：甲超市2瓶6元 vs 乙超市4瓶10元。举手投票哪个更划算。同桌讨论：写一个数学问题能确定答案。"
+            },
+            {
+              "type": "from_shared",
+              "key": "anchor_task"
+            }
+          ]
+        },
+        {
+          "heading": "新授：发现单位比（全班，15分钟）",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "引导学生发现：要比较两个方案，需要知道'每瓶多少钱'。引出单位比的概念——每1个单位的量对应多少元。甲超市每瓶3元，乙超市每瓶2.5元。"
+            },
+            {
+              "type": "from_shared",
+              "key": "standards_then_vocab"
+            }
+          ]
+        },
+        {
+          "heading": "练习：超市对决（两人合作，15分钟）",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "两人一组。出示三组商品价格（果汁、饼干、大米）。每组决定：哪家更划算？写出推理过程。"
+            },
+            {
+              "type": "from_shared",
+              "key": "showdown_prices"
+            },
+            {
+              "type": "from_shared",
+              "key": "showdown_workspace"
+            }
+          ]
+        },
+        {
+          "heading": "总结与出门条（10分钟）",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "exit_ticket"
+            },
+            {
+              "type": "from_shared",
+              "key": "reflect_prompt"
+            }
+          ]
+        },
+        {
+          "heading": "差异化建议",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "**基础层**：提供已列好的表格，学生只需填'每瓶元数'和'更划算'两列。使用线段图辅助。\n**提高层**：标准任务——独立计算并写出判断理由。\n**拓展层**：额外挑战——自己设计一种商品和两种促销方案，让B方案比A方案更便宜但A方案看似更划算（需要识别策略陷阱）。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "observation_template",
+      "audience": "teacher",
+      "eyebrow": "六年级数学 · 听课记录表",
+      "title": "听课记录——比较促销方案",
+      "meta": "课标2022·第三学段·比和比例 · 50分钟",
+      "sections": [
+        {
+          "heading": "使用说明",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "本表用于听课教师在课堂中记录观察。每个环节对应教案中的一个阶段。在'学生表现'列记录典型回答、错误、互动亮点；在'教学调整'列记录教师临场应变。"
+            }
+          ]
+        },
+        {
+          "heading": "核心观察点",
+          "blocks": [
+            {
+              "type": "callout",
+              "kind": "teacher-note",
+              "label": "导入环节",
+              "text": "学生能否自主提出'每瓶多少钱'类问题？有多少学生用除法直觉而非猜数？"
+            },
+            {
+              "type": "callout",
+              "kind": "teacher-note",
+              "label": "新授环节",
+              "text": "学生能否用自己的话说出'单位比'的含义？是否有人混淆'比'和'差'（6-5=1而非6/5）？"
+            },
+            {
+              "type": "callout",
+              "kind": "teacher-note",
+              "label": "练习环节",
+              "text": "两人合作时谁主导计算、谁记录？是否有学生直接比较总价而非单位价？"
+            },
+            {
+              "type": "callout",
+              "kind": "teacher-note",
+              "label": "总结环节",
+              "text": "出门题正确率如何？典型错误是什么（除法方向反了、单位混淆）？"
+            }
+          ]
+        },
+        {
+          "heading": "常见常见错误",
+          "blocks": [
+            {
+              "type": "data_table",
+              "headers": ["迷思", "表现", "干预建议"],
+              "rows": [
+                ["比=差", "学生说'6比5大1所以甲贵'", "引导：我们要比的是'每瓶的价钱'，不是总价差"],
+                ["除法方向反", "学生算6÷2=3却写成2÷6", "用线段图标注'总量÷份数=每份'"],
+                ["只比总价", "学生直接说9<10.4所以好又鲜便宜", "追问：6包和8包数量不同，能直接比总价吗？"]
+              ]
+            }
+          ]
+        },
+        {
+          "heading": "学生表现记录",
+          "blocks": [
+            {
+              "type": "fill_table",
+              "headers": ["环节", "学生表现", "教学调整"],
+              "blank_rows": 6,
+              "row_height_pt": 80
+            }
+          ]
+        },
+        {
+          "heading": "出门题分类",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "收集学生的出门题（6本15元 vs 4本10元），按以下掌握情况整理："
+            },
+            {
+              "type": "data_table",
+              "headers": ["掌握情况", "典型回答", "人数"],
+              "rows": [
+                ["✅ 正确——单位比法", "15÷6=2.5元/本，10÷4=2.5元/本，一样贵", ""],
+                ["✅ 正确——交叉相乘法", "15×4=60，10×6=60，一样贵", ""],
+                ["❌ 错误——比总价", "15>10所以第二个便宜", ""],
+                ["❌ 错误——除法方向反", "6÷15=0.4，4÷10=0.4", ""],
+                ["❌ 其他", "", ""]
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "student_materials",
+      "audience": "student",
+      "eyebrow": "六年级数学 · 学习任务单",
+      "title": "超市比价挑战",
+      "meta": "课标2022·比和比例 · 50分钟",
+      "sections": [
+        {
+          "heading": "一起试试",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "anchor_task"
+            },
+            {
+              "type": "workspace",
+              "size": "med"
+            }
+          ]
+        },
+        {
+          "heading": "新学概念",
+          "blocks": [
+            {
+              "type": "callout",
+              "kind": "student-note",
+              "label": "今日关键词",
+              "text": "**单位比** = 总价 ÷ 数量。算出'每1个多少钱'就能公平比较。"
+            },
+            {
+              "type": "from_shared",
+              "key": "sentence_frames"
+            }
+          ]
+        },
+        {
+          "heading": "超市对决",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "和同桌合作。看下面的价格表，决定每件商品哪家超市更划算。写出你的计算过程。"
+            },
+            {
+              "type": "from_shared",
+              "key": "showdown_prices"
+            },
+            {
+              "type": "from_shared",
+              "key": "showdown_workspace"
+            }
+          ]
+        },
+        {
+          "heading": "出门题",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "exit_ticket"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 140
+            }
+          ]
+        },
+        {
+          "heading": "想一想",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "reflect_prompt"
+            },
+            {
+              "type": "workspace",
+              "size": "small"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

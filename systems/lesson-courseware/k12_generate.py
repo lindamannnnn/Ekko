@@ -19,12 +19,15 @@ if HERE not in sys.path:
 from courseware_engine.textutil import extract_json  # noqa: E402
 from courseware_engine.kb import retrieve_kb  # noqa: E402
 
-# 课标 references 目录：默认指向本机 k12-lesson-planning SKILL（用 ~ 展开，跨机不改用户名）。
-# 可用环境变量 K12_SKILL_DIR 覆盖（换机/改路径即调）。
-_DEFAULT_SKILL_DIR = os.path.expanduser(
-    r"~/.workbuddy/skills/k12-lesson-planning/references"
-)
-SKILL_DIR = os.environ.get("K12_SKILL_DIR", _DEFAULT_SKILL_DIR)
+# 课标 references 目录：
+# 1) 环境变量 K12_SKILL_DIR 优先级最高（可覆盖任何路径）
+# 2) 开发机优先用本地安装的 k12-lesson-planning SKILL
+# 3) 生产/Docker 回退到项目内置的 references/ 目录（已随仓库/镜像打包）
+_LOCAL_SKILL_DIR = os.path.expanduser(r"~/.workbuddy/skills/k12-lesson-planning/references")
+_BUNDLED_SKILL_DIR = os.path.join(HERE, "references")
+SKILL_DIR = os.environ.get("K12_SKILL_DIR")
+if SKILL_DIR is None:
+    SKILL_DIR = _LOCAL_SKILL_DIR if os.path.isdir(_LOCAL_SKILL_DIR) else _BUNDLED_SKILL_DIR
 
 # 学科 → (课标文件, 学科指令文件)
 SUBJECT_FILES = {

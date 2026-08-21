@@ -1,0 +1,524 @@
+{
+  "shared": {
+    "subject": "数学",
+    "grade": "四年级（小学第二学段）",
+    "standard_code": "课标2022·第二学段·数与运算",
+    "standard_text": "结合具体情境，理解同分母分数加减法的算理，能正确计算同分母分数的加减法。",
+    "t1": {
+      "teacher": "核心任务——注意学生是否把分母相加（3/8+2/8=5/16）。",
+      "student": "一家人分吃一个月饼。妈妈吃了3/8，爸爸吃了2/8，他们一共吃了月饼的几分之几？"
+    },
+    "t2": {
+      "teacher": "拓展任务——从总量中减去剩余量；期待线段图或算式策略。",
+      "student": "吃完后，爷爷又吃了1/8个月饼。还剩下多少？"
+    },
+    "exit_ticket": {
+      "teacher": "分类：*掌握* — 正确并用图示或算式证明；*接近* — 答案正确但解释不清；*需补习* — 把分母也相加了。",
+      "student": "小明说 4/6 + 1/6 = 5/12。他算对了吗？用图或算式证明你的答案。"
+    },
+    "vocabulary": {
+      "type": "data_table",
+      "rows": [
+        [
+          "分母",
+          "分数中下面的数，表示把整体分成了多少份。"
+        ],
+        [
+          "同分母",
+          "几个分数的分母相同。"
+        ],
+        [
+          "分数单位",
+          "把一个整体平均分，表示其中一份的数。"
+        ]
+      ]
+    },
+    "sentence_frames": {
+      "type": "labeled",
+      "label": "用这些句子支架来思考",
+      "text": "我知道____________和____________。我不知道的部分是____________。\n我的想法是____________因为____________。"
+    },
+    "misconceptions": {
+      "type": "data_table",
+      "headers": [
+        "学生表现",
+        "原因",
+        "教师应对"
+      ],
+      "rows": [
+        [
+          "分子分母分别相加（3/8+2/8=5/16）",
+          "把分子和分母当作两个独立的自然数处理",
+          "回到线段图：一共有多少个八分之一？"
+        ]
+      ]
+    },
+    "anchor_activity": "早完成的话：从本页选一个问题用另一种方法证明答案（如用线段图）。然后编一个答案大于1个月饼的分数加法题，并解答。",
+    "reflect_prompt": "你用了什么策略？为什么？",
+    "pedagogy_note": "本方案遵循 math.md R3 递进：低层运算→中层模式→高层迁移"
+  },
+  "theme": {
+    "primary": "#17A267"
+  },
+  "documents": [
+    {
+      "id": "teacher_plan",
+      "audience": "teacher",
+      "eyebrow": "四年级数学 · 分层方案",
+      "title": "同分母分数加减法 — 分层方案",
+      "meta": "课标2022·第二学段·数与运算 · 60分钟 · 低层(A组) / 中层(B组) / 高层(C组)",
+      "sections": [
+        {
+          "heading": "概览",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "课标2022·第二学段·数与运算: 结合具体情境，理解同分母分数加减法的算理，能正确计算同分母分数的加减法。"
+            },
+            {
+              "type": "paragraph",
+              "text": "三个层级使用相同的月饼情境和核心问题。仅支持方式不同。"
+            },
+            {
+              "type": "from_shared",
+              "key": "t1",
+              "label": "1"
+            },
+            {
+              "type": "from_shared",
+              "key": "t2",
+              "label": "2"
+            },
+            {
+              "type": "from_shared",
+              "key": "exit_ticket"
+            }
+          ]
+        },
+        {
+          "heading": "灵活分组",
+          "blocks": [
+            {
+              "type": "labeled",
+              "label": "依据",
+              "text": "默认画像——无诊断数据。如果你有近期的分数出门条或作业样本，可据此分组。"
+            },
+            {
+              "type": "labeled",
+              "label": "可调整",
+              "text": "层级仅在本课有效。根据今天的出门条重新分组：低层学生如能独立完成问题2可上调；任何把分母相加的学生明天使用低层支持。"
+            }
+          ]
+        },
+        {
+          "heading": "低层（A组）",
+          "blocks": [
+            {
+              "type": "labeled",
+              "label": "锚定预备知识",
+              "text": "第二学段·分数的初步认识：理解把一个整体平均分成若干份，取其中的一份或几份可以用分数表示。"
+            },
+            {
+              "type": "from_shared",
+              "key": "misconceptions"
+            },
+            {
+              "type": "labeled",
+              "label": "练习单任务",
+              "text": "P1（阴影图入手 + 知/求表）、P2、出门条、'选做题'、反思。"
+            }
+          ]
+        },
+        {
+          "heading": "中层（B组）",
+          "blocks": [
+            {
+              "type": "labeled",
+              "label": "练习单任务",
+              "text": "P1、P2、出门条、'选做题'、反思。"
+            }
+          ]
+        },
+        {
+          "heading": "高层（C组）",
+          "blocks": [
+            {
+              "type": "labeled",
+              "label": "练习单任务",
+              "text": "P1、P2、'进一步'延伸（自己编题 + 错例分析）、出门条、'选做题'、反思。"
+            }
+          ]
+        },
+        {
+          "heading": "为什么有效 (1)",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "低层保留了年级水平的两个问题，仅在问题1前添加了阴影图入手和知/求表。学生先借助模型再进入符号运算——课标要求得到完整保留，而进入成本降低。脚手架在问题2时消退。"
+            }
+          ]
+        },
+        {
+          "heading": "为什么有效 (2)",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "高层延伸要求学生编题和评价错例，而非做更多计算。自编答案大于1的题并解释错误原因深化了对分数单位概念的理解。"
+            }
+          ]
+        },
+        {
+          "heading": "形成性检测",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "收集所有三层的出门条，分为三堆：正确并匹配模型；把分母也相加了；阴影部分数错了。"
+            },
+            {
+              "type": "labeled",
+              "label": "次日",
+              "text": "分母相加组从阴影图重新进入；数错组和你一起重数；正确组从锚点活动开始。"
+            }
+          ]
+        },
+        {
+          "heading": "锚点活动",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "anchor_activity"
+            },
+            {
+              "type": "labeled",
+              "label": "使用时机",
+              "text": "印在三层练习单上。出门条之后使用。"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "worksheet_group_a",
+      "audience": "student",
+      "eyebrow": "四年级数学 · 同分母分数加减法",
+      "title": "A组 — 分月饼",
+      "meta": "姓名：____________________    日期：____________",
+      "sections": [
+        {
+          "heading": "词汇",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "vocabulary"
+            }
+          ]
+        },
+        {
+          "heading": "句子支架",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "sentence_frames"
+            }
+          ]
+        },
+        {
+          "heading": "问题",
+          "blocks": [
+            {
+              "type": "labeled",
+              "label": "问题1 试试用图",
+              "text": "下面的月饼切成8等份。先用一种方式涂色表示妈妈吃的份数，再用另一种方式涂色表示爸爸吃的份数。"
+            },
+            {
+              "type": "data_table",
+              "headers": [
+                "我知道的",
+                "我需要求的"
+              ],
+              "rows": [
+                [
+                  "",
+                  ""
+                ]
+              ],
+              "empty_row_height_pt": 26
+            },
+            {
+              "type": "from_shared",
+              "key": "t1",
+              "label": "1"
+            },
+            {
+              "type": "workspace",
+              "size": "large"
+            },
+            {
+              "type": "from_shared",
+              "key": "t2",
+              "label": "2"
+            },
+            {
+              "type": "workspace",
+              "size": "large"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 80
+            }
+          ]
+        },
+        {
+          "heading": "展示你的理解",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "exit_ticket"
+            },
+            {
+              "type": "workspace",
+              "size": "large"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 90
+            }
+          ]
+        },
+        {
+          "heading": "选做题",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "anchor_activity"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 90
+            }
+          ]
+        },
+        {
+          "heading": "反思",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "reflect_prompt"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 60
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "worksheet_group_b",
+      "audience": "student",
+      "eyebrow": "四年级数学 · 同分母分数加减法",
+      "title": "B组 — 分月饼",
+      "meta": "姓名：____________________    日期：____________",
+      "sections": [
+        {
+          "heading": "词汇",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "vocabulary"
+            }
+          ]
+        },
+        {
+          "heading": "句子支架",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "sentence_frames"
+            }
+          ]
+        },
+        {
+          "heading": "问题",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "t1",
+              "label": "1"
+            },
+            {
+              "type": "workspace",
+              "size": "large"
+            },
+            {
+              "type": "from_shared",
+              "key": "t2",
+              "label": "2"
+            },
+            {
+              "type": "workspace",
+              "size": "large"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 100
+            }
+          ]
+        },
+        {
+          "heading": "展示你的理解",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "exit_ticket"
+            },
+            {
+              "type": "workspace",
+              "size": "large"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 90
+            }
+          ]
+        },
+        {
+          "heading": "选做题",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "anchor_activity"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 90
+            }
+          ]
+        },
+        {
+          "heading": "反思",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "reflect_prompt"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 60
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "worksheet_group_c",
+      "audience": "student",
+      "eyebrow": "四年级数学 · 同分母分数加减法",
+      "title": "C组 — 分月饼",
+      "meta": "姓名：____________________    日期：____________",
+      "sections": [
+        {
+          "heading": "词汇",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "vocabulary"
+            }
+          ]
+        },
+        {
+          "heading": "句子支架",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "sentence_frames"
+            }
+          ]
+        },
+        {
+          "heading": "问题",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "t1",
+              "label": "1"
+            },
+            {
+              "type": "workspace",
+              "size": "large"
+            },
+            {
+              "type": "from_shared",
+              "key": "t2",
+              "label": "2"
+            },
+            {
+              "type": "workspace",
+              "size": "large"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 100
+            }
+          ]
+        },
+        {
+          "heading": "进一步挑战",
+          "blocks": [
+            {
+              "type": "paragraph",
+              "text": "编一道分数加法题，答案大于1。再编一道容易犯'把分母也相加'错误的题——你会怎样帮助那位同学理解错在哪里？"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 110
+            }
+          ]
+        },
+        {
+          "heading": "展示你的理解",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "exit_ticket"
+            },
+            {
+              "type": "workspace",
+              "size": "large"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 90
+            }
+          ]
+        },
+        {
+          "heading": "选做题",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "anchor_activity"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 90
+            }
+          ]
+        },
+        {
+          "heading": "反思",
+          "blocks": [
+            {
+              "type": "from_shared",
+              "key": "reflect_prompt"
+            },
+            {
+              "type": "workspace",
+              "height_pt": 60
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
