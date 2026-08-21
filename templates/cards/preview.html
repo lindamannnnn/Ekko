@@ -17,7 +17,17 @@
       background: #ece5d8;
       font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Hiragino Sans GB", sans-serif;
       -webkit-font-smoothing: antialiased;
+      transition: background .25s ease;
     }
+    body[data-theme="theme-02"] { background: #f5f5f5; }
+    body[data-theme="theme-03"] { background: #e8dfcc; }
+    body[data-theme="theme-04"] { background: #fff4c8; }
+    body[data-theme="theme-05"] { background: #1a2540; }
+    body[data-theme="theme-06"] { background: #dde8dd; }
+    body[data-theme="theme-07"] { background: #0d0520; }
+    body[data-theme="theme-08"] { background: #e6dcc8; }
+    body[data-theme="theme-09"] { background: #fdeef5; }
+    body[data-theme="theme-10"] { background: #1a2e26; }
     .stage {
       display: flex; flex-direction: column; align-items: center;
       padding: 40px 16px; gap: 18px;
@@ -25,196 +35,8 @@
     .serif { font-family: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "STSong", "SimSun", serif; }
     .hand  { font-family: "Ma Shan Zheng", "Noto Serif SC", "STKaiti", "KaiTi", "楷体", serif; }
 
-    /* ===================== 卡片外壳 ===================== */
-    .rcard {
-      position: relative;
-      width: 760px; max-width: 94vw; box-sizing: border-box;
-      background: #fdfaf3;
-      background-image:
-        radial-gradient(120% 80% at 100% 0%, #fffaef 0%, #fdfaf3 60%),
-        radial-gradient(60% 40% at 0% 100%, #f6efde 0%, transparent 80%);
-      border: 1px solid #ece3d2;
-      border-radius: 26px;
-      box-shadow:
-        0 20px 60px rgba(74, 62, 48, .14),
-        0 2px 6px rgba(74, 62, 48, .04);
-      padding: 0 44px 32px;
-      color: #3f382f;
-      min-height: 360px;
-      overflow: hidden;
-    }
-    /* 顶部细色条 */
-    .rcard .ribbon {
-      position: relative;
-      height: 64px;
-      display: flex; align-items: center; justify-content: center;
-      border-bottom: 1px dashed #e6ddcd;
-    }
-    .rcard .ribbon::before, .rcard .ribbon::after {
-      content: ""; position: absolute; top: 50%; width: 50px; height: 1px; background: #d4c9b3;
-    }
-    .rcard .ribbon::before { left: 30%; }
-    .rcard .ribbon::after  { right: 30%; }
-    .rcard .ribbon-tag {
-      position: relative; z-index: 1;
-      padding: 5px 18px; border-radius: 999px;
-      background: #fdfaf3;
-      font-size: 12px; letter-spacing: 4px; color: #8a8175;
-      font-family: "Noto Serif SC", "Songti SC", serif;
-    }
-    /* 类型色：顶部圆点 + 装饰小元素 */
-    .rcard .ribbon-dot {
-      position: absolute; top: 50%; transform: translateY(-50%);
-      width: 7px; height: 7px; border-radius: 50%;
-    }
-    .rcard .ribbon-dot.l { left: calc(30% - 70px); }
-    .rcard .ribbon-dot.r { right: calc(30% - 70px); }
-
-    /* ===================== 顶部三栏信息行 ===================== */
-    .tri-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 22px; }
-    .tri-cell {
-      display: flex; align-items: center; gap: 11px;
-      padding: 12px 13px; border-radius: 14px;
-      background: rgba(255, 255, 255, .55);
-      border: 1px solid #ece3d2;
-    }
-    .tri-ic {
-      width: 32px; height: 32px; border-radius: 10px; flex: none;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .tri-ic svg { width: 17px; height: 17px; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-    .tri-body { min-width: 0; }
-    .tri-lbl { font-size: 11px; color: #a59b8b; letter-spacing: 1px; line-height: 1.2; margin-bottom: 3px; }
-    .tri-val { font-size: 15px; color: #2f2922; font-weight: 600; line-height: 1.3; overflow-wrap: anywhere; }
-
-    /* ===================== 大标题 ===================== */
-    .title-block { margin-top: 22px; }
-    .stu {
-      margin: 0; font-size: 44px; font-weight: 700; line-height: 1.15;
-      color: #2a241c; letter-spacing: 2px;
-      overflow-wrap: anywhere; max-width: 100%;
-    }
-    .stu-sub {
-      margin-top: 10px;
-      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
-      font-size: 13.5px; color: #8a8175; letter-spacing: .5px;
-    }
-    .stu-sub .sep { width: 4px; height: 4px; border-radius: 50%; background: #cdc4b3; }
-    .stu-sub .lesson-no {
-      padding: 2px 10px; border-radius: 999px; font-size: 12px;
-      letter-spacing: 1px; font-weight: 500;
-    }
-
-    /* ===================== 段落小标 ===================== */
-    .sec-h {
-      display: flex; align-items: center; gap: 10px;
-      margin: 26px 0 12px;
-      font-family: "Noto Serif SC", "Songti SC", serif;
-      font-size: 14px; color: #6b6253; letter-spacing: 3px; font-weight: 600;
-    }
-    .sec-h .ln { flex: 1; height: 1px; background: #ece3d2; }
-    .sec-h .sq { width: 6px; height: 6px; border-radius: 1px; transform: rotate(45deg); }
-
-    /* ===================== 本次亮点 · 行式 ===================== */
-    .achv-list { display: flex; flex-direction: column; gap: 8px; }
-    .achv-row {
-      display: flex; align-items: center; gap: 12px;
-      padding: 11px 14px; border-radius: 12px;
-      background: rgba(255, 255, 255, .55);
-      border: 1px solid #ece3d2;
-    }
-    .achv-bar {
-      width: 4px; height: 22px; border-radius: 2px; flex: none;
-    }
-    .achv-icon {
-      width: 28px; height: 28px; border-radius: 50%; flex: none;
-      display: flex; align-items: center; justify-content: center;
-    }
-    .achv-icon svg { width: 15px; height: 15px; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-    .achv-text {
-      flex: 1; min-width: 0;
-      font-size: 14.5px; color: #3a3328; line-height: 1.4; font-weight: 500;
-      overflow-wrap: anywhere;
-    }
-    .achv-empty {
-      padding: 14px; text-align: center; font-size: 13px; color: #a59b8b;
-      background: rgba(255, 255, 255, .4); border: 1px dashed #e0d6c0; border-radius: 12px;
-    }
-
-    /* ===================== 正文 ===================== */
-    .body {
-      position: relative; padding-left: 16px; margin-left: 4px;
-      font-size: 15px; line-height: 2.0; color: #4a4339;
-      white-space: pre-wrap; word-break: break-word; min-height: 80px;
-    }
-    .body::before {
-      content: ""; position: absolute; left: 0; top: 6px; bottom: 6px; width: 3px; border-radius: 2px;
-    }
-
-    /* ===================== 底部 ===================== */
-    .foot {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-top: 26px; padding-top: 14px; border-top: 1px dashed #e6ddcd;
-      font-size: 12px; color: #a59b8b; letter-spacing: 1px;
-    }
-    .foot .hand-date { font-family: "Ma Shan Zheng", "STKaiti", "KaiTi", "楷体", serif; font-size: 16px; color: #6b6253; letter-spacing: 1.5px; }
-
-    /* ===================== 类型色配置 ===================== */
-    /* skill · 苔绿（舞蹈/体育） */
-    .rcard.skill .ribbon-dot { background: #6f9279; }
-    .rcard.skill .ribbon-tag  { color: #4e6e58; }
-    .rcard.skill .tri-ic      { background: rgba(111, 146, 121, .14); }
-    .rcard.skill .tri-ic svg  { stroke: #6f9279; }
-    .rcard.skill .stu-sub .lesson-no { background: rgba(111, 146, 121, .14); color: #4e6e58; }
-    .rcard.skill .stu-sub .sep { background: #b6cdbc; }
-    .rcard.skill .sec-h .sq   { background: #6f9279; }
-    .rcard.skill .achv-bar    { background: #6f9279; }
-    .rcard.skill .achv-icon   { background: rgba(111, 146, 121, .16); }
-    .rcard.skill .achv-icon svg { stroke: #4e6e58; }
-    .rcard.skill .body::before { background: #6f9279; }
-
-    /* academic · 暖棕（编程/英语/学科辅导） */
-    .rcard.academic .ribbon-dot { background: #b08146; }
-    .rcard.academic .ribbon-tag  { color: #87622f; }
-    .rcard.academic .tri-ic      { background: rgba(176, 129, 70, .14); }
-    .rcard.academic .tri-ic svg  { stroke: #b08146; }
-    .rcard.academic .stu-sub .lesson-no { background: rgba(176, 129, 70, .14); color: #87622f; }
-    .rcard.academic .stu-sub .sep { background: #d4b890; }
-    .rcard.academic .sec-h .sq   { background: #b08146; }
-    .rcard.academic .achv-bar    { background: #b08146; }
-    .rcard.academic .achv-icon   { background: rgba(176, 129, 70, .16); }
-    .rcard.academic .achv-icon svg { stroke: #87622f; }
-    .rcard.academic .body::before { background: #b08146; }
-
-    /* work · 蓝灰（美术/书法） */
-    .rcard.work .ribbon-dot { background: #5d7e9e; }
-    .rcard.work .ribbon-tag  { color: #3f5b78; }
-    .rcard.work .tri-ic      { background: rgba(93, 126, 158, .14); }
-    .rcard.work .tri-ic svg  { stroke: #5d7e9e; }
-    .rcard.work .stu-sub .lesson-no { background: rgba(93, 126, 158, .14); color: #3f5b78; }
-    .rcard.work .stu-sub .sep { background: #a8bccc; }
-    .rcard.work .sec-h .sq   { background: #5d7e9e; }
-    .rcard.work .achv-bar    { background: #5d7e9e; }
-    .rcard.work .achv-icon   { background: rgba(93, 126, 158, .16); }
-    .rcard.work .achv-icon svg { stroke: #3f5b78; }
-    .rcard.work .body::before { background: #5d7e9e; }
-
-    /* general · 陶土橙（其他） */
-    .rcard.general .ribbon-dot { background: #bd8064; }
-    .rcard.general .ribbon-tag  { color: #92583c; }
-    .rcard.general .tri-ic      { background: rgba(189, 128, 100, .14); }
-    .rcard.general .tri-ic svg  { stroke: #bd8064; }
-    .rcard.general .stu-sub .lesson-no { background: rgba(189, 128, 100, .14); color: #92583c; }
-    .rcard.general .stu-sub .sep { background: #d4b09a; }
-    .rcard.general .sec-h .sq   { background: #bd8064; }
-    .rcard.general .achv-bar    { background: #bd8064; }
-    .rcard.general .achv-icon   { background: rgba(189, 128, 100, .16); }
-    .rcard.general .achv-icon svg { stroke: #92583c; }
-    .rcard.general .body::before { background: #bd8064; }
-
     /* ===================== 导出按钮 ===================== */
-    .toolbar { display: flex; align-items: center; gap: 12px; }
+    .toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .exp-btn {
       background: #2f2922; color: #fff; border: none; cursor: pointer;
       padding: 12px 24px; border-radius: 12px; font-size: 14px; letter-spacing: 1px;
@@ -223,11 +45,359 @@
     }
     .exp-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(74,62,48,.32); }
     #busy { font-size: 13px; color: #8a8175; }
+
+    /* ===================== 模板选择器 ===================== */
+    .theme-picker {
+      width: 760px; max-width: 94vw; box-sizing: border-box;
+      background: #fff; border: 1px solid #ece3d2; border-radius: 14px;
+      padding: 14px 18px;
+      display: flex; flex-direction: column; gap: 10px;
+      box-shadow: 0 4px 14px rgba(74,62,48,.06);
+    }
+    .theme-picker-label { font-size: 12px; color: #8a8175; letter-spacing: 1px; }
+    .theme-grid {
+      display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px;
+    }
+    .theme-btn {
+      cursor: pointer; border: 2px solid transparent; border-radius: 10px;
+      padding: 8px 6px; background: #fafaf6; transition: all .15s ease;
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+    }
+    .theme-btn:hover { background: #f2ecdf; transform: translateY(-1px); }
+    .theme-btn.active { border-color: #b08146; background: #fdfaf3; box-shadow: 0 2px 8px rgba(176,129,70,.18); }
+    .theme-swatch {
+      width: 36px; height: 24px; border-radius: 6px; border: 1px solid rgba(0,0,0,.06);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.4);
+    }
+    .theme-name { font-size: 11.5px; color: #4a4339; letter-spacing: .3px; }
+    .theme-btn.active .theme-name { color: #87622f; font-weight: 600; }
+
+    /* 主题缩略色 */
+    .sw-t01 { background: linear-gradient(135deg, #fdfaf3 60%, #b08146 60%); }
+    .sw-t02 { background: linear-gradient(135deg, #ffffff 60%, #1a1a1a 60%); }
+    .sw-t03 { background: linear-gradient(135deg, #f7f2e6 55%, #b83e2f 55%); }
+    .sw-t04 { background: linear-gradient(135deg, #fffbe8 50%, #ffd93d 50%, #ff6b6b 90%); }
+    .sw-t05 { background: linear-gradient(135deg, #0f1a33 55%, #c9a24b 55%); }
+    .sw-t06 { background: linear-gradient(135deg, #f0f6f1 55%, #4a7c59 55%); }
+    .sw-t07 { background: linear-gradient(135deg, #1a0b33 55%, #8b5cf6 75%, #22d3ee 100%); }
+    .sw-t08 { background: linear-gradient(135deg, #f3ede2 55%, #3d342b 55%); }
+    .sw-t09 { background: linear-gradient(135deg, #ffd6e8 33%, #cfeee0 66%, #b7e6f5 100%); }
+    .sw-t10 { background: linear-gradient(135deg, #2d4a3e 60%, #ffd166 60%); }
+
+    /* ===================== 10 套课评卡片主题（与 gallery.html 同步） ===================== */
+    /* ===== common card shell ===== */
+        .rcard {
+          position: relative; width: 760px; max-width: 100%; box-sizing: border-box;
+          min-height: 360px; overflow: hidden;
+        }
+        .rcard h1, .rcard h2, .rcard p { margin: 0; }
+        .rcard .tri-body, .rcard .tri-cell, .rcard .title-block, .rcard .achv-list, .rcard .body, .rcard .foot { position: relative; }
+        .rcard .tri-ic svg, .rcard .achv-icon svg { display: block; }
+        
+    
+            .rcard.theme-01 { background:#fdfaf3; border:1px solid #ece3d2; border-radius:26px; box-shadow:0 20px 60px rgba(74,62,48,.14); padding:0 44px 32px; color:#3f382f; }
+            .rcard.theme-01 .ribbon { height:64px; display:flex; align-items:center; justify-content:center; border-bottom:1px dashed #e6ddcd; }
+            .rcard.theme-01 .ribbon-tag { padding:5px 18px; border-radius:999px; background:#fdfaf3; font-size:12px; letter-spacing:4px; color:#8a8175; }
+            .rcard.theme-01 .tri-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:22px; }
+            .rcard.theme-01 .tri-cell { display:flex; align-items:center; gap:11px; padding:12px 13px; border-radius:14px; background:rgba(255,255,255,.55); border:1px solid #ece3d2; }
+            .rcard.theme-01 .tri-ic { width:32px; height:32px; border-radius:10px; flex:none; display:flex; align-items:center; justify-content:center; background:rgba(176,129,70,.14); }
+            .rcard.theme-01 .tri-ic svg { width:17px; height:17px; stroke:#b08146; fill:none; stroke-width:1.8; }
+            .rcard.theme-01 .tri-lbl { font-size:11px; color:#a59b8b; letter-spacing:1px; }
+            .rcard.theme-01 .tri-val { font-size:15px; color:#2f2922; font-weight:600; }
+            .rcard.theme-01 .stu { margin:22px 0 0; font-size:44px; font-weight:700; color:#2a241c; letter-spacing:2px; }
+            .rcard.theme-01 .stu-sub { margin-top:10px; display:flex; align-items:center; gap:10px; font-size:13.5px; color:#8a8175; }
+            .rcard.theme-01 .lesson-no { padding:2px 10px; border-radius:999px; background:rgba(176,129,70,.14); color:#87622f; font-size:12px; }
+            .rcard.theme-01 .sec-h { display:flex; align-items:center; gap:10px; margin:26px 0 12px; font-size:14px; color:#6b6253; letter-spacing:3px; font-weight:600; }
+            .rcard.theme-01 .sec-h .ln { flex:1; height:1px; background:#ece3d2; }
+            .rcard.theme-01 .sec-h .sq { width:6px; height:6px; border-radius:1px; transform:rotate(45deg); background:#b08146; }
+            .rcard.theme-01 .achv-list { display:flex; flex-direction:column; gap:8px; }
+            .rcard.theme-01 .achv-row { display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:12px; background:rgba(255,255,255,.55); border:1px solid #ece3d2; }
+            .rcard.theme-01 .achv-bar { width:4px; height:22px; border-radius:2px; background:#b08146; }
+            .rcard.theme-01 .achv-icon { width:28px; height:28px; border-radius:50%; flex:none; display:flex; align-items:center; justify-content:center; background:rgba(176,129,70,.16); }
+            .rcard.theme-01 .achv-icon svg { width:15px; height:15px; fill:none; stroke:#87622f; stroke-width:2; }
+            .rcard.theme-01 .achv-text { flex:1; font-size:14.5px; color:#3a3328; font-weight:500; }
+            .rcard.theme-01 .body { position:relative; padding-left:16px; margin-left:4px; font-size:15px; line-height:2.0; color:#4a4339; white-space:pre-wrap; }
+            .rcard.theme-01 .body::before { content:""; position:absolute; left:0; top:6px; bottom:6px; width:3px; border-radius:2px; background:#b08146; }
+            .rcard.theme-01 .foot { display:flex; justify-content:space-between; align-items:center; margin-top:26px; padding-top:14px; border-top:1px dashed #e6ddcd; font-size:12px; color:#a59b8b; letter-spacing:1px; }
+            
+            .rcard.theme-02 { background:#ffffff; border:1px solid #e5e5e5; border-radius:8px; padding:48px 52px 40px; color:#1a1a1a; }
+            .rcard.theme-02 .ribbon { display:none; }
+            .rcard.theme-02 .tri-row { display:flex; gap:48px; margin-top:0; padding-bottom:24px; border-bottom:1px solid #eee; }
+            .rcard.theme-02 .tri-cell { display:flex; flex-direction:column; gap:4px; }
+            .rcard.theme-02 .tri-ic { display:none; }
+            .rcard.theme-02 .tri-lbl { font-size:10px; color:#999; letter-spacing:2px; text-transform:uppercase; }
+            .rcard.theme-02 .tri-val { font-size:15px; color:#333; font-weight:500; }
+            .rcard.theme-02 .stu { margin:40px 0 0; font-size:42px; font-weight:300; color:#111; letter-spacing:6px; }
+            .rcard.theme-02 .stu-sub { margin-top:14px; font-size:13px; color:#888; }
+            .rcard.theme-02 .lesson-no { color:#111; font-weight:600; }
+            .rcard.theme-02 .sec-h { display:flex; align-items:center; gap:12px; margin:36px 0 18px; font-size:11px; color:#999; letter-spacing:3px; }
+            .rcard.theme-02 .sec-h .ln { flex:1; height:1px; background:#eee; }
+            .rcard.theme-02 .sec-h .sq { display:none; }
+            .rcard.theme-02 .achv-list { display:flex; flex-wrap:wrap; gap:10px; }
+            .rcard.theme-02 .achv-row { padding:8px 16px; border-radius:999px; border:1px solid #e0e0e0; background:#fafafa; }
+            .rcard.theme-02 .achv-bar, .rcard.theme-02 .achv-icon { display:none; }
+            .rcard.theme-02 .achv-text { font-size:13.5px; color:#444; }
+            .rcard.theme-02 .body { font-size:14.5px; line-height:2.0; color:#444; white-space:pre-wrap; }
+            .rcard.theme-02 .foot { margin-top:40px; padding-top:16px; border-top:1px solid #eee; font-size:11px; color:#aaa; letter-spacing:1px; }
+            
+            .rcard.theme-03 { background:#f7f2e6; background-image:linear-gradient(90deg, rgba(0,0,0,.02) 1px, transparent 1px), linear-gradient(rgba(0,0,0,.02) 1px, transparent 1px); background-size:20px 20px; border:1px solid #d9cbb4; border-radius:4px; padding:0 46px 38px; color:#3a2e1f; position:relative; }
+            .rcard.theme-03::before, .rcard.theme-03::after { content:""; position:absolute; top:12px; bottom:12px; width:6px; background:#8b5a2b; border-radius:3px; }
+            .rcard.theme-03::before { left:10px; } .rcard.theme-03::after { right:10px; }
+            .rcard.theme-03 .ribbon { height:70px; display:flex; align-items:center; justify-content:flex-end; }
+            .rcard.theme-03 .seal { width:52px; height:52px; border:2px solid #b83e2f; color:#b83e2f; border-radius:4px; display:flex; align-items:center; justify-content:center; font-size:22px; font-family:"Noto Serif SC","Songti SC",serif; transform:rotate(-6deg); }
+            .rcard.theme-03 .ribbon-tag { display:none; }
+            .rcard.theme-03 .tri-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:8px; }
+            .rcard.theme-03 .tri-cell { text-align:center; padding:10px 0; border-bottom:1px solid #d9cbb4; }
+            .rcard.theme-03 .tri-ic { display:none; }
+            .rcard.theme-03 .tri-lbl { font-size:11px; color:#8b7355; letter-spacing:2px; margin-bottom:4px; }
+            .rcard.theme-03 .tri-val { font-size:15px; color:#4a3b2a; font-weight:600; }
+            .rcard.theme-03 .stu { margin:28px 0 0; font-size:46px; font-family:"Noto Serif SC","Songti SC",serif; font-weight:700; color:#2a1d10; letter-spacing:8px; }
+            .rcard.theme-03 .stu-sub { margin-top:12px; font-size:13px; color:#7a6650; }
+            .rcard.theme-03 .sec-h { display:flex; align-items:center; gap:10px; margin:28px 0 14px; font-size:14px; color:#5e4b35; letter-spacing:4px; font-family:"Noto Serif SC",serif; }
+            .rcard.theme-03 .sec-h .ln { flex:1; height:1px; background:#d9cbb4; }
+            .rcard.theme-03 .sec-h .sq { width:7px; height:7px; background:#b83e2f; border-radius:50%; }
+            .rcard.theme-03 .achv-list { display:flex; flex-wrap:wrap; gap:10px; }
+            .rcard.theme-03 .achv-row { padding:8px 16px; border-radius:999px; background:#fff; border:1px solid #d9cbb4; }
+            .rcard.theme-03 .achv-bar, .rcard.theme-03 .achv-icon { display:none; }
+            .rcard.theme-03 .achv-text { font-size:13.5px; color:#5e4b35; }
+            .rcard.theme-03 .body { padding-left:18px; border-left:3px solid #b83e2f; font-size:15px; line-height:2.0; color:#4a3b2a; white-space:pre-wrap; }
+            .rcard.theme-03 .foot { margin-top:30px; padding-top:14px; border-top:1px dashed #d9cbb4; font-size:12px; color:#8b7355; }
+            
+            .rcard.theme-04 { background:#fffbe8; border:3px solid #ffd93d; border-radius:36px; padding:36px 42px 32px; color:#3d2c0d; box-shadow:0 18px 40px rgba(255,183,0,.22); position:relative; overflow:visible; }
+            .rcard.theme-04::before { content:"★"; position:absolute; top:-18px; left:30px; width:50px; height:50px; background:#ff6b6b; color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:26px; transform:rotate(-12deg); box-shadow:0 4px 12px rgba(255,107,107,.3); }
+            .rcard.theme-04 .ribbon { display:flex; align-items:center; justify-content:center; margin-bottom:14px; }
+            .rcard.theme-04 .ribbon-tag { padding:6px 20px; border-radius:999px; background:#ffd93d; color:#6b4c00; font-size:13px; font-weight:700; letter-spacing:2px; }
+            .rcard.theme-04 .tri-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:6px; }
+            .rcard.theme-04 .tri-cell { background:#fff; border-radius:16px; padding:12px; text-align:center; box-shadow:0 3px 0 #f0e6c8; }
+            .rcard.theme-04 .tri-ic { display:none; }
+            .rcard.theme-04 .tri-lbl { font-size:10px; color:#b5a06a; margin-bottom:4px; }
+            .rcard.theme-04 .tri-val { font-size:14px; color:#4a3b1a; font-weight:700; }
+            .rcard.theme-04 .stu { margin:24px 0 0; font-size:40px; font-weight:800; color:#ff6b6b; }
+            .rcard.theme-04 .stu-sub { margin-top:8px; font-size:13px; color:#8a7a4a; }
+            .rcard.theme-04 .lesson-no { background:#4ecdc4; color:#fff; padding:2px 10px; border-radius:999px; font-size:11px; }
+            .rcard.theme-04 .sec-h { display:flex; align-items:center; gap:10px; margin:24px 0 12px; font-size:14px; color:#6b4c00; font-weight:700; }
+            .rcard.theme-04 .sec-h .ln { flex:1; height:3px; border-radius:2px; background:repeating-linear-gradient(90deg,#ffd93d 0 8px,transparent 8px 14px); }
+            .rcard.theme-04 .sec-h .sq { display:none; }
+            .rcard.theme-04 .achv-list { display:flex; flex-wrap:wrap; gap:10px; }
+            .rcard.theme-04 .achv-row { padding:8px 16px; border-radius:16px; background:#fff; border:2px solid #4ecdc4; }
+            .rcard.theme-04 .achv-bar, .rcard.theme-04 .achv-icon { display:none; }
+            .rcard.theme-04 .achv-text { font-size:13.5px; color:#2d5c58; font-weight:700; }
+            .rcard.theme-04 .body { background:#fff; border-radius:20px; padding:20px 22px; font-size:14.5px; line-height:1.95; color:#5a4a2a; white-space:pre-wrap; }
+            .rcard.theme-04 .foot { margin-top:24px; padding-top:14px; border-top:2px dashed #ffd93d; font-size:12px; color:#9a8a5a; font-weight:700; }
+            
+            .rcard.theme-05 { background:#1a2332; border-radius:18px; padding:42px 46px 36px; color:#e8ecf1; box-shadow:0 24px 60px rgba(0,0,0,.35); }
+            .rcard.theme-05 .ribbon { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; }
+            .rcard.theme-05 .ribbon-tag { font-size:11px; letter-spacing:3px; color:#6b7a90; }
+            .rcard.theme-05 .brand-mark { width:32px; height:32px; border-radius:8px; background:linear-gradient(135deg,#4a90e2,#357abd); }
+            .rcard.theme-05 .tri-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin-top:8px; }
+            .rcard.theme-05 .tri-cell { background:rgba(255,255,255,.06); border-radius:12px; padding:14px 16px; }
+            .rcard.theme-05 .tri-ic { display:none; }
+            .rcard.theme-05 .tri-lbl { font-size:10px; color:#7d8da8; letter-spacing:2px; margin-bottom:6px; }
+            .rcard.theme-05 .tri-val { font-size:15px; color:#fff; font-weight:600; }
+            .rcard.theme-05 .stu { margin:32px 0 0; font-size:40px; font-weight:700; color:#fff; letter-spacing:2px; }
+            .rcard.theme-05 .stu-sub { margin-top:10px; font-size:13px; color:#9aadcc; }
+            .rcard.theme-05 .lesson-no { color:#4a90e2; font-weight:700; }
+            .rcard.theme-05 .sec-h { display:flex; align-items:center; gap:12px; margin:32px 0 16px; font-size:12px; color:#7d8da8; letter-spacing:3px; }
+            .rcard.theme-05 .sec-h .ln { flex:1; height:1px; background:rgba(255,255,255,.12); }
+            .rcard.theme-05 .sec-h .sq { width:6px; height:6px; background:#4a90e2; transform:rotate(45deg); }
+            .rcard.theme-05 .achv-list { display:flex; flex-direction:column; gap:10px; }
+            .rcard.theme-05 .achv-row { display:flex; align-items:center; gap:12px; padding:12px 16px; background:rgba(255,255,255,.06); border-radius:10px; border-left:3px solid #4a90e2; }
+            .rcard.theme-05 .achv-bar, .rcard.theme-05 .achv-icon { display:none; }
+            .rcard.theme-05 .achv-text { font-size:14px; color:#dce4ef; }
+            .rcard.theme-05 .body { font-size:15px; line-height:1.95; color:#c8d2e0; white-space:pre-wrap; }
+            .rcard.theme-05 .foot { margin-top:32px; padding-top:16px; border-top:1px solid rgba(255,255,255,.12); font-size:12px; color:#7d8da8; }
+            
+            .rcard.theme-06 { background:#f1f8f4; border:1px solid #c5e0cc; border-radius:28px; padding:0 44px 34px; color:#2d4a35; position:relative; overflow:hidden; }
+            .rcard.theme-06::before { content:""; position:absolute; top:-40px; right:-40px; width:160px; height:160px; background:#d4edda; border-radius:50%; opacity:.6; }
+            .rcard.theme-06::after { content:""; position:absolute; bottom:-60px; left:-60px; width:200px; height:200px; background:#e8f5e9; border-radius:50%; opacity:.6; }
+            .rcard.theme-06 .ribbon { height:66px; display:flex; align-items:center; justify-content:center; position:relative; z-index:1; }
+            .rcard.theme-06 .ribbon-tag { padding:6px 18px; border-radius:999px; background:#e8f5e9; color:#4a7c59; font-size:12px; letter-spacing:3px; }
+            .rcard.theme-06 .tri-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:14px; position:relative; z-index:1; }
+            .rcard.theme-06 .tri-cell { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:14px; background:rgba(255,255,255,.7); border:1px solid #c5e0cc; }
+            .rcard.theme-06 .tri-ic { width:30px; height:30px; border-radius:50%; background:#e8f5e9; display:flex; align-items:center; justify-content:center; }
+            .rcard.theme-06 .tri-ic svg { width:15px; height:15px; stroke:#4a7c59; fill:none; stroke-width:1.8; }
+            .rcard.theme-06 .tri-lbl { font-size:10px; color:#6b9e80; }
+            .rcard.theme-06 .tri-val { font-size:14px; color:#2d4a35; font-weight:600; }
+            .rcard.theme-06 .stu { margin:26px 0 0; font-size:42px; font-weight:700; color:#2d4a35; position:relative; z-index:1; }
+            .rcard.theme-06 .stu-sub { margin-top:10px; font-size:13px; color:#5a7d65; }
+            .rcard.theme-06 .lesson-no { background:#4a7c59; color:#fff; padding:2px 10px; border-radius:999px; font-size:11px; }
+            .rcard.theme-06 .sec-h { display:flex; align-items:center; gap:10px; margin:26px 0 12px; font-size:13px; color:#4a7c59; letter-spacing:3px; font-weight:600; position:relative; z-index:1; }
+            .rcard.theme-06 .sec-h .ln { flex:1; height:1px; background:#c5e0cc; }
+            .rcard.theme-06 .sec-h .sq { width:8px; height:8px; background:#4a7c59; border-radius:50%; }
+            .rcard.theme-06 .achv-list { display:flex; flex-wrap:wrap; gap:10px; position:relative; z-index:1; }
+            .rcard.theme-06 .achv-row { display:flex; align-items:center; gap:8px; padding:9px 16px; border-radius:999px; background:#fff; border:1px solid #c5e0cc; }
+            .rcard.theme-06 .achv-icon svg { width:14px; height:14px; stroke:#4a7c59; fill:none; }
+            .rcard.theme-06 .achv-bar { display:none; }
+            .rcard.theme-06 .achv-text { font-size:13.5px; color:#2d4a35; }
+            .rcard.theme-06 .body { position:relative; z-index:1; padding:20px; background:rgba(255,255,255,.6); border-radius:16px; font-size:15px; line-height:1.95; color:#3d5c45; white-space:pre-wrap; }
+            .rcard.theme-06 .foot { position:relative; z-index:1; margin-top:26px; padding-top:14px; border-top:1px solid #c5e0cc; font-size:12px; color:#6b9e80; }
+            
+            .rcard.theme-07 { background:#0d0d14; border:2px solid transparent; border-radius:20px; padding:0 44px 38px; color:#e0e0ff; position:relative; box-shadow:0 0 40px rgba(139,92,246,.25), inset 0 0 60px rgba(139,92,246,.05); background-clip:padding-box; }
+            .rcard.theme-07::before { content:""; position:absolute; inset:-2px; border-radius:20px; padding:2px; background:linear-gradient(135deg,#8b5cf6,#06b6d4); -webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0); -webkit-mask-composite:xor; mask-composite:exclude; z-index:-1; }
+            .rcard.theme-07 .ribbon { height:60px; display:flex; align-items:center; justify-content:center; }
+            .rcard.theme-07 .ribbon-tag { padding:5px 18px; border-radius:999px; background:rgba(139,92,246,.15); border:1px solid rgba(139,92,246,.4); color:#c4b5fd; font-size:12px; letter-spacing:3px; }
+            .rcard.theme-07 .tri-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:16px; }
+            .rcard.theme-07 .tri-cell { padding:12px 14px; border-radius:12px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); }
+            .rcard.theme-07 .tri-ic { display:none; }
+            .rcard.theme-07 .tri-lbl { font-size:10px; color:#818cf8; letter-spacing:2px; margin-bottom:4px; }
+            .rcard.theme-07 .tri-val { font-size:14px; color:#fff; font-weight:600; }
+            .rcard.theme-07 .stu { margin:28px 0 0; font-size:42px; font-weight:800; color:#fff; text-shadow:0 0 20px rgba(139,92,246,.5); }
+            .rcard.theme-07 .stu-sub { margin-top:10px; font-size:13px; color:#a5b4fc; }
+            .rcard.theme-07 .lesson-no { color:#22d3ee; font-weight:700; }
+            .rcard.theme-07 .sec-h { display:flex; align-items:center; gap:10px; margin:28px 0 14px; font-size:12px; color:#818cf8; letter-spacing:3px; }
+            .rcard.theme-07 .sec-h .ln { flex:1; height:1px; background:linear-gradient(90deg,transparent,#8b5cf6,transparent); }
+            .rcard.theme-07 .sec-h .sq { width:6px; height:6px; background:#22d3ee; border-radius:50%; box-shadow:0 0 8px #22d3ee; }
+            .rcard.theme-07 .achv-list { display:flex; flex-wrap:wrap; gap:10px; }
+            .rcard.theme-07 .achv-row { padding:8px 16px; border-radius:999px; background:rgba(139,92,246,.12); border:1px solid rgba(139,92,246,.35); }
+            .rcard.theme-07 .achv-bar, .rcard.theme-07 .achv-icon { display:none; }
+            .rcard.theme-07 .achv-text { font-size:13px; color:#ddd6fe; }
+            .rcard.theme-07 .body { font-size:15px; line-height:1.95; color:#c7c7f0; white-space:pre-wrap; }
+            .rcard.theme-07 .foot { margin-top:28px; padding-top:14px; border-top:1px solid rgba(255,255,255,.1); font-size:12px; color:#818cf8; }
+            
+            .rcard.theme-08 { background:#f4eed4; background-image:radial-gradient(rgba(0,0,0,.04) 1px, transparent 1px); background-size:8px 8px; border:2px solid #3d342b; border-radius:4px; padding:38px 42px 34px; color:#2b231b; }
+            .rcard.theme-08 .ribbon { display:flex; justify-content:space-between; align-items:center; border-bottom:3px solid #3d342b; padding-bottom:12px; margin-bottom:18px; }
+            .rcard.theme-08 .ribbon-tag { font-size:20px; font-family:"Noto Serif SC","Songti SC",serif; font-weight:900; color:#3d342b; letter-spacing:1px; }
+            .rcard.theme-08 .issue { font-size:11px; color:#6b5d4d; border:1px solid #3d342b; padding:2px 8px; }
+            .rcard.theme-08 .tri-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:6px; }
+            .rcard.theme-08 .tri-cell { border-right:1px dashed #8b7d6b; padding-right:10px; }
+            .rcard.theme-08 .tri-cell:last-child { border-right:none; }
+            .rcard.theme-08 .tri-ic { display:none; }
+            .rcard.theme-08 .tri-lbl { font-size:10px; color:#6b5d4d; text-transform:uppercase; letter-spacing:1px; }
+            .rcard.theme-08 .tri-val { font-size:14px; color:#2b231b; font-weight:700; }
+            .rcard.theme-08 .stu { margin:24px 0 0; font-size:48px; font-family:"Noto Serif SC","Songti SC",serif; font-weight:900; color:#3d342b; text-transform:uppercase; letter-spacing:1px; line-height:1.1; }
+            .rcard.theme-08 .stu-sub { margin-top:8px; font-size:13px; color:#6b5d4d; }
+            .rcard.theme-08 .lesson-no { background:#3d342b; color:#f4eed4; padding:2px 8px; }
+            .rcard.theme-08 .sec-h { display:flex; align-items:center; gap:10px; margin:26px 0 12px; font-size:12px; color:#6b5d4d; font-weight:700; letter-spacing:2px; }
+            .rcard.theme-08 .sec-h .ln { flex:1; height:2px; background:#3d342b; }
+            .rcard.theme-08 .sec-h .sq { display:none; }
+            .rcard.theme-08 .achv-list { display:flex; flex-wrap:wrap; gap:8px; }
+            .rcard.theme-08 .achv-row { padding:5px 12px; border:1px solid #3d342b; background:#fff; }
+            .rcard.theme-08 .achv-bar, .rcard.theme-08 .achv-icon { display:none; }
+            .rcard.theme-08 .achv-text { font-size:13px; color:#2b231b; font-weight:700; }
+            .rcard.theme-08 .body { font-size:14.5px; line-height:1.9; color:#3d342b; white-space:pre-wrap; column-count:2; column-gap:28px; }
+            .rcard.theme-08 .foot { margin-top:24px; padding-top:10px; border-top:1px solid #3d342b; font-size:11px; color:#6b5d4d; }
+            
+            .rcard.theme-09 { background:linear-gradient(135deg,#fff0f5 0%,#f0f8ff 100%); border:1px solid #e6e0f0; border-radius:32px; padding:38px 44px 34px; color:#5d4e6d; box-shadow:0 16px 48px rgba(180,160,200,.18); }
+            .rcard.theme-09 .ribbon { display:flex; justify-content:center; margin-bottom:18px; }
+            .rcard.theme-09 .ribbon-tag { padding:6px 20px; border-radius:999px; background:#fff; border:1px solid #e6e0f0; color:#9b8ab5; font-size:12px; letter-spacing:3px; }
+            .rcard.theme-09 .tri-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:6px; }
+            .rcard.theme-09 .tri-cell { display:flex; align-items:center; gap:10px; padding:12px 14px; border-radius:16px; background:#fff; box-shadow:0 2px 8px rgba(180,160,200,.1); }
+            .rcard.theme-09 .tri-ic { width:32px; height:32px; border-radius:10px; background:#f3e8ff; display:flex; align-items:center; justify-content:center; }
+            .rcard.theme-09 .tri-ic svg { width:16px; height:16px; stroke:#a78bfa; fill:none; }
+            .rcard.theme-09 .tri-lbl { font-size:10px; color:#b8a8d0; }
+            .rcard.theme-09 .tri-val { font-size:14px; color:#5d4e6d; font-weight:600; }
+            .rcard.theme-09 .stu { margin:28px 0 0; font-size:42px; font-weight:700; color:#7c6a9a; }
+            .rcard.theme-09 .stu-sub { margin-top:10px; font-size:13px; color:#9b8ab5; }
+            .rcard.theme-09 .lesson-no { background:#f3e8ff; color:#8b5cf6; padding:2px 10px; border-radius:999px; font-size:11px; }
+            .rcard.theme-09 .sec-h { display:flex; align-items:center; gap:10px; margin:26px 0 14px; font-size:13px; color:#9b8ab5; letter-spacing:3px; font-weight:600; }
+            .rcard.theme-09 .sec-h .ln { flex:1; height:1px; background:linear-gradient(90deg,#e6e0f0,transparent); }
+            .rcard.theme-09 .sec-h .sq { width:8px; height:8px; border-radius:50%; background:#c4b5fd; }
+            .rcard.theme-09 .achv-list { display:flex; flex-wrap:wrap; gap:10px; }
+            .rcard.theme-09 .achv-row { padding:8px 16px; border-radius:999px; background:#fff; border:1px solid #e6e0f0; box-shadow:0 2px 6px rgba(180,160,200,.1); }
+            .rcard.theme-09 .achv-bar, .rcard.theme-09 .achv-icon { display:none; }
+            .rcard.theme-09 .achv-text { font-size:13.5px; color:#6b5b7d; }
+            .rcard.theme-09 .body { background:#fff; border-radius:20px; padding:22px 24px; font-size:15px; line-height:1.95; color:#6b5b7d; white-space:pre-wrap; }
+            .rcard.theme-09 .foot { margin-top:24px; padding-top:14px; border-top:1px dashed #e6e0f0; font-size:12px; color:#b8a8d0; }
+            
+            .rcard.theme-10 { background:#2d4739; background-image:radial-gradient(rgba(255,255,255,.04) 1px, transparent 1px); background-size:6px 6px; border:12px solid #8b5a2b; border-radius:8px; padding:30px 36px 30px; color:#f0f0e8; box-shadow:0 20px 50px rgba(0,0,0,.35); }
+            .rcard.theme-10 .ribbon { display:flex; align-items:center; justify-content:center; margin-bottom:16px; }
+            .rcard.theme-10 .ribbon-tag { padding:5px 18px; border-radius:4px; border:2px solid rgba(255,255,255,.35); color:rgba(255,255,255,.7); font-size:13px; letter-spacing:4px; }
+            .rcard.theme-10 .tri-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:6px; }
+            .rcard.theme-10 .tri-cell { padding:10px 0; text-align:center; border-bottom:2px solid rgba(255,255,255,.15); }
+            .rcard.theme-10 .tri-ic { display:none; }
+            .rcard.theme-10 .tri-lbl { font-size:10px; color:rgba(255,255,255,.5); letter-spacing:2px; }
+            .rcard.theme-10 .tri-val { font-size:15px; color:#fff; font-weight:600; }
+            .rcard.theme-10 .stu { margin:24px 0 0; font-size:44px; font-family:"Kaiti","STKaiti","楷体",serif; font-weight:700; color:#fff; text-shadow:0 0 4px rgba(255,255,255,.3); }
+            .rcard.theme-10 .stu-sub { margin-top:8px; font-size:13px; color:rgba(255,255,255,.65); }
+            .rcard.theme-10 .lesson-no { color:#fff; border:1px solid rgba(255,255,255,.4); padding:2px 10px; border-radius:4px; }
+            .rcard.theme-10 .sec-h { display:flex; align-items:center; gap:10px; margin:24px 0 12px; font-size:13px; color:rgba(255,255,255,.6); letter-spacing:3px; }
+            .rcard.theme-10 .sec-h .ln { flex:1; height:2px; background:repeating-linear-gradient(90deg,rgba(255,255,255,.3) 0 8px,transparent 8px 12px); }
+            .rcard.theme-10 .sec-h .sq { width:6px; height:6px; background:#fff; border-radius:1px; transform:rotate(45deg); }
+            .rcard.theme-10 .achv-list { display:flex; flex-wrap:wrap; gap:10px; }
+            .rcard.theme-10 .achv-row { padding:7px 14px; border-radius:4px; background:rgba(255,255,255,.1); border:1px dashed rgba(255,255,255,.35); }
+            .rcard.theme-10 .achv-bar, .rcard.theme-10 .achv-icon { display:none; }
+            .rcard.theme-10 .achv-text { font-size:13.5px; color:#fff; }
+            .rcard.theme-10 .body { font-size:15px; line-height:1.95; color:rgba(255,255,255,.85); white-space:pre-wrap; }
+            .rcard.theme-10 .foot { margin-top:24px; padding-top:12px; border-top:2px solid rgba(255,255,255,.15); font-size:12px; color:rgba(255,255,255,.5); }
+    
+        /* ============================================================
+           丰富化装饰层（追加，不改原主题规则；全部字面色 + 内联 SVG，
+           html2canvas 兼容，DOM 不变）
+           ============================================================ */
+    
+        /* 01 奶油手账：右上和纸胶带 + 左下贴纸小花 */
+        .rcard.theme-01::before { content:""; position:absolute; top:-14px; right:36px; width:120px; height:36px; background:rgba(176,129,70,.22); border-left:1px dashed rgba(135,98,47,.5); border-right:1px dashed rgba(135,98,47,.5); transform:rotate(4deg); border-radius:2px; }
+        .rcard.theme-01::after { content:""; position:absolute; left:18px; bottom:14px; width:120px; height:60px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='60'%3E%3Cg fill='%23b08146' fill-opacity='0.35'%3E%3Ccircle cx='15' cy='30' r='6'/%3E%3Ccircle cx='30' cy='14' r='4'/%3E%3Ccircle cx='46' cy='34' r='7'/%3E%3Ccircle cx='66' cy='18' r='4'/%3E%3Ccircle cx='82' cy='36' r='6'/%3E%3Ccircle cx='100' cy='20' r='4'/%3E%3C/g%3E%3C/svg%3E"); background-repeat:no-repeat; }
+        .rcard.theme-01 .ribbon { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Cpath d='M8 20c0-6 5-11 11-11' stroke='%23d8c9a8' fill='none' stroke-width='2'/%3E%3Ccircle cx='30' cy='28' r='3' fill='%23d8c9a8'/%3E%3C/svg%3E"); }
+    
+        /* 02 极简留白：顶部粗黑线 + 左侧细分隔线 + 右下三角水印 */
+        .rcard.theme-02 { border-top:3px solid #1a1a1a; }
+        .rcard.theme-02::before { content:""; position:absolute; left:52px; top:0; bottom:0; width:1px; background:#f0f0f0; }
+        .rcard.theme-02::after { content:""; position:absolute; right:0; bottom:0; width:0; height:0; border-style:solid; border-width:0 0 90px 90px; border-color:transparent transparent #f0f0f0 transparent; }
+    
+        /* 03 新中式卷轴：顶部云纹带 + 底部淡墨竹 */
+        .rcard.theme-03 { box-shadow:0 18px 44px rgba(90,64,32,.18), inset 0 0 0 1px #efe6d2; }
+        .rcard.theme-03 .ribbon { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='24'%3E%3Cg fill='none' stroke='%23c9b385' stroke-width='1.4'%3E%3Cpath d='M4 16q8-12 16 0t16 0' /%3E%3Cpath d='M52 16q8-12 16 0t16 0' /%3E%3Cpath d='M100 16q8-12 16 0t16 0' /%3E%3C/g%3E%3C/svg%3E"); background-repeat:repeat-x; background-position:left top; }
+        .rcard.theme-03 .foot { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='40'%3E%3Cg stroke='%238b5a2b' stroke-opacity='0.25' fill='none' stroke-width='2'%3E%3Cpath d='M10 38V12M10 20c8-2 12-8 12-8M10 28c8-2 14-8 14-8'/%3E%3C/g%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right bottom; }
+    
+        /* 04 童趣贴纸：四角贴纸星 + 圆点底纹 + 波浪虚线框 */
+        .rcard.theme-04 { background-image:radial-gradient(rgba(255,255,255,.5) 2px, transparent 2px); background-size:22px 22px; }
+        .rcard.theme-04::before { content:""; position:absolute; top:14px; left:16px; width:44px; height:44px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='44' height='44'%3E%3Cpath d='M22 4l4.5 10 11 1.2-8.2 7.4 2.2 10.9L22 27.8l-9.5 5.7 2.2-10.9-8.2-7.4 11-1.2z' fill='%23ffd166' stroke='%23f4a261' stroke-width='1.5'/%3E%3C/svg%3E"); transform:rotate(-8deg); }
+        .rcard.theme-04::after { content:""; position:absolute; bottom:16px; right:18px; width:40px; height:40px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40'%3E%3Ccircle cx='20' cy='20' r='15' fill='%23ff8fa3'/%3E%3Cpath d='M13 20c3-5 11-5 14 0' stroke='%23fff' stroke-width='2.4' fill='none' stroke-linecap='round'/%3E%3Ccircle cx='15.5' cy='17' r='1.6' fill='%23fff'/%3E%3Ccircle cx='24.5' cy='17' r='1.6' fill='%23fff'/%3E%3C/svg%3E"); transform:rotate(8deg); }
+        .rcard.theme-04 .body { border-radius:14px; }
+    
+        /* 05 商务深蓝：顶部金线 + 左细金侧条 + 内框 */
+        .rcard.theme-05 { box-shadow:0 22px 54px rgba(10,20,40,.4); }
+        .rcard.theme-05::before { content:""; position:absolute; top:0; left:0; right:0; height:5px; background:linear-gradient(90deg,#c9a24b,#e6c877,#c9a24b); }
+        .rcard.theme-05::after { content:""; position:absolute; top:5px; bottom:0; left:0; width:5px; background:linear-gradient(180deg,#c9a24b,rgba(201,162,75,.25)); }
+        .rcard.theme-05 .stu { letter-spacing:4px; }
+    
+        /* 06 森系自然：左下枝叶 + 右上圆叶群 */
+        .rcard.theme-06::before { content:""; position:absolute; left:-6px; bottom:-4px; width:150px; height:150px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cg fill='%234a7c59' fill-opacity='0.28'%3E%3Cpath d='M10 150C10 90 50 50 110 40c-8 50-50 90-100 110z'/%3E%3Cpath d='M150 150c-40-6-70-30-80-70 40 6 70 30 80 70z'/%3E%3C/g%3E%3C/svg%3E"); background-repeat:no-repeat; }
+        .rcard.theme-06::after { content:""; position:absolute; right:22px; top:80px; width:60px; height:60px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60'%3E%3Cg fill='%236b9e80' fill-opacity='0.4'%3E%3Ccircle cx='18' cy='18' r='10'/%3E%3Ccircle cx='42' cy='14' r='7'/%3E%3Ccircle cx='40' cy='42' r='11'/%3E%3Ccircle cx='16' cy='44' r='6'/%3E%3C/g%3E%3C/svg%3E"); }
+    
+        /* 07 霓虹赛博：背景网格 + 扫描线 + 双层霓虹光晕 */
+        .rcard.theme-07 { box-shadow:0 0 50px rgba(139,92,246,.35), 0 0 14px rgba(34,211,238,.25), inset 0 0 80px rgba(139,92,246,.06); }
+        .rcard.theme-07::after { content:""; position:absolute; inset:0; background-image:linear-gradient(rgba(139,92,246,.07) 1px, transparent 1px), linear-gradient(90deg, rgba(34,211,238,.06) 1px, transparent 1px); background-size:30px 30px; pointer-events:none; }
+        .rcard.theme-07 .stu { text-shadow:0 0 24px rgba(139,92,246,.8), 0 0 60px rgba(34,211,238,.4); }
+    
+        /* 08 复古杂志：半调网点角 + 顶部双细线报头 + 做旧斑驳 */
+        .rcard.theme-08 { box-shadow:inset 0 0 60px rgba(61,52,43,.08), 0 16px 40px rgba(43,35,27,.15); }
+        .rcard.theme-08::before { content:""; position:absolute; top:0; right:0; width:120px; height:120px; background-image:radial-gradient(rgba(61,52,43,.35) 1.2px, transparent 1.2px); background-size:7px 7px; -webkit-mask:linear-gradient(225deg,#000 30%,transparent 70%); mask:linear-gradient(225deg,#000 30%,transparent 70%); }
+        .rcard.theme-08::after { content:""; position:absolute; left:42px; right:42px; top:64px; height:0; border-top:1px solid #3d342b; border-bottom:1px solid #3d342b; padding-top:2px; opacity:.5; }
+    
+        /* 09 清新马卡龙：四角渐变圆斑 + 漂浮小圆点 */
+        .rcard.theme-09::before { content:""; position:absolute; top:-30px; left:-30px; width:120px; height:120px; border-radius:50%; background:radial-gradient(circle at 35% 35%, #ffd6e8, #ffc4e0 60%, transparent 70%); opacity:.7; }
+        .rcard.theme-09::after { content:""; position:absolute; bottom:-26px; right:-26px; width:110px; height:110px; border-radius:50%; background:radial-gradient(circle at 60% 60%, #cfeee0, #b7e6f5 60%, transparent 70%); opacity:.7; }
+        .rcard.theme-09 .ribbon { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='16'%3E%3Cg fill='%23d8c7ec'%3E%3Ccircle cx='10' cy='8' r='2.4'/%3E%3Ccircle cx='40' cy='8' r='1.8'/%3E%3Ccircle cx='80' cy='8' r='2.4'/%3E%3Ccircle cx='120' cy='8' r='1.8'/%3E%3Ccircle cx='160' cy='8' r='2.4'/%3E%3Ccircle cx='190' cy='8' r='1.8'/%3E%3C/g%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:center bottom; }
+    
+        /* 10 黑板粉笔：四角粉笔涂鸦 + 顶部虚线 + 粉笔粉尘 */
+        .rcard.theme-10 { box-shadow:0 22px 54px rgba(0,0,0,.45), inset 0 0 0 2px rgba(255,255,255,.06); }
+        .rcard.theme-10::before { content:""; position:absolute; top:18px; left:22px; width:46px; height:46px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='46' height='46'%3E%3Cg stroke='%23ffffff' stroke-opacity='0.55' fill='none' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='23' cy='23' r='15' stroke-dasharray='4 4'/%3E%3Cpath d='M14 23c4-6 14-6 18 0'/%3E%3C/g%3E%3C/svg%3E"); }
+        .rcard.theme-10::after { content:""; position:absolute; right:24px; bottom:18px; width:70px; height:40px; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='40'%3E%3Cg stroke='%23ffd166' stroke-opacity='0.6' fill='none' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M6 30l10-12 8 8 10-14 8 10' /%3E%3Cpath d='M54 30l10-12' stroke='%23ffffff'/%3E%3C/g%3E%3C/svg%3E"); }
+        .rcard.theme-10 .ribbon { background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='10'%3E%3Cpath d='M4 6h112' stroke='%23ffffff' stroke-opacity='0.2' stroke-width='2' stroke-dasharray='6 6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:center top; }
   </style>
 </head>
 <body>
   <div class="stage">
-    <div class="rcard {{ (preset.card_template if preset else 'general') }}" id="rcard">
+    <div class="theme-picker">
+      <div class="theme-picker-label">选择卡片模板（点击切换，自动保存）</div>
+      <div class="theme-grid" id="theme-grid">
+        <button type="button" class="theme-btn" data-theme="theme-01"><span class="theme-swatch sw-t01"></span><span class="theme-name">01 奶油手账</span></button>
+        <button type="button" class="theme-btn" data-theme="theme-02"><span class="theme-swatch sw-t02"></span><span class="theme-name">02 极简留白</span></button>
+        <button type="button" class="theme-btn" data-theme="theme-03"><span class="theme-swatch sw-t03"></span><span class="theme-name">03 新中式卷轴</span></button>
+        <button type="button" class="theme-btn" data-theme="theme-04"><span class="theme-swatch sw-t04"></span><span class="theme-name">04 童趣贴纸</span></button>
+        <button type="button" class="theme-btn" data-theme="theme-05"><span class="theme-swatch sw-t05"></span><span class="theme-name">05 商务深蓝</span></button>
+        <button type="button" class="theme-btn" data-theme="theme-06"><span class="theme-swatch sw-t06"></span><span class="theme-name">06 森系自然</span></button>
+        <button type="button" class="theme-btn" data-theme="theme-07"><span class="theme-swatch sw-t07"></span><span class="theme-name">07 霓虹赛博</span></button>
+        <button type="button" class="theme-btn" data-theme="theme-08"><span class="theme-swatch sw-t08"></span><span class="theme-name">08 复古杂志</span></button>
+        <button type="button" class="theme-btn" data-theme="theme-09"><span class="theme-swatch sw-t09"></span><span class="theme-name">09 清新马卡龙</span></button>
+        <button type="button" class="theme-btn" data-theme="theme-10"><span class="theme-swatch sw-t10"></span><span class="theme-name">10 黑板粉笔</span></button>
+      </div>
+    </div>
+
+    <div class="rcard theme-01" id="rcard">
       {# ===== 顶部：细色条 + 居中「一对一课评」标签 ===== #}
       <div class="ribbon">
         <span class="ribbon-dot l"></span>
@@ -327,13 +497,58 @@
 
   <script src="{{ url_for('static', filename='js/html2canvas.min.js') }}"></script>
   <script>
+    // ===================== 模板切换 =====================
+    (function () {
+      var THEMES = ['theme-01','theme-02','theme-03','theme-04','theme-05','theme-06','theme-07','theme-08','theme-09','theme-10'];
+      var KEY = 'ekko_card_theme';
+      var card = document.getElementById('rcard');
+      var grid = document.getElementById('theme-grid');
+      var btns = grid.querySelectorAll('.theme-btn');
+
+      function apply(theme) {
+        if (THEMES.indexOf(theme) < 0) theme = 'theme-01';
+        THEMES.forEach(function (t) { card.classList.remove(t); });
+        card.classList.add(theme);
+        document.body.setAttribute('data-theme', theme);
+        btns.forEach(function (b) {
+          b.classList.toggle('active', b.dataset.theme === theme);
+        });
+        try { localStorage.setItem(KEY, theme); } catch (e) {}
+      }
+
+      grid.addEventListener('click', function (e) {
+        var btn = e.target.closest('.theme-btn');
+        if (!btn) return;
+        apply(btn.dataset.theme);
+      });
+
+      // 初始：URL ?theme=XX > localStorage > 默认 theme-01
+      var init = null;
+      var m = location.search.match(/[?&]theme=(theme-\d+)/);
+      if (m) init = m[1];
+      if (!init) {
+        try { init = localStorage.getItem(KEY); } catch (e) {}
+      }
+      apply(init || 'theme-01');
+    })();
+
+    // ===================== 导出 PNG =====================
     document.getElementById('export-png').addEventListener('click', async function () {
       var card = document.getElementById('rcard');
       var busy = document.getElementById('busy');
       busy.textContent = '渲染中…';
+      // 根据当前主题选合适的导出背景色
+      var themeBg = {
+        'theme-01': '#fdfaf3', 'theme-02': '#ffffff', 'theme-03': '#f7f2e6',
+        'theme-04': '#fffbe8', 'theme-05': '#0f1a33', 'theme-06': '#f0f6f1',
+        'theme-07': '#1a0b33', 'theme-08': '#f3ede2', 'theme-09': '#ffffff',
+        'theme-10': '#2d4a3e'
+      };
+      var curTheme = (card.className.match(/theme-\d+/) || ['theme-01'])[0];
+      var bgColor = themeBg[curTheme] || '#fdfaf3';
       try {
         var canvas = await html2canvas(card, {
-          scale: 2, backgroundColor: '#fdfaf3', useCORS: true, logging: false,
+          scale: 2, backgroundColor: bgColor, useCORS: true, logging: false,
         });
         var link = document.createElement('a');
         var name = {{ (student.name if student else "keping") | tojson | safe }};

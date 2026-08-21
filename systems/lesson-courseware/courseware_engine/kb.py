@@ -20,6 +20,29 @@ def _norm(s):
     return re.sub(r"\s+", "", (s or "").lower())
 
 
+# 年级核心抽取：把「六年级（小学第三学段）」「六年级上」「六年级」「6年级」统一成「六年级」，
+# 用于年级段的精确比较（忽略学段后缀与上/下册——同一年级的课文应视为同一年级段）。
+_CN_NUM = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9}
+_GRADE_RE = re.compile(r"([一二三四五六七八九]+|\d+)\s*年级")
+
+
+def _grade_core(s):
+    """从年级字符串里抽出「X年级」核心（中文数字），抽不到返回 None。"""
+    s = s or ""
+    m = _GRADE_RE.search(s)
+    if not m:
+        return None
+    tok = m.group(1)
+    if tok.isdigit():
+        n = int(tok)
+    else:
+        n = _CN_NUM.get(tok)
+        if n is None:
+            return None
+    cn = {v: k for k, v in _CN_NUM.items()}.get(n)
+    return (cn + "年级") if cn else None
+
+
 def load_kb(kb_dir=None):
     """加载 kb/ 下所有 .json 条目（递归）。
 
@@ -106,33 +129,48 @@ def invalidate_kb_cache():
 
 
 def retrieve_kb(form, kb_dir=None):
-    """按 (subject, grade, topic) 找最匹配的原文条目；无匹配返回 None。"""
+    """按 (subject, grade, topic) 精确锚定 KB 原文条目；无匹配返回 None。
+
+    学科生成本质是「选课文」：前端三级下拉只列 KB 真实存在的 (学科,年级,课题)，
+    因此检索应当精确锚定，杜绝「二年级秋天 → 错配成三年级《秋天的雨》」这类张冠李戴。
+
+    匹配规则（不再用 100/10/5 模糊打分）：
+      1. 学科必须一致（归一化后相等）。
+      2. 年级必须兼容：表单 grade 多为「X年级」，KB 条目为「X年级上/下」，
+         用「互相包含」判断同一年级段，排除跨年级。
+      3. 课题：完全相等 优先于 互相包含；同分时按「本课题范围护栏更宽(原文更长)」优先，
+         例如「圆的认识」在六年级上册有「圆」与「圆的认识」两条时，取更完整的那条。
+    """
     global KB_DIR
     if kb_dir is not None:
         KB_DIR = kb_dir
-    subj = (form.get("subject") or form.get("category") or "").strip()
-    grade = (form.get("grade") or "").strip()
-    topic = (form.get("topic") or form.get("content") or "").strip()
+    subj = _norm(form.get("subject") or form.get("category") or "")
+    grade = _norm(form.get("grade") or "")
+    topic = _norm(form.get("topic") or form.get("content") or "")
     if not (topic or subj):
         return None
-    tn = _norm(topic)
-    cands = []  # (score, 原文长度, entry)
+
+    def _grade_ok(eg):
+        if not grade or not eg:
+            return False
+        return _grade_core(eg) is not None and _grade_core(eg) == _grade_core(grade)
+
+    cands = []  # (topic_exact, 原文长度, entry)
     for e in _get_kb():
         es = _norm(e.get("subject", ""))
-        eg = _norm(e.get("grade", ""))
+        if subj and es and es != subj:
+            continue
+        if not _grade_ok(_norm(e.get("grade", ""))):
+            continue
         et = _norm(e.get("topic", ""))
-        score = 0
-        if tn and et and (tn in et or et in tn):
-            score += 100
-        if es and _norm(subj) and es == _norm(subj):
-            score += 10
-        if eg and _norm(grade) and (eg == _norm(grade) or _norm(grade) in eg or eg in _norm(grade)):
-            score += 5
-        if score >= 100:
-            cands.append((score, len(e.get("original_text") or ""), e))
+        if not topic or not et:
+            continue
+        exact = 1 if topic == et else 0
+        if not (exact or topic in et or et in topic):
+            continue
+        cands.append((exact, len(e.get("original_text") or ""), e))
     if not cands:
         return None
-    # 同分时优先「原文更长(非空)」的条目
     cands.sort(key=lambda c: (c[0], c[1]), reverse=True)
     return cands[0][2]
 

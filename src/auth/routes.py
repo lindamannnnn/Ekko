@@ -71,8 +71,6 @@ def register():
             current_app.logger.warning('[dev] 注册验证码(未真发): %s', code)
         return render_template(
             'auth/register_code.html', email=email,
-            dev_mode=(not current_app.config.get('MAIL_SERVER')),
-            reg_code=session.get('reg_code'),
             resend_at=session.get('reg_resend_at', 0),
             now_ts=int(time.time()),
         )
@@ -100,8 +98,6 @@ def register_code_page():
         return redirect(url_for('auth.register'))
     return render_template(
         'auth/register_code.html', email=email,
-        dev_mode=(not current_app.config.get('MAIL_SERVER')),
-        reg_code=session.get('reg_code'),
         resend_at=session.get('reg_resend_at', 0),
         now_ts=int(time.time()),
     )

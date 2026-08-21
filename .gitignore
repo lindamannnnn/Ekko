@@ -58,6 +58,10 @@ tour.js
 _*.png
 uploads/prep/
 
+# 手动备份的模板/html 旧版本（回滚用，本地保留，不入库）
+*.bak_*
+*.bak
+
 # 服务器生成的凭据文件（含管理员密码，严禁入库）
 CREDENTIALS.txt
 

@@ -109,12 +109,12 @@ SCHEMA_HINT = """\
 lesson.json 顶层结构：
 {
   "shared": {"subject": "学科", "grade": "年级（含学段，如 五年级（小学第三学段））", "duration": 40,
-             "standard_code": "课标2022·<学段>·<领域>·<主题>", "standard_text": "课标内容要求原文(≤30字)",
+             "standard_code": "课标2022年版·<学段>·<领域>·<主题>", "standard_text": "课标内容要求原文(≤30字)",
              "domain": "数与代数/图形与几何/统计与概率/综合与实践(选填)"},
   "theme": {"primary": "#b45309"},
   "documents": [
     {"id": "lesson_plan", "audience": "teacher", "eyebrow": "年级 学科 · 课时方案",
-     "title": "课题名", "meta": "课标2022·<学段>·<领域> · 时长分钟",
+     "title": "课题名", "meta": "课标2022年版·<学段>·<领域> · 教材：人教版2024修订 · 时长分钟",
      "sections": [ {"heading": "学习目标", "blocks": [{"type":"paragraph","text":"..."}]},
                    {"heading": "教学重难点", "blocks": [{"type":"labeled","label":"重点","text":"..."},{"type":"labeled","label":"难点","text":"..."}]},
                    {"heading": "教学过程", "blocks": [
@@ -224,7 +224,7 @@ def build_prompt(form):
 
 请输出 lesson.json。"""
 
-    system = "你是资深中国 K-12 学科教研员，严格依据义务教育课程标准（2022版）编写课时教案。你只输出符合 schema 的 lesson.json，不输出任何解释。"
+    system = "你是资深中国 K-12 学科教研员，严格依据义务教育课程标准（2022年版）编写课时教案，教材依据人教版2024修订版教科书。你只输出符合 schema 的 lesson.json，不输出任何解释。"
     return system, user
 
 

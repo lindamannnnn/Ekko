@@ -232,3 +232,10 @@ def preview(review_id):
         review=review, lesson=lesson, klass=klass, preset=preset, student=student,
         pos_tags=pos_tags,
     )
+
+
+@card_bp.route("/gallery")
+@login_required
+def gallery():
+    """10 套课评卡片模板设计稿预览页（供用户挑选默认模板）。"""
+    return render_template("cards/gallery.html")

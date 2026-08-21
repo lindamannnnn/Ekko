@@ -195,30 +195,10 @@ def _run_subject_job(job_id: str, user_id: str, app):
             if not course:
                 course = next((os.path.join(job_dir, f) for f in out_files if f.startswith("course_") or f == "index.html"), None)
 
-            # 用所选风格重新渲染
-            style = job.style or STYLE_IDS[0]
-            if style not in STYLE_IDS:
-                style = STYLE_IDS[0]
-            try:
-                lesson_text = ""
-                if lesson and os.path.exists(lesson):
-                    with open(lesson, "r", encoding="utf-8") as f:
-                        raw_html = f.read()
-                    lesson_text = re.sub(r"<[^>]+>", " ", raw_html)
-                    lesson_text = re.sub(r"\s+", "\n", lesson_text).strip()
-                if lesson_text:
-                    slides = segment(lesson_text, env={}, allow_llm=False)
-                    if slides:
-                        title = job.title or job.topic or "课件"
-                        courseware_html = render(slides, style, title=title)
-                        with open(courseware_path, "w", encoding="utf-8") as f:
-                            f.write(courseware_html)
-                        course = courseware_path
-            except Exception:
-                pass
-
-            if not course and os.path.exists(courseware_path):
-                course = courseware_path
+            # 学科生成的课件 = orchestrator 用 KB 精确锚定产出的 v3 课件（course_*.html）。
+            # 不再把教案 HTML 转纯文本重切页/重渲染——那条路会把 KB 驱动的好课件
+            # 拆成重复页/乱标题/生字刷屏（用户实测「拍手歌」即被这套覆盖逻辑毁掉）。
+            # 课件内容以 KB 原文为唯一事实源，这里直接采用 orchestrator 的产物。
 
             job.status = "success"
             job.lesson_path = lesson
