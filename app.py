@@ -93,6 +93,10 @@ def create_app(config: dict | None = None) -> Flask:
     if config:
         app.config.from_mapping(config)
 
+    # 保持 JSON 响应中字典的插入顺序，避免中文键被按 Unicode 码点重新排序
+    # （例如 prep 课程树 "一年级/二年级/三年级" 不能排成 "一三二"）
+    app.json.sort_keys = False
+
     db.init_app(app)
     # render_as_batch=True：SQLite 不支持改列类型/加约束/删列，
     # 必须走 batch_alter_table 重建表，否则第二次迁移即卡死（见风险 T8）
