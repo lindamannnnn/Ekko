@@ -18,6 +18,7 @@
     <div class="form-group">
       <label>班级类型</label>
       <select name="type_code" required class="form-input">
+        <option value="" disabled {% if not form_type %}selected{% endif %}>请选择班级类型</option>
         {% for p in presets %}
         <option value="{{ p.code }}" {% if form_type and p.code == form_type %}selected{% endif %}>{{ p.name }}</option>
         {% endfor %}
