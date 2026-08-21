@@ -123,7 +123,7 @@ function toggleHelp(id) {
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
 }
 document.addEventListener('DOMContentLoaded', function(){
-  var courseTree = {};
+  var courseTree = null;   // null 表示尚未加载
   var subEl = document.getElementById('subSubject');
   var gradeEl = document.getElementById('subGrade');
   var topicEl = document.getElementById('subTopic');
@@ -131,25 +131,50 @@ document.addEventListener('DOMContentLoaded', function(){
   function fillGrades(){
     gradeEl.innerHTML = '<option value="">请选择</option>';
     topicEl.innerHTML = '<option value="">请选择</option>';
+    if (!courseTree || !subEl.value) return;
     var grades = Object.keys(courseTree[subEl.value] || {});
     grades.forEach(function(g){
       var o = document.createElement('option'); o.value = g; o.textContent = g; gradeEl.appendChild(o);
     });
+    // 如果年级已经有值（回显），尝试恢复
+    if (gradeEl.dataset.pendingGrade) {
+      gradeEl.value = gradeEl.dataset.pendingGrade;
+      delete gradeEl.dataset.pendingGrade;
+      fillTopics();
+    }
   }
   function fillTopics(){
     topicEl.innerHTML = '<option value="">请选择</option>';
+    if (!courseTree || !subEl.value || !gradeEl.value) return;
     var topics = ((courseTree[subEl.value] || {})[gradeEl.value] || []);
     topics.forEach(function(t){
       var o = document.createElement('option'); o.value = t; o.textContent = t; topicEl.appendChild(o);
     });
+    if (topicEl.dataset.pendingTopic) {
+      topicEl.value = topicEl.dataset.pendingTopic;
+      delete topicEl.dataset.pendingTopic;
+    }
   }
 
-  fetch('{{ url_for("prep.courses") }}').then(function(r){ return r.json(); }).then(function(tree){
-    courseTree = tree;
-    if (subEl.value) fillGrades();
-  }).catch(function(e){
-    console.error('加载课程数据失败', e);
-  });
+  // 数据加载完成后再启用学科下拉，避免用户先选学科但数据未加载导致年级为空
+  subEl.disabled = true;
+  gradeEl.disabled = true;
+  topicEl.disabled = true;
+
+  fetch('{{ url_for("prep.courses") }}', { credentials: 'same-origin' })
+    .then(function(r){ return r.json(); })
+    .then(function(tree){
+      courseTree = tree;
+      subEl.disabled = false;
+      gradeEl.disabled = false;
+      topicEl.disabled = false;
+      fillGrades();
+    }).catch(function(e){
+      console.error('加载课程数据失败', e);
+      subEl.disabled = false;
+      gradeEl.disabled = false;
+      topicEl.disabled = false;
+    });
 
   subEl.addEventListener('change', fillGrades);
   gradeEl.addEventListener('change', fillTopics);
