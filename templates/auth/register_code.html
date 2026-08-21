@@ -62,6 +62,10 @@
   </script>
 
   {% if dev_mode %}
-    <p class="hint">当前为 dev 模式，邮件未真正发送；控制台已打印验证码，可直接输入后点击「验证并注册」。</p>
+    <p class="hint">当前为 dev 模式，邮件未真正发送；可直接输入下方验证码后点击「验证并注册」。</p>
+    <div class="field">
+      <label>dev 验证码</label>
+      <input type="text" readonly value="{{ reg_code or '' }}" onclick="this.select()" style="font-family:monospace;letter-spacing:2px;">
+    </div>
   {% endif %}
 {% endblock %}
