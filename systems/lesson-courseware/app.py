@@ -125,11 +125,11 @@ document.getElementById('f').addEventListener('submit',async e=>{
   btn.disabled=true;btxt.textContent='生成中…';prog.classList.add('show');resetSteps();
   msg.textContent='⏳ AI 备课中…（第 1 / 4 步）';result.innerHTML='';
   try{
-    const r=await fetch('/generate',{method:'POST',body:new FormData(e.target)});
+    const r=await fetch('generate',{method:'POST',body:new FormData(e.target)});
     const d=await r.json();
     const start=Date.now();
     const timer=setInterval(async ()=>{
-      let s;try{s=await (await fetch('/status/'+d.task_id)).json();}catch(_){return;}
+      let s;try{s=await (await fetch('status/'+d.task_id)).json();}catch(_){return;}
       if(s.status==='running'){
         const el=Math.min(3,Math.floor((Date.now()-start)/45000));
         steps.forEach((st,i)=>{st.className='step'+(i<el?' done':(i===el?' active':''));});
@@ -143,9 +143,9 @@ document.getElementById('f').addEventListener('submit',async e=>{
           banner='<div style="background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:12px;padding:14px 18px;margin-bottom:18px;font-size:13.5px"><b>⚠️ 审核门禁未过：</b>本课有确定性硬伤，建议人工复核后再用于课堂。<ul style="margin:8px 0 0 18px">'+s.result.review_issues.map(i=>'<li>'+i.replace(/</g,'&lt;')+'</li>').join('')+'</ul></div>';
         }
         result.innerHTML=banner+
-          '<div class="panel"><div class="phead"><h2>📘 教案</h2><span class="tag">K12 课标 grounded</span></div><iframe src="/file/'+s.result.lesson_html+'"></iframe></div>'+
-          '<div class="panel"><div class="phead"><h2>📊 课件</h2><span class="tag">'+s.result.slides+' 页 · '+s.result.engine+'</span></div><iframe src="/file/'+s.result.course_html+'"></iframe></div>'+
-          '<a class="dl" href="/file/'+s.result.lesson_json+'" download>⬇ 下载 lesson.json（教案结构化数据）</a>';
+          '<div class="panel"><div class="phead"><h2>📘 教案</h2><span class="tag">K12 课标 grounded</span></div><iframe src="file/'+s.result.lesson_html+'"></iframe></div>'+
+          '<div class="panel"><div class="phead"><h2>📊 课件</h2><span class="tag">'+s.result.slides+' 页 · '+s.result.engine+'</span></div><iframe src="file/'+s.result.course_html+'"></iframe></div>'+
+          '<a class="dl" href="file/'+s.result.lesson_json+'" download>⬇ 下载 lesson.json（教案结构化数据）</a>';
       }else if(s.status==='error'){
         clearInterval(timer);prog.classList.remove('show');
         btn.disabled=false;btxt.textContent='重试';msg.textContent='⚠️ 出错：'+(s.error||'未知错误');
@@ -208,4 +208,5 @@ def file(fn):
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5057, debug=False)
+    port = int(os.environ.get("PORT", "5057"))
+    app.run(host="0.0.0.0", port=port, debug=False)

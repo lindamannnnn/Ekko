@@ -35,3 +35,34 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+
+  courseware:
+    build:
+      context: ./systems/lesson-courseware
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.tuna.tsinghua.edu.cn/simple}
+        PIP_TRUSTED_HOST: ${PIP_TRUSTED_HOST:-pypi.tuna.tsinghua.edu.cn}
+    image: ekko-courseware:latest
+    container_name: ekko-courseware
+    ports:
+      - "127.0.0.1:5001:5001"
+    env_file:
+      - .env
+    environment:
+      - PORT=5001
+      - AI_PROXY=${AI_PROXY:-}
+    volumes:
+      # 生成产物（教案/课件 HTML）持久化，避免容器重建丢失
+      - ./systems/lesson-courseware/out:/app/out
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:5001/',timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
