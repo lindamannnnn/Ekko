@@ -15,6 +15,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # prep 位于 class-review-system/src/prep，向上三级到 E:/001 再进 lesson-courseware。
 # 用候选回退，避免目录结构调整后直接崩。
 _KB_CANDIDATES = [
+    os.path.normpath(os.path.join(BASE_DIR, "..", "..", "systems", "lesson-courseware", "vendor", "kb")),
     os.path.normpath(os.path.join(BASE_DIR, "..", "..", "..", "lesson-courseware", "vendor", "kb")),
     os.path.normpath(os.path.join(BASE_DIR, "..", "..", "lesson-courseware", "vendor", "kb")),
     os.path.normpath(os.path.join(BASE_DIR, "kb")),

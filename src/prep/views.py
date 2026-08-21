@@ -49,10 +49,19 @@ MAX_FILE_SIZE = 15 * 1024 * 1024  # 15MB
 MAX_TEXT = 20000
 RETENTION_DAYS = 7
 
-# 系统 B orchestrator 路径
-ORCHESTRATOR_PATH = os.path.normpath(
-    os.path.join(BASE_DIR, '..', '..', '..', 'lesson-courseware', 'orchestrator.py')
-)
+# 系统 B orchestrator 路径（B 归档到 systems/lesson-courseware/ 后优先使用归档路径）
+_ORCHESTRATOR_CANDIDATES = [
+    os.path.normpath(os.path.join(BASE_DIR, '..', '..', 'systems', 'lesson-courseware', 'orchestrator.py')),
+    os.path.normpath(os.path.join(BASE_DIR, '..', '..', '..', 'lesson-courseware', 'orchestrator.py')),
+    os.path.normpath(os.path.join(BASE_DIR, '..', '..', 'lesson-courseware', 'orchestrator.py')),
+]
+ORCHESTRATOR_PATH = None
+for _c in _ORCHESTRATOR_CANDIDATES:
+    if os.path.isfile(_c):
+        ORCHESTRATOR_PATH = _c
+        break
+if ORCHESTRATOR_PATH is None:
+    ORCHESTRATOR_PATH = _ORCHESTRATOR_CANDIDATES[0]
 
 SUBJECTS = ["语文", "数学", "英语"]
 GRADES = [f"{g}{s}" for g in range(1, 10) for s in ("年级上", "年级下")]
