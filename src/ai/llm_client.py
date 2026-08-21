@@ -1,7 +1,8 @@
 """通用 LLM 客户端（OpenAI 兼容）。
 
 支持任意 OpenAI-compatible 端点（智谱 GLM-4-Flash / OpenAI / 本地 vLLM 等）。
-单 Key 走同步请求；多 Key 轮询在 channel.py 里做容量扩容。
+支持单 KEY 或多 KEY 轮询：在 .env 中把多个 key 用逗号分隔填入 AI_API_KEY，
+当某个 key 限流、失败或异常时自动切换到下一个 key。
 """
 import os
 
@@ -11,7 +12,10 @@ from flask import current_app
 
 class LLMClient:
     def __init__(self, api_key=None, base_url=None, model=None):
-        self.api_key = api_key or current_app.config.get("AI_API_KEY", "")
+        raw_key = api_key or current_app.config.get("AI_API_KEY", "")
+        self.api_keys = [k.strip() for k in raw_key.split(",") if k.strip()] if raw_key else []
+        if not self.api_keys:
+            self.api_keys = [""]
         self.base_url = base_url or current_app.config.get(
             "AI_BASE_URL", "https://open.bigmodel.cn/api/paas/v4"
         )
@@ -22,6 +26,13 @@ class LLMClient:
         self.proxies = (
             {"http": proxy_url, "https": proxy_url} if proxy_url else {"http": None, "https": None}
         )
+        # 轮询起始索引，Flask 多线程下用实例级索引已足够（每个请求独立 client）
+        self._key_index = 0
+
+    @property
+    def api_key(self):
+        """兼容单 KEY 读取场景。"""
+        return self.api_keys[0] if self.api_keys else ""
 
     @classmethod
     def for_user(cls, user):
@@ -35,11 +46,11 @@ class LLMClient:
         )
 
     def complete(self, messages, temperature=0.7, timeout=120, max_tokens=None):
-        """同步调用，返回纯文本。失败时抛异常交由调用方处理。"""
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
+        """同步调用，返回纯文本。
+
+        多 KEY 时依次尝试，遇到限流/超时/服务端错误/鉴权失败自动切换到下一个 key。
+        全部 key 失败后抛出最后一个异常。
+        """
         payload = {
             "model": self.model,
             "messages": messages,
@@ -47,17 +58,40 @@ class LLMClient:
         }
         if max_tokens is not None:
             payload["max_tokens"] = int(max_tokens)
-        try:
-            r = requests.post(
-                f"{self.base_url.rstrip('/')}/chat/completions",
-                headers=headers,
-                json=payload,
-                timeout=timeout,
-                proxies=self.proxies,
-            )
-            r.raise_for_status()
-            data = r.json()
-            return data["choices"][0]["message"]["content"]
-        except requests.RequestException as e:
-            # 把底层错误原样上抛，调用方记录到 reviews.error_msg
-            raise
+
+        last_err = None
+        key_count = len(self.api_keys)
+        for offset in range(key_count):
+            key = self.api_keys[(self._key_index + offset) % key_count]
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            }
+            try:
+                r = requests.post(
+                    f"{self.base_url.rstrip('/')}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                    timeout=timeout,
+                    proxies=self.proxies,
+                )
+                r.raise_for_status()
+                data = r.json()
+                # 成功后把起始索引挪到下一个 key，实现简单轮询
+                self._key_index = (self._key_index + 1) % key_count
+                return data["choices"][0]["message"]["content"]
+            except requests.HTTPError as e:
+                last_err = e
+                code = e.response.status_code
+                # 400/422 等参数错误换 key 也没用，直接抛出
+                if 400 <= code < 500 and code not in (401, 429):
+                    raise
+                # 401/429/5xx 以及网络异常继续尝试下一个 key
+                continue
+            except requests.RequestException as e:
+                last_err = e
+                continue
+
+        if last_err is not None:
+            raise last_err
+        raise RuntimeError("所有 API KEY 均调用失败")

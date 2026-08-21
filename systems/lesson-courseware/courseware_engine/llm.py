@@ -30,9 +30,13 @@ class LLMClient:
 
     def __init__(self, api_key=None, base_url=None, model=None, proxy=None):
         # 统一读取 AI_* 与 COURSEWARE_*（AI_* 优先）
-        self.api_key = _first(api_key,
-                              os.environ.get("AI_API_KEY"),
-                              os.environ.get("COURSEWARE_API_KEY")) or ""
+        # 支持多 KEY 轮询：在 .env 里用逗号分隔填入 AI_API_KEY
+        raw_key = _first(api_key,
+                         os.environ.get("AI_API_KEY"),
+                         os.environ.get("COURSEWARE_API_KEY")) or ""
+        self.api_keys = [k.strip() for k in raw_key.split(",") if k.strip()] if raw_key else []
+        if not self.api_keys:
+            self.api_keys = [""]
         self.base_url = (_first(base_url,
                                 os.environ.get("AI_BASE_URL"),
                                 os.environ.get("COURSEWARE_BASE_URL"))
@@ -50,6 +54,7 @@ class LLMClient:
         if self.proxy:
             self._opener = urllib.request.build_opener(
                 urllib.request.ProxyHandler({"http": self.proxy, "https": self.proxy}))
+        self._key_index = 0
 
     def is_strong(self):
         """是否强模型（推理型/大模型）。含弱档标志词（flash/lite/mini/…）判为弱模型。"""
@@ -60,7 +65,10 @@ class LLMClient:
                  max_tokens=1500, retries=2):
         """调用 /chat/completions，返回 content 字符串。
 
-        retries：HTTPError/超时按 2s/5s 指数退避重试；非网络错误（如鉴权失败）立即抛出。
+        多 KEY 时依次尝试，遇到限流/超时/服务端错误/鉴权失败自动切换到下一个 key。
+        全部 key 失败后抛出最后一个异常。
+
+        retries：单个 KEY 内部 HTTPError/超时按 2s/5s 指数退避重试。
 
         强模型适配：强模型（推理型）在调用前就把 max_tokens 抬到下限（避免思考未完成
         就截断导致 content 为空）；弱模型保持原 max_tokens 不变。
@@ -74,36 +82,45 @@ class LLMClient:
             "temperature": temperature,
             "max_tokens": max_tokens,
         }).encode("utf-8")
+
         last_err = None
-        for attempt in range(1, max(retries, 1) + 1):
-            try:
-                req = urllib.request.Request(url, data=body, method="POST")
-                req.add_header("Content-Type", "application/json")
-                req.add_header("Authorization", "Bearer " + self.api_key)
-                if self._opener:
-                    with self._opener.open(req, timeout=timeout) as resp:
-                        data = json.loads(resp.read().decode("utf-8"))
-                else:
-                    with urllib.request.urlopen(req, timeout=timeout) as resp:
-                        data = json.loads(resp.read().decode("utf-8"))
-                return data["choices"][0]["message"].get("content") or ""
-            except urllib.error.HTTPError as e:
-                detail = e.read().decode("utf-8", "replace")[:300]
-                if e.code == 429:
-                    # 限流：重试 + 更长退避（连续批量跑时 API 会限流）
-                    last_err = RuntimeError(f"LLM 限流 429: {detail}")
-                    time.sleep(min(5 * attempt, 20))
-                    continue
-                # 其它 4xx（鉴权/参数错误）不重试，立即抛出
-                if 400 <= e.code < 500:
-                    raise RuntimeError(f"LLM HTTP {e.code}: {detail}")
-                last_err = RuntimeError(f"LLM HTTP {e.code}: {detail}")
-            except Exception as e:  # 超时 / 连接错误 → 重试
-                last_err = RuntimeError(f"LLM 调用失败: {e}")
-            # 退避：1→2s, 2→5s（指数，封顶 5s）
-            if attempt < max(retries, 1):
-                time.sleep(min(2 ** attempt, 5))
-        raise last_err or RuntimeError("LLM 调用失败（未知错误）")
+        key_count = len(self.api_keys)
+        for key_offset in range(key_count):
+            key = self.api_keys[(self._key_index + key_offset) % key_count]
+            for attempt in range(1, max(retries, 1) + 1):
+                try:
+                    req = urllib.request.Request(url, data=body, method="POST")
+                    req.add_header("Content-Type", "application/json")
+                    req.add_header("Authorization", "Bearer " + key)
+                    if self._opener:
+                        with self._opener.open(req, timeout=timeout) as resp:
+                            data = json.loads(resp.read().decode("utf-8"))
+                    else:
+                        with urllib.request.urlopen(req, timeout=timeout) as resp:
+                            data = json.loads(resp.read().decode("utf-8"))
+                    # 成功后将起始索引挪到下一个 key，实现简单轮询
+                    self._key_index = (self._key_index + 1) % key_count
+                    return data["choices"][0]["message"].get("content") or ""
+                except urllib.error.HTTPError as e:
+                    detail = e.read().decode("utf-8", "replace")[:300]
+                    if e.code == 429:
+                        # 限流：重试 + 更长退避（连续批量跑时 API 会限流）
+                        last_err = RuntimeError(f"LLM 限流 429: {detail}")
+                        time.sleep(min(5 * attempt, 20))
+                        continue
+                    # 400/422 等参数错误换 key 也没用，直接抛出
+                    if 400 <= e.code < 500 and e.code not in (401,):
+                        raise RuntimeError(f"LLM HTTP {e.code}: {detail}")
+                    # 401/5xx 等可能为临时异常，换下一个 key
+                    last_err = RuntimeError(f"LLM HTTP {e.code}: {detail}")
+                    break
+                except Exception as e:  # 超时 / 连接错误 → 换下一个 key
+                    last_err = RuntimeError(f"LLM 调用失败: {e}")
+                    break
+                # 单个 key 内部成功前退避（如未被 continue/break 跳过则执行）
+                if attempt < max(retries, 1):
+                    time.sleep(min(2 ** attempt, 5))
+        raise last_err or RuntimeError("所有 API KEY 均调用失败")
 
 
 def make_client(env=None):
