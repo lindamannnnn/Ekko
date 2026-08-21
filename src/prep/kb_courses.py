@@ -30,13 +30,24 @@ if KB_ROOT is None:
 
 _CIRCLED = "①②③④⑤⑥⑦⑧⑨⑩"
 
-_GRADE_KEY = re.compile(r"(\d+)\s*年级([上下])?")
+_CN_NUM = {
+    "一": 1, "二": 2, "三": 3, "四": 4, "五": 5,
+    "六": 6, "七": 7, "八": 8, "九": 9, "十": 10,
+}
+
+_GRADE_KEY = re.compile(r"([一二三四五六七八九十]+)\s*年级([上下])?")
 
 
 def _grade_key(g: str):
     m = _GRADE_KEY.match(g or "")
     if m:
-        return (int(m.group(1)), 0 if m.group(2) == "上" else 1)
+        cn = m.group(1)
+        n = _CN_NUM.get(cn)
+        if n is None:
+            n = 0
+            for ch in cn:
+                n = n * 10 + _CN_NUM.get(ch, 0)
+        return (n, 0 if m.group(2) == "上" else 1)
     return (99, 0)
 
 
