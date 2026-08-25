@@ -1,34 +1,53 @@
-# 课评自动生成系统
+# Ekko · 教培机构 AI 教学工作台
 
-一个面向**少儿培训机构**的多租户 Web 系统：老师建好「班级 → 学生 → 课次」并上传课件后，系统用 AI 自动生成结构统一的课后评价，经老师编辑确认，可导出 Excel / PDF、生成家长群分享卡片、发送提醒。
+一个已经在生产环境跑起来的多租户 Web 系统（线上地址 `ekkosys.cn`），服务少儿培训机构的真实业务场景：老师管理「班级 → 学生 → 课次」，上传课件后由 AI 生成结构化的课后评价与课前教案/课件，经老师编辑确认后导出或分享给家长。
+
+这不是 Demo，是从零设计、开发、部署并持续迭代的完整产品。下文的每个设计决策都来自真实用户反馈和线上排查记录。
 
 ---
 
-## 功能特点
+## 这个项目解决什么问题
 
-- 🏫 **多班级管理**：班级、学生、课次全周期管理，支持归档/删除。
-- 📚 **课件上传与解析**：支持 `txt / pptx / docx / pdf`，自动抽取文字与教学目标，喂给 AI。
-- 🤖 **AI 课评生成**：结合课件知识点 + 学生基本信息 + 本班优秀课评范例，生成草稿。
-- 📝 **两段式课评结构**（系统硬约束）：
-  - **段① 课堂内容总结** —— 本节课知识点，编号列表，纯内容不夹评价；
-  - **段② 课后评价** —— 写给家长/孩子的评价，首句点名学生昵称，末尾含家庭建议。
-- ✏️ **可视化编辑器**：课程目标、当节课表现要点、知识点（AI 辅助提取）、优秀范例一键参考；请假学生直接输出「请假」，不调用 AI。
-- ✅ **状态流转**：草稿 → 确认 → 已发布；支持请假、撤回、删除、历史查看。
-- 📚 **课前备课**：按学科/年级/课题自动生成教案，或上传任意教学内容生成 11 种风格的离线 HTML 课件，支持代码块保留与特殊符号。
-- 📤 **多形态导出**：Excel 汇总、PDF 报告、家长群分享卡片（图片）、微信/邮件提醒。
-- 🔐 **账号与安全**：邮箱注册 + 验证、找回密码、密码 bcrypt 哈希、CSRF 防护、登录限流、上传文件魔数校验。
-- 🛠️ **平台总后台**（仅超管）：用户 / 班级 / 课件 / 课评 / 课前备课任务 统一管理。
+培训机构老师的重复劳动集中在两块：**课前**要逐课写教案做课件，**课后**要给每个学生写课评发给家长。一个带 8 个学生的老师，课后光写课评就要一个多小时。
+
+系统把这两块流程化：老师只负责录入事实（今天讲了什么、学生表现标签），AI 负责把事实组织成结构化、风格统一的文字。老师始终保有最终编辑权——**AI 出草稿，人做判断**。
+
+## 关键工程设计
+
+### 生产级 LLM 管线，而非一次 API 调用
+
+课评质量直接面对家长，不能容忍模型胡说。生成链路是「prompt 构造 → 生成 → 确定性校验 → 兜底修复 → 质量打分」的完整管线（`src/ai/`）：
+
+- **输出护栏（`output_guard.py`）**：上线后全量走查发现弱模型 30/30 份课评叫错学生名字、40% 出现「亲爱的家长」群发开头。仅靠 prompt 软约束压不住，于是在生成后加了一道确定性门禁——正则+规则检出硬伤（叫错名/群发开头/缺段落/占位符泄漏），能确定性修复的直接修，修不好的如实标记给老师，**绝不静默放行**。
+- **PII 脱敏（`redact.py`）**：发往 LLM 前把同班其他同学姓名替换为占位符，返回后还原；few-shot 范例同样脱敏，防止模型套用样本里的真实姓名。当前学生昵称按需明文——这是写本人课评的必要信息，属风险最小化的权衡。
+- **多 KEY 轮询与成本兜底（`llm_client.py`）**：OpenAI 兼容客户端支持多 KEY 轮询，单 KEY 限流/失败自动切换；老师可在账号页填自己的 KEY 覆盖平台默认，代理策略显式可控（默认直连，避免开发机代理环境污染线上行为）。
+
+### 业务建模与状态机
+
+课评不是一段文本，而是一个有生命周期的实体：`pending → generating → draft → confirmed / leave / failed`。请假学生直接落库「请假」不调用 AI；同班同课次去重；满意的历史课评可一键设为本班「优秀范例」作为下次生成的 few-shot 锚点——业务规则沉淀在模型与服务层（`src/models/`、`src/services/`），而不是散落在视图里。
+
+### 数据集成与文档解析管线
+
+老师上传的课件格式混杂（`txt/pptx/docx/pdf`），系统统一走「格式校验 → 文本抽取 → 清洗 → 结构化」管线（`src/parsers/`），喂给下游 AI 与知识库检索。安全上做了两层防护（`src/security/upload_check.py`）：扩展名白名单之外加**文件头魔数校验**防改名绕过，对抽取文本设上限防 zip 解析炸弹；上传目录不对外托管，从路径上消除存储型 XSS。
+
+### 知识库检索：从模糊打分到精确锚定
+
+课前备课按「学科 + 年级 + 课题」从 975 篇教材课文知识库检索原文。初版用模糊打分（topic 互含 +100 / subject +10 / grade +5），线上实测出现五年级课题错配三年级课文的「张冠李戴」。改为**精确锚定**（学科一致 + 年级段归一化一致 + 课题精确/包含兜底，见 `systems/lesson-courseware/courseware_engine/kb.py` 的 `_grade_core`），并删掉了一条会把好结果重切页覆盖掉的渲染旁路——这个 bug 是用户拿真实课件反馈「页面重复、内容不对」后定位到的。
+
+### 安全与多租户
+
+CSRF 全局开启（纯 API 豁免）、密码 bcrypt 哈希、登录滑动窗口限流（`src/security/ratelimit.py`，仅计失败、成功即清零，正常用户永不被误伤）、按用户隔离数据查询、密钥全部走环境变量不入库。限流目前是单实例内存实现——代码里明确标注了多实例时需换 Redis，这是刻意的部署形态权衡。
 
 ---
 
 ## 技术栈
 
-- **后端**：Python 3.11+ · Flask 3.x · Jinja2
-- **数据库**：SQLite（WAL）+ SQLAlchemy 2.x + Flask-Migrate
-- **鉴权**：Flask-Login · bcrypt · Flask-WTF（CSRF）
-- **AI**：OpenAI 兼容接口（默认智谱 GLM-4-Flash）
-- **解析/导出**：pdfplumber · python-pptx · python-docx · openpyxl · reportlab · Pillow
-- **部署**：Docker / 本地 Flask（建议生产换 waitress/gunicorn + Nginx + HTTPS）
+- **后端**：Python 3.11+ · Flask 3.x · Jinja2 · SQLAlchemy 2.x · Flask-Migrate
+- **数据库**：SQLite（WAL）起步，schema 用 Alembic 迁移管理，可随时切 PostgreSQL
+- **AI**：OpenAI 兼容接口（默认智谱 GLM-4-Flash，可换任意兼容端点/本地 vLLM）
+- **文档解析 / 导出**：pdfplumber · python-pptx · python-docx · openpyxl · reportlab · Pillow
+- **前端**：服务端渲染 + html2canvas 导出家长分享卡片（10 套可选模板，全字面色兼容截图渲染）
+- **部署**：Docker Compose 单机部署 + Nginx + HTTPS，阿里云生产环境
 
 ---
 
@@ -38,19 +57,19 @@
 class-review-system/
 ├── app.py / run.py          # 应用工厂 + 启动入口
 ├── src/
-│   ├── models/              # 数据模型（User/Klass/Student/Lesson/Review/...）
-│   ├── main/ auth/ classes/ lessons/ reviews/ students/ cards/ reports/ admin/   # 蓝图
-│   ├── ai/                  # 课评生成链路（prompt / guard / normalize / redact / scorer）
-│   ├── parsers/             # 课件文本解析
-│   ├── security/            # 上传校验 + 登录限流
-│   └── services/            # 去重 / 学期总结
+│   ├── models/              # User / Klass / Student / Lesson / Review / PrepJob
+│   ├── main/ auth/ classes/ lessons/ reviews/ students/ cards/ reports/ admin/  # 蓝图（77 个路由）
+│   ├── ai/                  # LLM 管线：prompt / guard / redact / scorer / 标签分类 / 多 KEY 客户端
+│   ├── parsers/             # 课件文档解析
+│   ├── security/            # 上传魔数校验 + 登录限流
+│   └── services/            # 去重 / 学期阶段总结
+├── systems/lesson-courseware/   # 课前备课子系统（KB 检索 + 课件渲染引擎）
 ├── templates/ static/       # 前端
-├── uploads/ instance/       # 上传文件 / SQLite 库（不入库）
-├── seeds/ migrations/       # 学科预置 / 数据库迁移
-├── reports/ docs/           # 项目报告 / 样例
-├── .env .env.example        # 环境变量（密钥不入库）
-├── requirements.txt Dockerfile docker-compose.yml
-├── DEPLOY.md CLAUDE.md      # 部署文档 / 架构索引（开发者）
+├── migrations/ seeds/       # schema 迁移 / 学科预置数据
+├── docs/ reports/           # 设计文档 / 全量走查报告
+├── .env.example             # 环境变量模板（密钥不入库）
+├── Dockerfile docker-compose.yml
+├── DEPLOY.md CHANGELOG.md CLAUDE.md
 └── README.md
 ```
 
@@ -59,75 +78,24 @@ class-review-system/
 ## 快速开始（本地开发）
 
 ```bash
-# 1. 准备 Python venv（推荐项目自带 .venv）
-.venv/Scripts/python.exe -m pip install -r requirements.txt
+# 1. 依赖
+python -m venv .venv && .venv/Scripts/python.exe -m pip install -r requirements.txt
 
-# 2. 配置环境变量
-cp .env.example .env
-# 至少填入 AI_API_KEY；SECRET_KEY / ADMIN_PASSWORD 留空则本地随机（仅开发）
+# 2. 环境变量
+cp .env.example .env    # 至少填 AI_API_KEY
 
-# 3. 建库 + 预置学科
-flask db upgrade
-flask seed
+# 3. 建库 + 预置学科数据
+flask db upgrade && flask seed
 
 # 4. 启动
-python run.py          # 访问 http://127.0.0.1:5000
+python run.py           # http://127.0.0.1:5000
 ```
 
-> 未配置 SMTP 时，邮件类功能进入 dev 模式（控制台打印链接，不真发信）。
-
----
-
-## 使用流程（老师视角）
-
-1. **注册 / 登录**：邮箱注册并验证。
-2. **建班级**：选择学科类型（coding/art/dance/...），填班级名与时间。
-3. **加学生**：录入姓名与昵称（课评里点名用昵称）。
-4. **建课次 + 上传课件**：上传 `pptx/docx/pdf/txt`，系统抽取知识点与目标。
-5. **生成课评**：进入编辑器点「生成」，AI 给出两段式草稿（段①知识点 / 段②评价）。
-6. **编辑 / 设优秀范例**：修改要点；满意的课评可一键设为本班「优秀范例」，下次全班参考。
-7. **确认发布**：状态转「已确认」。
-8. **导出 / 分享**：Excel / PDF / 卡片图片 / 家长提醒。
-
----
-
-## 配置说明（`.env`）
-
-| 变量 | 说明 | 默认 |
-|---|---|---|
-| `AI_API_KEY` | 平台默认 AI 模型 Key（必填；用户未填自己的 key 时使用） | 无 |
-| `AI_BASE_URL` | OpenAI 兼容接口地址 | `https://open.bigmodel.cn/api/paas/v4` |
-| `AI_MODEL` | 模型名 | `glm-4-flash` |
-| `SECRET_KEY` | 会话签名密钥；生产必须固定随机串 | 留空则本地随机（重启失效） |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | 平台超管凭据 | 留空则随机密码（打日志） |
-| `MAIL_*` | SMTP 发信（可选） | 空则 dev 模式 |
-| `DATABASE_URL` | 数据库地址 | `sqlite:///instance/app.db` |
-| `PORT` / `HOST` | 监听地址 | 5000 / 127.0.0.1 |
-
-**用户自定义 API KEY**：老师在「账号设置 / AI API KEY」填入自己的 OpenAI 兼容 KEY（含 base_url、model）后，**课评生成、课前备课学科生成、课前备课内容生成**都会优先使用用户 KEY；未配置时回退到平台默认 KEY。
-
----
-
-## 安全说明
-
-**已实现**：CSRF 全局开启（reviews 纯 API 豁免）、密码 bcrypt 哈希、登录失败限流、上传文件扩展名 + **文件头魔数**双校验、解析文本长度上限（防炸弹）、上传目录不对外托管、多租户数据隔离、`.env` 不入库。
-
-**上线前仍建议**（详见 `DEPLOY.md`）：换 waitress/gunicorn + Nginx HTTPS、固定 `SECRET_KEY` 与 `ADMIN_PASSWORD` 环境变量、数据库定期备份、多实例时限流换 Redis。
-
----
+> 未配置 SMTP 时邮件功能进入 dev 模式（链接打印到控制台，不真发信）。
 
 ## 部署
 
-见 [`DEPLOY.md`](DEPLOY.md)：本地运行、Docker 部署、生产检查清单。
-
-## 近期更新
-
-- **2026-08-20**：用户自定义 API KEY 已覆盖课评生成、学生阶段总结、卡片标签判定；请假课评直接输出「请假」且不调用 AI；课前备课内容生成支持保留代码块与特殊符号。
-- 完整更新日志见 [`CHANGELOG.md`](CHANGELOG.md)。
-
-## 开发者
-
-架构与代码索引见 [`CLAUDE.md`](CLAUDE.md)。
+见 [`DEPLOY.md`](DEPLOY.md)：Docker 部署、生产检查清单（固定 `SECRET_KEY`、HTTPS、数据库备份、多实例时限流换 Redis）。完整变更历史见 [`CHANGELOG.md`](CHANGELOG.md)，架构索引见 [`CLAUDE.md`](CLAUDE.md)。
 
 ## 许可证
 
