@@ -20,18 +20,24 @@
 
 ---
 
-## ⚠️ 重要：这是「系统 B」，与「课评系统（系统 A）」是两个独立仓库
+## ⚠️ 仓库归并说明（2026-09-01 更新）
 
-本仓库只对应 **系统 B：教案 → 课件生成器**。
+本系统 B 已**并入 Ekko 主仓库**（`class-review-system`）的 `systems/lesson-courseware/` 子目录，不再维护独立的 `kjsys` 仓库。
 
-- **系统 A（`class-review-system/`，Ekko 课评系统）** 是已上线生产环境，**本仓库不含它、也不应触碰它**。
-- 两个系统**没有任何代码耦合**：一个做「课后课评」，一个做「课前课件」。请勿把两者的目录 / 脚本混淆部署。
+- **系统 A（Ekko 课评系统）**：`class-review-system/` 根目录，已上线生产环境
+- **系统 B（本目录）**：`class-review-system/systems/lesson-courseware/`，与系统 A 同仓库但**代码完全解耦**
+- 两个系统部署在同一台服务器的不同 Docker 容器（`ekko-web:5000` 课评 + `ekko-courseware:5001` 课件），但共享同一份 lesson-courseware 代码。**改动本目录任何文件，两个容器都需要重建**。
 
 ---
 
 ## 分支 `content-upload/`（非学科）— 详见 [`content-upload/README.md`](content-upload/README.md)
 
 上文「系统总览」已说明：它是系统 B 在**非学科场景**下的分支，接收用户上传内容、跳过学科生成，由同一套「课件生成平台」产出 11 风格单文件 HTML 课件。以下主线内容（双路径、专家机制、评测）仅适用于**学科主线**；分支的技术细节、风格表、运行方式见其独立 README。
+
+**分支最新进展（2026-09-01）**：
+- 修复了无围栏 C++ 代码块识别（启发式 `_looks_like_code`），代码教学内容不再丢失
+- 修复了规则切页的章节层级识别（汉字数字 + 严格递增阿拉伯数字），空标题自动合并
+- 11 风格全部通过真实 C++ 教案验证（4 页结构清晰，代码块完整保留）
 
 ---
 
@@ -341,16 +347,24 @@ python tools/stress_all.py
 
 ## 关于这个仓库（GitHub）
 
-本仓库已整理为可公开状态：
+本仓库已**并入 Ekko 主仓库**，作为 `systems/lesson-courseware/` 子目录维护：
 
-- **地址**：`https://github.com/lindamannnnn/kjsys.git`
-- **认证**：本机已配置专用 SSH key `~/.ssh/id_ed25519_github`（与服务器生产 key `id_ed25519_ekko` 隔离），改完代码 `git push` 即可。
-- `.env`（含密钥）已被 `.gitignore` 排除，**不会**进入版本库。
-- `out/`（生成产物）已被忽略，按需本地重新生成。
-- `vendor/kb/`（527 篇知识库）是系统核心，**会**随仓库提交。
-- `__pycache__` / `*.log` / 临时调试脚本已清理。
+- **主仓库地址**：`https://github.com/lindamannnnn/Ekko.git`
+- **独立仓库 kjsys 已废弃**：原 `https://github.com/lindamannnnn/kjsys.git` 不再维护，所有改动都在 Ekko 仓库
+- **认证**：本机已配置专用 SSH key `~/.ssh/id_ed25519_github`（与服务器生产 key `id_ed25519_ekko` 隔离），改完代码 `git push` 即可
+- `.env`（含密钥）已被 `.gitignore` 排除，**不会**进入版本库
+- `out/`（生成产物）已被忽略，按需本地重新生成
+- `vendor/kb/`（527 篇知识库）是系统核心，**会**随仓库提交
+- `__pycache__` / `*.log` / 临时调试脚本已清理
 
 **协作注意**：硬编码密钥严禁出现在任何被提交的文件里。`tools/gen_batch_strong.py` 已改为读 `KJSYS_STRONG_API_KEY` 环境变量，是合规范式。
+
+**部署注意**：本目录代码被服务器上两个 Docker 容器共享（`ekko-web:5000` 课评 + `ekko-courseware:5001` 课件），**任何改动都需要重建两个容器**：
+
+```bash
+cd /opt/ekko
+docker compose up -d --build web courseware
+```
 
 ---
 

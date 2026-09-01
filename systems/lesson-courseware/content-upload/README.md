@@ -140,15 +140,19 @@ content-upload/
 - ✅ emoji 严格仅 `graffiti` 出现，其它风格 0 emoji 前缀
 - ✅ 11 套风格均能渲染不报错；离线单文件、双击即开
 - ✅ `selftest.py` 回归（4 页规则切页 + 合规 ok + 11 风格渲染）全过
+- ✅ **C++ 代码教学内容完整保留**（2026-09-01 验证）：启发式识别无围栏代码块（`#include` / `int main()` / `cout <<`），11 风格全部正确渲染代码块
+- ✅ **规则切页层级清晰**（2026-09-01 修复）：汉字数字章节 + 严格递增阿拉伯数字识别，空标题自动合并，不再出现 9 页混乱空壳
 
 ---
 
 ## 红线 / 边界
-本分支（`content-upload/`）现位于 **系统 B（`E:/001/lesson-courseware`，GitHub `kjsys`）** 仓库内，是 B 在**非学科场景**下的一个分支，与 B 主线（学科教案→课件）共用「课件生成平台」思路。
+本分支（`content-upload/`）现位于 **Ekko 主仓库（`class-review-system/systems/lesson-courseware/content-upload/`）**，是系统 B 在**非学科场景**下的一个分支，与 B 主线（学科教案→课件）共用「课件生成平台」思路。
 - **不改动系统 B 自身的生成逻辑**：`k12_generate.py` / `k12_adapter.py` / `orchestrator.py` / `courseware_engine/*` 一律不动；本分支为独立子目录，自带 `pipeline/` + `styles/`。
-- **系统 A（Ekko 课评 `E:/001/class-review-system`，生产）仍独立、不触碰**。
+- **系统 A（Ekko 课评，同仓库根目录）仍独立、不触碰**。
 - `pipeline/llm.py` 复刻系统 B 的纯标准库客户端，但**不 import 系统 B 任何代码**（保持分支自洽、不耦合主线）。
 - 智谱 key 从系统 B `.env` 只拷 `AI_*` 四个变量到本分支 `.env`（`content-upload/.env`），不动系统 B 其它密钥。
+
+**部署**：本分支代码随 lesson-courseware 一起被两个容器共享（`ekko-web` + `ekko-courseware`），改动后需重建两个容器。
 
 ## 已知限制 / TODO
 - 上传的**纯段落、无标题**内容，规则切页粒度较粗；有 key 时 LLM 切得更细（已验证）。

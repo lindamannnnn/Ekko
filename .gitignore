@@ -7,6 +7,7 @@
 # 运行时产物
 instance/
 uploads/
+out/
 __pycache__/
 *.pyc
 *.pyo
