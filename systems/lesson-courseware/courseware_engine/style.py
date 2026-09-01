@@ -150,7 +150,7 @@ def recipe_to_scoped_css(recipe):
     deco_css = {
         "underline": ".ly-h{border-bottom:3px solid var(--primary);padding-bottom:6px;display:inline-block;}",
         "side_bar": ".ly-h{border-left:6px solid var(--primary);padding-left:14px;}",
-        "highlight": ".ly-h{background:linear-gradient(transparent 62%,var(--accent) 62%);padding:2px 8px;border-radius:var(--radius,4px);display:inline-block;}",
+        "highlight": ".ly-h{border-bottom:4px solid var(--accent);padding-bottom:4px;display:inline-block;}",
         "outline": ".ly-h{-webkit-text-stroke:1px var(--primary);color:transparent;}",
     }
     ts = getattr(recipe, "title_style", None) or {}

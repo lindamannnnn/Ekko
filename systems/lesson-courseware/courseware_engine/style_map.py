@@ -24,15 +24,15 @@ _ROUNDED = FONT_WHITELIST["rounded"]
 # 每风格：palette 10 色 + fonts(head/body) + 整套视觉 5 字段
 # palette 键 = PALETTE_KEYS = [primary, primary700, accent, bg, surface, ink, muted, line, cover1, cover2]
 _STYLE_TABLE = {
-    "graffiti": {  # 涂鸦像素游戏风：深空 + 金/橙霓虹 + 锐利色块 + 像素装饰
-        "palette": {"primary": "#0f3460", "primary700": "#16213e", "accent": "#ffd700",
-                    "bg": "#1a1a2e", "surface": "#ffffff", "ink": "#1a1a2e", "muted": "#4a4a6a",
-                    "line": "#ffd700", "cover1": "#ffd700", "cover2": "#ffa502"},
+    "graffiti": {  # 涂鸦像素游戏风：亮底 + 金/橙霓虹 + 锐利色块 + 像素装饰
+        "palette": {"primary": "#1a56db", "primary700": "#1e40af", "accent": "#f59e0b",
+                    "bg": "#fef3c7", "surface": "#fffbeb", "ink": "#1c1917", "muted": "#57534e",
+                    "line": "#f59e0b", "cover1": "#f59e0b", "cover2": "#1a56db"},
         "fonts": {"head": _ROUNDED, "body": _SANS},
         "card_style": {"radius": 0, "border_width": 3, "border_style": "solid",
-                       "shadow": "6px 6px 0 rgba(255,215,0,.25)", "padding_scale": 0.95},
+                       "shadow": "6px 6px 0 rgba(245,158,11,.3)", "padding_scale": 0.95},
         "background": {"type": "pattern",
-                       "css": "background-image:radial-gradient(rgba(255,215,0,.08) 2px,transparent 2px);"
+                       "css": "background-image:radial-gradient(rgba(245,158,11,.12) 2px,transparent 2px);"
                               "background-size:32px 32px;"},
         "density": "compact",
         "title_style": {"size_scale": 1.1, "decoration": "highlight", "letter_spacing": 2},

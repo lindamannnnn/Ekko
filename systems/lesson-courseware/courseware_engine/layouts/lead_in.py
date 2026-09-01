@@ -14,7 +14,7 @@ def render(slots, theme):
     q_html = ""
     if question:
         q_html = (
-            f'<div class="lead-question" style="border-left:6px solid {accent};background:var(--surface)">'
+            f'<div class="lead-question" style="border-left:6px solid {accent};background:color-mix(in srgb, var(--accent) 8%, var(--bg))">'
             f'<span class="lead-qtag" style="color:{primary}">{_esc(qtag)}</span>'
             f'<span class="lead-qtext">{_esc(question)}</span></div>')
     return (
