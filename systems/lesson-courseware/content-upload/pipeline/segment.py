@@ -51,6 +51,37 @@ class CodeBlockExtractor:
         r"[\d一二三四五六七八九十]*[、.:：\s]",
         re.I)
 
+    # C++ 代码特征行（启发式识别无围栏代码块）
+    _CPP_CODE_RE = re.compile(
+        r"^(?:#include|#define|using namespace|int main|void main|"
+        r"cout\s*<<|cin\s*>>|return\s+\d|"
+        r"[\w\s\*\&<>:]+\([^)]*\)\s*\{?|"   # 函数声明/定义（含 int main() { ）
+        r"^\s*\{|\}|\s*//|\s*printf|\s*scanf|"
+        r"\s*if\s*\(|\s*for\s*\(|\s*while\s*\(|\s*else\b)",
+        re.I)
+
+    def _looks_like_code(self, line: str) -> bool:
+        """判断一行是否像代码（启发式，用于无围栏无语言标记的代码块识别）。"""
+        s = (line or "").strip()
+        if not s:
+            return False
+        # C++ 预处理指令（#include/#define/#pragma 等）——必须优先于 markdown 标题判断
+        if re.match(r"^#(?:include|define|pragma|ifdef|ifndef|endif|import)\b", s, re.I):
+            return True
+        # 含分号/花括号/流操作符，大概率是代码
+        if self._CPP_CODE_RE.match(s):
+            return True
+        # 单行花括号（代码块边界）
+        if s in ("{", "}", "};", "{;"):
+            return True
+        # 以分号结尾且含英文/符号（排除中文句子）
+        if s.endswith(";") and re.search(r"[a-zA-Z_#<>&|]", s) and not re.search(r"[。，；！？]", s):
+            return True
+        # 赋值/比较/算术运算符在行首或紧跟空格（排除「C++程序」这种文本里的 ++）
+        if re.match(r"^[a-zA-Z_][a-zA-Z0-9_\s]*[=+\-*/%<>!&|]", s) and not re.search(r"[。，；！？]", s):
+            return True
+        return False
+
     def _is_heading(self, line: str) -> bool:
         """判断行是否为章节标题（用于终止无围栏代码块）。
 
@@ -150,7 +181,50 @@ class CodeBlockExtractor:
                     out.append(marker)
                 continue
 
-            # 3) 普通行
+            # 3) 启发式无围栏代码块：连续多行代码特征行（无语言标记，如教案里标题后直接跟代码）
+            # 向前看：如果当前行不像代码但下一行像代码，且当前行是短标题行，则当前行留给标题
+            if not self._looks_like_code(line) and i + 1 < n and self._looks_like_code(lines[i + 1]):
+                # 当前行可能是标题，检查是否够短（≤30字）且无代码特征
+                if len(s) <= 30 and not self._looks_like_code(line):
+                    out.append(line)
+                    i += 1
+                    continue
+            if self._looks_like_code(line):
+                code_lines = [line]
+                i += 1
+                while i < n:
+                    cur = lines[i]
+                    cs = cur.strip()
+                    if not cs:
+                        # 代码块内允许单个空行，连续空行或后续是标题则终止
+                        j = i + 1
+                        while j < n and not lines[j].strip():
+                            j += 1
+                        if j >= n or self._is_heading(lines[j]) or self._looks_like_prose(lines[j]):
+                            break
+                        code_lines.append(cur)
+                        i += 1
+                        continue
+                    if cs.startswith("```") or cs in _UNFENCED_LANGS or self._is_heading(cur) or self._looks_like_prose(cur):
+                        break
+                    if not self._looks_like_code(cur):
+                        # 遇到不像代码的行，终止（可能是代码块后的正文说明）
+                        break
+                    code_lines.append(cur)
+                    i += 1
+                while code_lines and not code_lines[-1].strip():
+                    code_lines.pop()
+                if len(code_lines) >= 2:  # 至少2行才算代码块（防单行误判）
+                    marker = self._add_block(code_lines, "cpp")
+                    if marker:
+                        out.append(marker)
+                    continue
+                else:
+                    # 单行不够成块，回退当普通行
+                    out.append(line)
+                    continue
+
+            # 4) 普通行
             out.append(line)
             i += 1
         return "\n".join(out)
@@ -284,8 +358,9 @@ def segment_by_llm(text: str, client, max_slides: int = 24) -> list:
 
 
 # 标题识别：显式标记（# / 第X讲 / 数字. / 模块 / Unit / Lesson / Part / 章 / 节 …）
+# 注意：#include/#define 等 C++ 预处理指令不匹配（# 后必须跟空格才是 markdown 标题）
 _HEAD_RE = re.compile(
-    r"^(#{1,6}\s*|第[一二三四五六七八九十百\d]+[\.、讲课章节]|[\d]+[\.、]|"
+    r"^(#{1,6}\s+|第[一二三四五六七八九十百\d]+[\.、讲课章节]|[\d]+[\.、]|"
     r"[一二三四五六七八九十]+[、.、]|模块|单元|专题|讲\s*$|"
     r"Unit\s*\d|Lesson\s*\d|Part\s*\d|Chapter\s*\d)",
     re.I)
