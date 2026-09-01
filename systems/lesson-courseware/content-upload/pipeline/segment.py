@@ -396,13 +396,57 @@ def _markdown_level(line: str) -> int:
 
 
 def _regex_segment(text: str) -> list:
-    """标题正则模式（无显式 # 标记时）：命中标题标记的行开新页。"""
-    slides, cur = [], None
+    """标题正则模式（无显式 # 标记时）：命中标题标记的行开新页。
+
+    层级识别（修复混乱编号）：
+      - 主章节标记：`一、` `二、` `五、`（汉字数字+顿号） 或 严格递增的 `1.` `2.` `3.` `4.`；
+      - 列表项标记：数字重置/跳号（如 `1.` 后紧跟 `8.`）→ 不当标题，作为上一页的要点；
+      - 空标题合并：标题下无任何要点时，不开新页，把该"标题"降格为上一页 bullet。
+    """
+    lines = []
     for raw in text.split("\n"):
         line = _clean_line(raw)
-        if not line:
+        if line:
+            lines.append(line)
+
+    # 第一遍：决定每行是否为"真标题"
+    is_head = [False] * len(lines)
+    last_arabic = 0  # 最近见到的阿拉伯数字章节号（用于判断递增）
+    for idx, line in enumerate(lines):
+        s = line.strip()
+        # 汉字数字章节：一、二、三、…（永远算标题，是中文文档的主章节标记）
+        if re.match(r"^[一二三四五六七八九十]+、", s):
+            is_head[idx] = True
             continue
-        if _looks_heading(line):
+        # 阿拉伯数字章节：1. 2. 3.（必须严格递增才算；1. 8. 这种跳号/重置 → 列表项）
+        m = re.match(r"^(\d+)[\.、]\s*(.+)$", s)
+        if m:
+            num = int(m.group(1))
+            rest = m.group(2).strip()
+            # 空标题（如单独的 "1."）不算
+            if not rest:
+                continue
+            # 严格递增（允许 +1 或 +2 容错跳号，如原文 1→2→4 跳过 3）
+            if num > last_arabic and num <= last_arabic + 3:
+                is_head[idx] = True
+                last_arabic = num
+            else:
+                # 数字重置或跳太远 → 是列表项，不是标题
+                pass
+            continue
+        # 其他标题标记（第X讲 / Unit / Lesson / 模块 / 单元 等）保持原逻辑
+        if _looks_heading(s):
+            is_head[idx] = True
+
+    # 第二遍：按 is_head 切页 + 空标题合并
+    slides, cur = [], None
+    for idx, line in enumerate(lines):
+        if is_head[idx]:
+            # 空标题合并：上一个 slide 是空壳（只有标题无要点）→ 把这个标题降为上一页的要点
+            if cur is not None and not cur["bullets"] and cur["title"]:
+                # 把当前标题作为上一页的第一个要点（保留语义）
+                cur["bullets"].append(line)
+                continue
             if cur is not None:
                 slides.append(cur)
             cur = {"title": line, "bullets": []}
