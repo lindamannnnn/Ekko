@@ -181,7 +181,9 @@ def _generate_for(review: Review) -> dict:
         excellent_review=excellent_review,
         library_example=library_example,
     )
-    client = LLMClient.for_user(current_user)
+    # 课评固定使用平台默认模型（GLM-4-Flash），不用用户自定义 KEY——
+    # 用户 KEY 只对课前备课/课件生效（见 prep/views.py）。
+    client = LLMClient()
     raw = client.complete(messages, timeout=120)
     text = red.restore(raw)
     # 教师未点标签时，模型会在文末附「【AI亮点标签】」区块：先解析剥离，正文只留课评
@@ -484,7 +486,8 @@ def _regenerate_with_reference(review, reference_opening):
         excellent_review=red.redact(excellent_raw) if excellent_raw else "",
         library_example=library_example,
     )
-    client = LLMClient.for_user(current_user)
+    # 课评固定使用平台默认模型（GLM-4-Flash），不用用户自定义 KEY。
+    client = LLMClient()
     raw = client.complete(messages, timeout=120)
     text = red.restore(raw)
     force_two = not bool(excellent_raw)

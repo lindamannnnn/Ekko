@@ -63,10 +63,10 @@ def classify_tag(tag, user=None) -> str:
         _cache[t] = "negative"
         return "negative"
 
-    # 2) 交给 AI 判定（优先使用用户自定义 API）
+    # 2) 交给 AI 判定（课评侧固定平台默认模型 GLM-4-Flash，不用用户自定义 KEY）
     result = None
     try:
-        client = LLMClient.for_user(user)
+        client = LLMClient()
         resp = client.complete(
             [
                 {"role": "system", "content": _SYSTEM},
