@@ -31,6 +31,13 @@ EVENT_KINDS = ["lead_in", "concept", "example", "activity", "practice",
 # StyleRecipe 白名单
 DECORATIONS = ["seal", "branch", "dot_grid", "wave", "none"]
 ILLUSTRATION_STYLES = ["line_art", "flat", "none"]
+# 整套风格新增白名单
+CARD_BORDER_STYLES = ["solid", "dashed", "dotted", "none"]
+BG_TYPES = ["solid", "gradient", "texture", "pattern"]
+DENSITY_LEVELS = ["compact", "balanced", "spacious"]
+TITLE_DECORATIONS = ["none", "underline", "side_bar", "highlight", "outline"]
+PAGE_DECORS = ["seal", "branch", "dot_grid", "wave", "corner_line", "side_band",
+               "pixel_block", "grid_lines", "glow", "thick_rule", "gold_line", "none"]
 FONT_WHITELIST = {
     "serif": '"Noto Serif SC","Songti SC","SimSun",serif',
     "sans": '"PingFang SC","Microsoft YaHei","Heiti SC",sans-serif',
@@ -148,6 +155,12 @@ class StyleRecipe:
     layout_prefs: dict = field(default_factory=dict)
     illustration: dict = field(default_factory=dict)
     decorations: list = field(default_factory=list)
+    # 整套视觉（新增，全部带默认值，不破坏旧配方）
+    card_style: dict = field(default_factory=dict)    # {radius, border_width, border_style, shadow, padding_scale}
+    background: dict = field(default_factory=dict)    # {type: solid/gradient/texture/pattern, css: ...}
+    density: str = "balanced"                         # compact/balanced/spacious
+    title_style: dict = field(default_factory=dict)   # {size_scale, decoration, letter_spacing}
+    page_decor: list = field(default_factory=list)    # 每页装饰（不只封面）
 
     def validate(self) -> "StyleRecipe":
         """逐项过白名单/正则，非法单项替换为种子化默认（不整体丢弃）。"""
@@ -182,6 +195,34 @@ class StyleRecipe:
         lp["per_kind"] = {str(k): [str(x) for x in v if isinstance(x, str)]
                           for k, v in (pk or {}).items()} if isinstance(pk, dict) else {}
         self.layout_prefs = lp
+        # ---- 整套视觉新字段（带安全默认，不破坏旧配方） ----
+        # card_style
+        cs = dict(self.card_style or {})
+        cs["radius"] = max(0, min(30, int(cs.get("radius", 12)))) if isinstance(cs.get("radius", 12), (int, float)) else 12
+        cs["border_width"] = max(0, min(6, int(cs.get("border_width", 2)))) if isinstance(cs.get("border_width", 2), (int, float)) else 2
+        cs["border_style"] = cs.get("border_style") if cs.get("border_style") in CARD_BORDER_STYLES else "solid"
+        cs["shadow"] = str(cs.get("shadow", "none"))[:120]
+        cs["padding_scale"] = max(0.6, min(1.6, float(cs.get("padding_scale", 1.0)))) if isinstance(cs.get("padding_scale", 1.0), (int, float)) else 1.0
+        self.card_style = cs
+        # background
+        bg = dict(self.background or {})
+        bg["type"] = bg.get("type") if bg.get("type") in BG_TYPES else "solid"
+        bg["css"] = str(bg.get("css", ""))[:300]  # 背景层 CSS（渐变/纹理/点阵）
+        self.background = bg
+        # density
+        self.density = self.density if self.density in DENSITY_LEVELS else "balanced"
+        # title_style
+        ts = dict(self.title_style or {})
+        ts["size_scale"] = max(0.8, min(1.5, float(ts.get("size_scale", 1.0)))) if isinstance(ts.get("size_scale", 1.0), (int, float)) else 1.0
+        ts["decoration"] = ts.get("decoration") if ts.get("decoration") in TITLE_DECORATIONS else "none"
+        ts["letter_spacing"] = max(0, min(12, int(ts.get("letter_spacing", 0)))) if isinstance(ts.get("letter_spacing", 0), (int, float)) else 0
+        self.title_style = ts
+        # page_decor：过滤白名单、去重、最多 2 个
+        pd = [str(x) for x in (self.page_decor or []) if str(x) in PAGE_DECORS]
+        pd = list(dict.fromkeys(pd))
+        if "none" in pd and len(pd) > 1:
+            pd = [d for d in pd if d != "none"]
+        self.page_decor = pd[:2]
         return self
 
     def to_dict(self):
@@ -196,6 +237,11 @@ class StyleRecipe:
             layout_prefs=dict(d.get("layout_prefs") or {}),
             illustration=dict(d.get("illustration") or {}),
             decorations=list(d.get("decorations") or []),
+            card_style=dict(d.get("card_style") or {}),
+            background=dict(d.get("background") or {}),
+            density=str(d.get("density", "balanced")),
+            title_style=dict(d.get("title_style") or {}),
+            page_decor=list(d.get("page_decor") or []),
         )
 
 

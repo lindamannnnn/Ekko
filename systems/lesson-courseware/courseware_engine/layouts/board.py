@@ -34,10 +34,10 @@ DEF = LayoutDef(
                               "items": {"type": "list[str]", "max_items": 4, "max_chars": 40}}},
     },
     applicable={"cats": "*", "kinds": ["board", "summary"], "stages": "*"},
-    css=(".ly-board{padding:5% 7%;display:flex;flex-direction:column;height:100%}"
-         ".ly-board .board-center{align-self:center;color:#fff;font-weight:800;font-size:clamp(18px,2.8vw,26px);padding:12px 28px;border-radius:999px;margin-bottom:22px}"
+    css=(".ly-board{padding:calc(5% * var(--pad-scale,1)) calc(7% * var(--pad-scale,1));display:flex;flex-direction:column;height:100%}"
+         ".ly-board .board-center{align-self:center;color:#fff;font-weight:800;font-size:clamp(18px,2.8vw,26px);padding:calc(12px * var(--pad-scale,1)) calc(28px * var(--pad-scale,1));border-radius:var(--radius,999px);margin-bottom:22px}"
          ".ly-board .board-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;flex:1;align-content:center}"
-         ".ly-board .board-branch{background:var(--surface);border-radius:12px;padding:14px 16px}"
+         ".ly-board .board-branch{background:var(--surface);border-radius:var(--radius,12px);padding:calc(14px * var(--pad-scale,1)) calc(16px * var(--pad-scale,1))}"
          ".ly-board .board-label{font-weight:800;font-size:16px;margin-bottom:8px}"
          ".ly-board .board-items{list-style:none;margin:0;padding:0;display:grid;gap:6px}"
          ".ly-board .board-items li{font-size:clamp(14px,2.1vw,18px);line-height:1.5;padding-left:14px;position:relative}"

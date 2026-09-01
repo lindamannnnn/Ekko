@@ -75,7 +75,7 @@ DEF = LayoutDef(
     },
     applicable={"cats": ["chinese"], "kinds": ["concept"], "stages": "*"},
     css=(
-        ".ly-poem_thinking{padding:4% 7%;display:flex;flex-direction:column;height:100%;"
+        ".ly-poem_thinking{padding:calc(4% * var(--pad-scale,1)) calc(7% * var(--pad-scale,1));display:flex;flex-direction:column;height:100%;"
         "background:linear-gradient(180deg,#fdfaf4 0%,#f9f3e8 100%);"
         "position:relative;overflow:hidden}"
         # 左侧朱红装饰
@@ -87,8 +87,8 @@ DEF = LayoutDef(
         "font-size:clamp(20px,2.8vw,26px);margin:0;font-weight:600;letter-spacing:8px;color:#2c1f15}"
         # 阕网格
         ".ly-poem_thinking .pt-stanzas{display:grid;gap:12px;margin-bottom:12px;position:relative;z-index:1}"
-        ".ly-poem_thinking .pt-stanza{background:rgba(255,253,248,0.7);border-radius:8px;"
-        "padding:12px 16px;border-left:3px solid #c0392b66;}"
+        ".ly-poem_thinking .pt-stanza{background:rgba(255,253,248,0.7);border-radius:var(--radius,8px);"
+        "padding:calc(12px * var(--pad-scale,1)) calc(16px * var(--pad-scale,1));border-left:3px solid #c0392b66;}"
         ".ly-poem_thinking .pt-stanza-head{font-family:'KaiTi','楷体',serif;font-size:13px;"
         "font-weight:700;letter-spacing:6px;margin-bottom:6px;display:inline-block;"
         "border-bottom:2px solid currentColor;padding-bottom:2px}"
@@ -97,7 +97,7 @@ DEF = LayoutDef(
         # 底部行（主旨/修辞）
         ".ly-poem_thinking .pt-rows{display:flex;flex-direction:column;gap:8px;position:relative;z-index:1;margin-top:auto}"
         ".ly-poem_thinking .pt-row{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:baseline;"
-        "background:rgba(255,253,248,0.6);border-radius:8px;padding:8px 14px}"
+        "background:rgba(255,253,248,0.6);border-radius:var(--radius,8px);padding:calc(8px * var(--pad-scale,1)) calc(14px * var(--pad-scale,1))}"
         ".ly-poem_thinking .pt-row-head{font-family:'KaiTi','楷体',serif;font-size:13px;"
         "font-weight:700;letter-spacing:4px;flex:0 0 auto;min-width:96px}"
         ".ly-poem_thinking .pt-row-body{font-family:'KaiTi','楷体',serif;font-size:14px;"

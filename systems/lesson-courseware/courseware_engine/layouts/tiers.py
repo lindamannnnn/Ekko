@@ -56,14 +56,14 @@ DEF = LayoutDef(
                      "keys": {"q": {"type": "str", "max_chars": 120}, "a": {"type": "str", "max_chars": 400}}},
     },
     applicable={"cats": "*", "kinds": ["practice", "homework"], "stages": "*"},
-    css=(".ly-tiers{padding:5% 7%}"
-         ".ly-tiers .ly-h{font-size:clamp(20px,3.2vw,28px);margin:0 0 16px}"
-         ".ly-tiers .tier-layer{border:2px solid;background:var(--surface);border-radius:12px;margin-bottom:14px;overflow:hidden}"
+    css=(".ly-tiers{padding:calc(5% * var(--pad-scale,1)) calc(7% * var(--pad-scale,1))}"
+         ".ly-tiers .ly-h{font-size:calc(clamp(20px,3.2vw,28px) * var(--title-scale,1));margin:0 0 16px}"
+         ".ly-tiers .tier-layer{border:var(--card-border,2px solid);background:var(--surface);border-radius:var(--radius,12px);box-shadow:var(--card-shadow,none);margin-bottom:14px;overflow:hidden}"
          ".ly-tiers .tier-name{color:#fff;font-weight:800;font-size:14px;padding:6px 14px}"
-         ".ly-tiers .tier-items{display:grid;gap:12px;padding:14px}"
+         ".ly-tiers .tier-items{display:grid;gap:12px;padding:calc(14px * var(--pad-scale,1))}"
          ".ly-tiers .tier-item{display:grid;grid-template-columns:1fr auto;grid-template-areas:'q btn' 'ans ans';gap:8px;align-items:center}"
          ".ly-tiers .tier-q{grid-area:q;font-size:clamp(15px,2.2vw,19px);line-height:1.5}"
-         ".ly-tiers .ans-btn{grid-area:btn;border:1px solid var(--accent);background:#fff;color:var(--accent);border-radius:8px;padding:5px 12px;font-size:13px;cursor:pointer;font-weight:700}"
+         ".ly-tiers .ans-btn{grid-area:btn;border:1px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:var(--radius,8px);padding:5px 12px;font-size:13px;cursor:pointer;font-weight:700}"
          ".ly-tiers .tier-ans{grid-area:ans;font-size:clamp(14px,2.1vw,18px);line-height:1.6;color:var(--ink);white-space:pre-wrap}"),
     _render=render,
 )

@@ -104,6 +104,10 @@ CHINESE_AGENT = (
     + _COMMON_RULES +
     "【输出格式】只输出一个 JSON 对象，键名固定为：title, objectives, lead_in, concepts, practice, summary, board, homework。\n"
     "concepts 是数组，每个元素 {\"statement\":\"...\",\"points\":[\"...\",\"...\"]}。\n"
+    "【环节完整性 · 最高优先级】以上 8 个键一个都不能少、一个都不能为空：\n"
+    "practice 必须含 basic/standard/advanced 三档各有至少 1 题；summary.points 至少 3 条；\n"
+    "board 必须有 center 和至少 2 个 branches；homework 必须含三档各有至少 1 题。\n"
+    "**宁可每个环节内容少一点，也绝不允许整个环节缺失或为空对象/空数组**——缺任何一个环节这份课件就是废品。\n"
 )
 
 
@@ -125,6 +129,10 @@ ENGLISH_AGENT = (
     + _COMMON_RULES +
     "【输出格式】只输出一个 JSON 对象，键名固定为：title, objectives, lead_in, concepts, practice, summary, board, homework。\n"
     "concepts 是数组，每个元素 {\"statement\":\"...\",\"points\":[\"...\",\"...\"]}。\n"
+    "【环节完整性 · 最高优先级】以上 8 个键一个都不能少、一个都不能为空：\n"
+    "practice 必须含 basic/standard/advanced 三档各有至少 1 题；summary.points 至少 3 条；\n"
+    "board 必须有 center 和至少 2 个 branches；homework 必须含三档各有至少 1 题。\n"
+    "**宁可每个环节内容少一点，也绝不允许整个环节缺失或为空对象/空数组**——缺任何一个环节这份课件就是废品。\n"
 )
 
 
@@ -252,11 +260,24 @@ def content_to_segments(lc, kb):
             slots["formula"] = lc.summary["formula"]
         segs.append({"layout": "summary", "kind": "summary", "slots": slots})
 
-    # 板书
-    if lc.board.get("center") or lc.board.get("branches"):
-        segs.append({"layout": "board", "kind": "board",
-                     "slots": {"center": lc.board.get("center") or topic,
-                               "branches": lc.board.get("branches") or []}})
+    # 板书（规范化 branches 满足 board 版式 schema：center 必填 str、
+    # branches 至少 1 个 {label:str, items:list[str]}，否则 check_slots 丢页 → 产物缺板书）
+    _bc = (lc.board.get("center") or "").strip() or topic
+    _branches = []
+    for b in (lc.board.get("branches") or []):
+        if isinstance(b, dict):
+            label = str(b.get("label") or "").strip()
+            items = [str(x) for x in (b.get("items") or []) if isinstance(x, str) and x.strip()]
+            if label or items:
+                _branches.append({"label": label or "要点", "items": items or [label]})
+        elif isinstance(b, str) and b.strip():  # 容错：模型把 branch 写成纯字符串
+            _branches.append({"label": b.strip()[:16], "items": [b.strip()[:40]]})
+    if not _branches:
+        # 兜底：模型没给合法 branches，用知识点/小结造 2 个分支，绝不让板书页因格式被丢
+        _src = (lc.summary.get("points") or [])[:2] or [c.get("statement","") for c in lc.concepts[:2] if c.get("statement")]
+        _branches = [{"label": (s[:16] or "要点"), "items": [s[:40]]} for s in _src if s] or [{"label": "要点", "items": [topic]}]
+    segs.append({"layout": "board", "kind": "board",
+                 "slots": {"center": _bc[:24], "branches": _branches[:5]}})
 
     # 分层作业
     homework = lc.homework or {}

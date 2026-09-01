@@ -60,7 +60,7 @@ DEF = LayoutDef(
     applicable={"cats": ["chinese"], "kinds": ["concept", "lead_in"], "stages": "*"},
     css=(
         # 主容器：米白宣纸底
-        ".ly-vertical_poem{padding:5% 8%;display:flex;flex-direction:column;height:100%;"
+        ".ly-vertical_poem{padding:calc(5% * var(--pad-scale,1)) calc(8% * var(--pad-scale,1));display:flex;flex-direction:column;height:100%;"
         "background:linear-gradient(180deg,#fdfaf4 0%,#f9f3e8 100%);"
         "position:relative;overflow:hidden}"
         # 左侧朱红竖条（线装书版心装饰）

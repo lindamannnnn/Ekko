@@ -33,9 +33,9 @@ DEF = LayoutDef(
         "why": {"type": "str", "req": True, "max_chars": 120},
     },
     applicable={"cats": "*", "kinds": ["concept", "example", "practice"], "stages": "*"},
-    css=(".ly-compare{padding:5% 7%;display:flex;flex-direction:column;gap:14px;height:100%;justify-content:center}"
-         ".ly-compare .cmp-block{border:2px solid;background:var(--surface);border-radius:12px;padding:14px 18px;display:flex;gap:14px;align-items:flex-start}"
-         ".ly-compare .cmp-tag{flex:0 0 auto;color:#fff;font-weight:800;font-size:13px;padding:4px 10px;border-radius:8px;margin-top:2px}"
+    css=(".ly-compare{padding:calc(5% * var(--pad-scale,1)) calc(7% * var(--pad-scale,1));display:flex;flex-direction:column;gap:14px;height:100%;justify-content:center}"
+         ".ly-compare .cmp-block{border:2px solid;background:var(--surface);border-radius:var(--radius,12px);padding:calc(14px * var(--pad-scale,1)) calc(18px * var(--pad-scale,1));display:flex;gap:14px;align-items:flex-start}"
+         ".ly-compare .cmp-tag{flex:0 0 auto;color:#fff;font-weight:800;font-size:13px;padding:calc(4px * var(--pad-scale,1)) calc(10px * var(--pad-scale,1));border-radius:var(--radius,8px);margin-top:2px}"
          ".ly-compare .cmp-text{font-size:clamp(15px,2.3vw,20px);line-height:1.6}"),
     _render=render,
 )

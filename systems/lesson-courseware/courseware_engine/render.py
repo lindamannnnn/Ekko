@@ -16,7 +16,6 @@ from .style import recipe_to_css_vars, recipe_to_scoped_css
 # deck 骨架 CSS（迁移 vendor _deck_css，色值全改 var(--*)）
 # ---------------------------------------------------------------------------
 _DECK_CSS = """
-:root{--radius:14px;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;font-family:var(--font-body);color:var(--ink);background:#0f172a;}
 #deck{position:relative;width:100%;height:100vh;overflow:hidden;background:var(--bg);}
@@ -58,12 +57,18 @@ show(0);
 
 
 def _theme_from_recipe(recipe):
-    """构造传给布局渲染器的 theme dict（具体 hex + 字体 + 装饰 + 图示）。"""
+    """构造传给布局渲染器的 theme dict（具体 hex + 字体 + 装饰 + 图示 + 整套视觉）。"""
     t = dict(recipe.palette)
     t["fontHead"] = recipe.fonts.get("head", "")
     t["fontBody"] = recipe.fonts.get("body", "")
     t["decorations"] = recipe.decorations
     t["illustration"] = recipe.illustration
+    # 整套视觉（新字段，旧配方为空 dict/默认，layout 自行兜底）
+    t["card_style"] = getattr(recipe, "card_style", None) or {}
+    t["background"] = getattr(recipe, "background", None) or {}
+    t["density"] = getattr(recipe, "density", "balanced")
+    t["title_style"] = getattr(recipe, "title_style", None) or {}
+    t["page_decor"] = getattr(recipe, "page_decor", None) or []
     return t
 
 

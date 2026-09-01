@@ -204,29 +204,162 @@ def _fig_area_grid(spec, th):
     return "".join(svg)
 
 
+def _fig_parallelogram(spec, th):
+    """平行四边形面积推导图：左侧平行四边形（标底 a、高 h），右侧割补成的长方形（标注 长=a 宽=h），中间箭头表示割补变换。
+
+    spec 字段：
+      base  底的数字（如 6）       height 高的数字（如 4）
+      base_label  底标注（默认 "底"）   height_label 高标注（默认 "高"）
+      cut_label   割补箭头文字（默认 "割补 → 变长方形"）
+      result_label 结果标注（默认 "面积 = 底 × 高"）
+    """
+    primary = (th or {}).get("primary", "#9a3412")
+    base = _sfloat(spec.get("base", 6))
+    height = _sfloat(spec.get("height", 4))
+    bl = _esc(spec.get("base_label", "底 a"))
+    hl = _esc(spec.get("height_label", "高 h"))
+    cl = _esc(spec.get("cut_label", "割补 → 变长方形"))
+    rl = _esc(spec.get("result_label", "面积 = 底 × 高"))
+    W, H = 640, 380
+    pad = 30
+    # 左图：平行四边形
+    par_w, par_h = 240, 160
+    par_x, par_y = pad + 20, pad + 20
+    svg = [f'<svg viewBox="0 0 {W} {H}" width="100%" style="max-width:640px" role="img">']
+    # 平行四边形（斜边倾斜）
+    skew = 50  # 倾斜量
+    pts = f"{par_x+skew},{par_y} {par_x+par_w+skew},{par_y} {par_x+par_w},{par_y+par_h} {par_x},{par_y+par_h}"
+    svg.append(f'<polygon points="{pts}" fill="none" stroke="{primary}" stroke-width="3"/>')
+    # 底边标注
+    bx, by = par_x + par_w/2, par_y + par_h + 24
+    svg.append(f'<text x="{bx:.0f}" y="{by}" font-size="16" font-weight="700" text-anchor="middle" fill="{primary}">{bl} = {base}</text>')
+    # 高线（虚线，从顶点到底边垂线）
+    hx = par_x + par_w + skew
+    svg.append(f'<line x1="{hx}" y1="{par_y}" x2="{hx}" y2="{par_y+par_h}" stroke="#b45309" stroke-width="2" stroke-dasharray="6,4"/>')
+    svg.append(f'<text x="{hx+8}" y="{par_y+par_h/2}" font-size="14" fill="#b45309" font-weight="700">{hl} = {height}</text>')
+    # 割补箭头（右侧）
+    arrow_x = par_x + par_w + skew + 40
+    ay = par_y + par_h/2
+    svg.append(f'<text x="{arrow_x}" y="{ay}" font-size="13" fill="#6b6256" text-anchor="middle" font-size="14">{cl}</text>')
+    svg.append(f'<line x1="{arrow_x+8}" y1="{ay+8}" x2="{arrow_x+88}" y2="{ay+8}" stroke="#6b6256" stroke-width="2" marker-end="url(#arrowhead)"/>')
+    # 右图：割补后的长方形
+    rect_x = arrow_x + 100
+    rect_w, rect_h = 160, 120
+    rect_y = par_y + (par_h - rect_h)/2
+    svg.append(f'<rect x="{rect_x}" y="{rect_y}" width="{rect_w}" height="{rect_h}" fill="none" stroke="#0f766e" stroke-width="3"/>')
+    # 长方形标注
+    svg.append(f'<text x="{rect_x+rect_w/2}" y="{rect_y+rect_h+24}" font-size="15" font-weight="700" text-anchor="middle" fill="#0f766e">长 = 底</text>')
+    svg.append(f'<text x="{rect_x+rect_w+14}" y="{rect_y+rect_h/2}" font-size="15" fill="#0f766e" text-anchor="start" font-weight="700">宽 = 高</text>')
+    # 结果公式
+    svg.append(f'<text x="{W/2}" y="{H-20}" font-size="17" font-weight="800" text-anchor="middle" fill="{primary}">{rl}</text>')
+    # 箭头标记定义
+    svg.insert(1, '<defs><marker id="arrowhead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><polygon points="0 0,8 3,0 6" fill="#6b6256"/></defs>')
+    svg.append('</svg>')
+    return "".join(svg)
+
+
+def _fig_circle(spec, th):
+    """圆示意图：画圆，可标注圆心 O、半径 r、直径 d。
+
+    spec 字段（均可选，缺省画一个带圆心+半径的圆）：
+      show_center  是否标圆心（默认 True）
+      show_radius  是否画半径并标 r（默认 True）
+      show_diameter 是否画直径并标 d（默认 False，与半径二选一避免杂乱）
+      radius_label 半径标注文字（默认 "r"）
+      diameter_label 直径标注文字（默认 "d"）
+      center_label 圆心标注文字（默认 "O"）
+    """
+    primary = (th or {}).get("primary", "#1d4ed8")
+    show_center = spec.get("show_center", True)
+    show_radius = spec.get("show_radius", True)
+    show_diameter = spec.get("show_diameter", False)
+    rl = _esc(spec.get("radius_label", "r"))
+    dl = _esc(spec.get("diameter_label", "d"))
+    cl = _esc(spec.get("center_label", "O"))
+
+    W, H = 640, 420
+    cx, cy, r = W // 2, H // 2, 150
+    svg = [f'<svg viewBox="0 0 {W} {H}" width="100%" style="max-width:520px" role="img">']
+    # 圆
+    svg.append(f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{primary}" stroke-width="3"/>')
+    # 直径（穿过圆心的水平线）
+    if show_diameter:
+        svg.append(f'<line x1="{cx-r}" y1="{cy}" x2="{cx+r}" y2="{cy}" stroke="#0f766e" stroke-width="2.5"/>')
+        svg.append(f'<text x="{cx}" y="{cy-12}" font-size="18" font-weight="700" fill="#0f766e" text-anchor="middle">{dl}</text>')
+    # 半径（圆心到圆周右上）
+    if show_radius:
+        import math
+        ex = cx + r * math.cos(math.radians(-35))
+        ey = cy + r * math.sin(math.radians(-35))
+        svg.append(f'<line x1="{cx}" y1="{cy}" x2="{ex:.1f}" y2="{ey:.1f}" stroke="#b45309" stroke-width="2.5"/>')
+        mx, my = (cx + ex) / 2, (cy + ey) / 2
+        svg.append(f'<text x="{mx+8:.1f}" y="{my-6:.1f}" font-size="18" font-weight="700" fill="#b45309">{rl}</text>')
+    # 圆心点 + 标注
+    if show_center:
+        svg.append(f'<circle cx="{cx}" cy="{cy}" r="5" fill="{primary}"/>')
+        svg.append(f'<text x="{cx-22}" y="{cy+22}" font-size="18" font-weight="700" fill="{primary}">{cl}</text>')
+    svg.append('</svg>')
+    return "".join(svg)
+
+
 DIAGRAM_RENDERERS = {
     "fraction_bars": _fig_fraction_bars,
     "number_line": _fig_number_line,
     "bar_model": _fig_bar_model,
     "area_grid": _fig_area_grid,
     "place_value": _fig_place_value,
+    "parallelogram": _fig_parallelogram,
+    "parallelogram_area": _fig_parallelogram,
+    "平行四边形": _fig_parallelogram,
+    # 圆/几何图形（含 agent 可能给的别名），解决《圆的认识》等课 diagram 空白
+    "circle": _fig_circle,
+    "circle_diagram": _fig_circle,
+    "annulus": _fig_circle,
+    "圆": _fig_circle,
+}
+
+
+# 各图渲染非空的关键参数（丢图告警用：缺了 svg 必为空）
+_FIG_REQUIRED = {
+    "fraction_bars": ["bars"],
+    "bar_model": ["total", "parts"],
+    "area_grid": ["rows", "cols", "shade"],
+    "place_value": ["places"],
+    "number_line": ["min", "max"],
+    "parallelogram": ["base", "height"],
+    "parallelogram_area": ["base", "height"],
+    "平行四边形": ["base", "height"],
 }
 
 
 def _render_figure(spec, th):
     if not isinstance(spec, dict):
         return ""
-    fn = DIAGRAM_RENDERERS.get(spec.get("type"))
-    if not fn:
-        return ""
-    try:
-        svg = fn(spec, th)
-    except Exception:
-        return ""
-    if not svg:
-        return ""
     cap = spec.get("caption")
     cap_html = f'<div class="figcap">{_esc(cap)}</div>' if cap else ""
+    ftype = spec.get("type")
+    fn = DIAGRAM_RENDERERS.get(ftype)
+    if not fn:
+        # 未知图形 type：不再静默吞掉。打日志 + 出占位框（至少显示 caption），避免整页空白。
+        print(f"  [diagram] 未注册的图形 type={ftype!r}，用占位框兜底", flush=True)
+        ph = (f'<div style="padding:22px;border:2px dashed #cbd5e1;border-radius:10px;'
+              f'color:#64748b;font-size:15px;text-align:center">示意图：{_esc(str(ftype or "未指定"))}</div>')
+        return f'<div class="figure">{ph}{cap_html}</div>'
+    try:
+        svg = fn(spec, th)
+    except Exception as e:
+        print(f"  [diagram] 渲染 type={ftype!r} 异常：{e}，用占位框兜底", flush=True)
+        ph = (f'<div style="padding:22px;border:2px dashed #cbd5e1;border-radius:10px;'
+              f'color:#64748b;font-size:15px;text-align:center">示意图渲染失败</div>')
+        return f'<div class="figure">{ph}{cap_html}</div>'
+    if not svg:
+        # 丢图告警：svg 为空说明关键参数缺失（fraction_bars 无 bars 等），不再静默只显示 caption。
+        req = _FIG_REQUIRED.get(ftype, [])
+        missing = [k for k in req if not spec.get(k)]
+        print(f"  [diagram] 图形 type={ftype!r} 渲染为空"
+              + (f"——缺关键参数 {missing}（agent 给了 type 但没填数据）" if missing else "——参数无效"),
+              flush=True)
+        return f'<div class="figure">{cap_html}</div>' if cap else ""
     return f'<div class="figure">{svg}{cap_html}</div>'
 
 
@@ -271,6 +404,13 @@ DEF = LayoutDef(
                        "places": {"type": "raw"},
                        "digits": {"type": "raw"},
                        "note": {"type": "raw"},
+                       # parallelogram（平行四边形/三角形/梯形割补图）嵌套字段
+                       "base": {"type": "raw"},
+                       "height": {"type": "raw"},
+                       "base_label": {"type": "raw"},
+                       "height_label": {"type": "raw"},
+                       "cut_label": {"type": "raw"},
+                       "result_label": {"type": "raw"},
                    }},
         "caption": {"type": "str", "max_chars": 80},
         "side_text": {"type": "str", "max_chars": 200},

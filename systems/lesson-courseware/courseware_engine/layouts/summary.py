@@ -33,11 +33,11 @@ DEF = LayoutDef(
         "formula": {"type": "str", "max_chars": 80},
     },
     applicable={"cats": "*", "kinds": ["summary"], "stages": "*"},
-    css=(".ly-summary{padding:6% 8%}"
+    css=(".ly-summary{padding:calc(6% * var(--pad-scale,1)) calc(8% * var(--pad-scale,1))}"
          ".ly-summary .ly-h{font-size:clamp(20px,3.4vw,30px);margin:0 0 18px}"
          ".ly-summary .sum-points{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:12px}"
-         ".ly-summary .sum-points li{background:var(--surface);border-radius:10px;padding:12px 16px;font-size:clamp(15px,2.3vw,20px);line-height:1.6}"
-         ".ly-summary .sum-formula{padding:14px 18px;border-radius:12px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}"
+         ".ly-summary .sum-points li{background:var(--surface);border-radius:var(--radius,10px);padding:calc(12px * var(--pad-scale,1)) calc(16px * var(--pad-scale,1));font-size:clamp(15px,2.3vw,20px);line-height:1.6}"
+         ".ly-summary .sum-formula{padding:calc(14px * var(--pad-scale,1)) calc(18px * var(--pad-scale,1));border-radius:var(--radius,12px);display:flex;gap:12px;align-items:center;flex-wrap:wrap}"
          ".ly-summary .sf-tag{font-weight:800;font-size:14px;flex:0 0 auto}"
          ".ly-summary .sf-text{font-size:clamp(16px,2.6vw,22px);font-weight:700}"),
     _render=render,

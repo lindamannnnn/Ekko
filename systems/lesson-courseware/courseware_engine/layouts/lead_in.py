@@ -32,10 +32,10 @@ DEF = LayoutDef(
         "qtag": {"type": "str", "req": False, "max_chars": 8},
     },
     applicable={"cats": "*", "kinds": ["lead_in"], "stages": "*"},
-    css=(".ly-lead_in{padding:6% 8%}"
+    css=(".ly-lead_in{padding:calc(6% * var(--pad-scale,1)) calc(8% * var(--pad-scale,1))}"
          ".ly-lead_in .ly-h{font-size:clamp(20px,3.4vw,30px);margin:0 0 18px;color:var(--primary)}"
          ".ly-lead_in .lead-scenario{font-size:clamp(16px,2.4vw,21px);line-height:1.7;color:var(--ink);margin:0 0 22px}"
-         ".ly-lead_in .lead-question{padding:18px 22px;border-radius:14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap}"
+         ".ly-lead_in .lead-question{padding:calc(18px * var(--pad-scale,1)) calc(22px * var(--pad-scale,1));border-radius:var(--radius,14px);display:flex;gap:14px;align-items:center;flex-wrap:wrap}"
          ".ly-lead_in .lead-qtag{font-weight:800;font-size:15px;flex:0 0 auto}"
          ".ly-lead_in .lead-qtext{font-size:clamp(18px,3vw,26px);font-weight:700}"),
     _render=render,

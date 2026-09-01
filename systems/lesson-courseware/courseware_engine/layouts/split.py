@@ -35,12 +35,12 @@ DEF = LayoutDef(
         "body_r": {"type": "list[str]", "req": True, "min_items": 1, "max_items": 6, "max_chars": 80},
     },
     applicable={"cats": "*", "kinds": ["concept", "example", "activity"], "stages": "*"},
-    css=(".ly-split{padding:5% 7%}"
+    css=(".ly-split{padding:calc(5% * var(--pad-scale,1)) calc(7% * var(--pad-scale,1))}"
          ".ly-split .split-grid{display:grid;grid-template-columns:1fr 4px 1fr;gap:18px;align-items:stretch;height:100%}"
          ".ly-split .split-col{display:flex;flex-direction:column}"
          ".ly-split .split-head{font-size:clamp(17px,2.6vw,23px);margin:0 0 12px;color:var(--primary)}"
          ".ly-split .split-body{list-style:none;margin:0;padding:0;display:grid;gap:10px}"
-         ".ly-split .split-body li{background:var(--surface);border-radius:10px;padding:12px 14px;font-size:clamp(14px,2.1vw,18px);line-height:1.6}"
-         ".ly-split .split-divider{width:4px;border-radius:2px}"),
+         ".ly-split .split-body li{background:var(--surface);border-radius:var(--radius,10px);padding:calc(12px * var(--pad-scale,1)) calc(14px * var(--pad-scale,1));font-size:clamp(14px,2.1vw,18px);line-height:1.6}"
+         ".ly-split .split-divider{width:4px;border-radius:var(--radius,2px)}"),
     _render=render,
 )

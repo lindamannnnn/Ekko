@@ -40,14 +40,14 @@ DEF = LayoutDef(
         "method": {"type": "str", "max_chars": 120},
     },
     applicable={"cats": ["math", "science"], "kinds": ["example"], "stages": "*"},
-    css=(".ly-steps{padding:5% 7%}"
-         ".ly-steps .step-problem{background:var(--surface);border-radius:12px;padding:14px 18px;font-size:clamp(16px,2.6vw,22px);font-weight:600;margin-bottom:18px}"
+    css=(".ly-steps{padding:calc(5% * var(--pad-scale,1)) calc(7% * var(--pad-scale,1))}"
+         ".ly-steps .step-problem{background:var(--surface);border-radius:var(--radius,12px);padding:calc(14px * var(--pad-scale,1)) calc(18px * var(--pad-scale,1));font-size:clamp(16px,2.6vw,22px);font-weight:600;margin-bottom:18px}"
          ".ly-steps .step-list{list-style:none;margin:0;padding:0;counter-reset:none;display:grid;gap:12px}"
          ".ly-steps .step-list li{display:flex;gap:12px;align-items:flex-start}"
          ".ly-steps .step-no{flex:0 0 auto;width:26px;height:26px;border-radius:50%;color:#fff;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;margin-top:2px}"
          ".ly-steps .step-txt{font-size:clamp(15px,2.3vw,20px);line-height:1.6}"
          ".ly-steps .step-answer{font-size:clamp(16px,2.6vw,22px);font-weight:800;margin-top:16px}"
-         ".ly-steps .step-method{border:1px dashed;padding:10px 14px;border-radius:10px;font-size:clamp(14px,2.1vw,18px);margin-top:12px}"
+         ".ly-steps .step-method{border:1px dashed;padding:calc(10px * var(--pad-scale,1)) calc(14px * var(--pad-scale,1));border-radius:var(--radius,10px);font-size:clamp(14px,2.1vw,18px);margin-top:12px}"
          ".ly-steps .sm-tag{font-weight:800;margin-right:8px}"),
     _render=render,
 )

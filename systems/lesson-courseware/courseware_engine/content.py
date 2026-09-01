@@ -58,10 +58,15 @@ def build_script(kb):
 def _fill_one(seg, idx):
     layout_id = seg.get("layout")
     if not layout_id or layout_id not in _layouts.LAYOUTS:
+        print(f"  [content_fill] 第{idx}段版式未注册（{layout_id}），丢页", flush=True)
         return None
     defn = _layouts.LAYOUTS[layout_id]
     slots = defn.check_slots(seg.get("slots") or {})
     if slots is None:
+        # 丢页告警：slots 不满足版式 schema（如 board branches 空/格式错）会被静默丢页，
+        # 必须打日志——否则产物缺环节时无法定位是哪页被丢、为什么丢。
+        print(f"  [content_fill] 第{idx}段（kind={seg.get('kind')}/layout={layout_id}）"
+              f"slots 不满足版式 schema，丢页。slots 键={list((seg.get('slots') or {}).keys())}", flush=True)
         return None
     return PageSpec(
         page_id=f"p{idx:02d}",

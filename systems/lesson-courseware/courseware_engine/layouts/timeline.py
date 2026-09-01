@@ -33,7 +33,7 @@ DEF = LayoutDef(
                           "event": {"type": "str", "max_chars": 50}}},
     },
     applicable={"cats": "*", "kinds": ["concept", "summary"], "stages": "*"},
-    css=(".ly-timeline{padding:6% 9%}"
+    css=(".ly-timeline{padding:calc(6% * var(--pad-scale,1)) calc(9% * var(--pad-scale,1))}"
          ".ly-timeline .tl-list{list-style:none;margin:0;padding:0;position:relative}"
          ".ly-timeline .tl-item{position:relative;padding:0 0 22px 28px;border-left:3px solid var(--line)}"
          ".ly-timeline .tl-dot{position:absolute;left:-7px;top:4px;width:12px;height:12px;border-radius:50%}"

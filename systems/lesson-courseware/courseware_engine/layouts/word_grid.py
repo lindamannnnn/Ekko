@@ -90,16 +90,16 @@ DEF = LayoutDef(
                   }},
     },
     applicable={"cats": ["english", "chinese"], "kinds": ["concept", "lead_in"], "stages": "*"},
-    css=(".ly-word_grid{padding:5% 7%}"
+    css=(".ly-word_grid{padding:calc(5% * var(--pad-scale,1)) calc(7% * var(--pad-scale,1))}"
          # 默认 3 列；按 --cols 切换（1/2/3/4 列）
          ".ly-word_grid .wg-grid{display:grid;gap:14px;"
          "grid-template-columns:repeat(var(--cols,3),minmax(0,1fr))}"
          # 卡片基础
-         ".ly-word_grid .wg-card{background:var(--surface);border-radius:12px;"
-         "padding:16px 18px;box-shadow:0 2px 8px rgba(0,0,0,.05)}"
+         ".ly-word_grid .wg-card{background:var(--surface);border-radius:var(--radius,12px);"
+         "padding:calc(16px * var(--pad-scale,1)) calc(18px * var(--pad-scale,1));box-shadow:0 2px 8px rgba(0,0,0,.05)}"
          # 生字卡（单字+拼音）：居中大字，拼音在上、生字居中
          ".ly-word_grid .wg-card.wg-char{display:flex;flex-direction:column;align-items:center;"
-         "justify-content:center;padding:14px 6px;gap:3px}"
+         "justify-content:center;padding:calc(14px * var(--pad-scale,1)) calc(6px * var(--pad-scale,1));gap:3px}"
          ".ly-word_grid .wg-card.wg-char .wg-phon{font-size:12px;margin:0;color:var(--muted);line-height:1.2}"
          ".ly-word_grid .wg-card.wg-char .wg-word{font-size:clamp(26px,3.6vw,38px);line-height:1.15;margin:2px 0}"
          # 字号默认（3 列 4-6 词）
@@ -109,23 +109,23 @@ DEF = LayoutDef(
          ".ly-word_grid .wg-mean{font-weight:600}"
          ".ly-word_grid .wg-ex{margin-top:8px;font-size:13px;color:var(--muted);font-style:italic;line-height:1.5}"
          # ---- 1 列（1 词）：居中大卡，字号加大 ----
-         ".ly-word_grid .wg-grid[data-cols='1'] .wg-card{padding:24px 28px}"
+         ".ly-word_grid .wg-grid[data-cols='1'] .wg-card{padding:calc(24px * var(--pad-scale,1)) calc(28px * var(--pad-scale,1))}"
          ".ly-word_grid .wg-grid[data-cols='1'] .wg-word{font-size:clamp(28px,4vw,40px)}"
          ".ly-word_grid .wg-grid[data-cols='1'] .wg-phon{font-size:16px}"
          ".ly-word_grid .wg-grid[data-cols='1'] .wg-meta{font-size:18px}"
          ".ly-word_grid .wg-grid[data-cols='1'] .wg-ex{font-size:15px}"
          # ---- 2 列（2-3 词）：舒适 ----
-         ".ly-word_grid .wg-grid[data-cols='2'] .wg-card{padding:18px 20px}"
+         ".ly-word_grid .wg-grid[data-cols='2'] .wg-card{padding:calc(18px * var(--pad-scale,1)) calc(20px * var(--pad-scale,1))}"
          ".ly-word_grid .wg-grid[data-cols='2'] .wg-word{font-size:clamp(20px,2.8vw,28px)}"
          # ---- 3 列（4-6 词）：默认 ----
-         ".ly-word_grid .wg-grid[data-cols='3'] .wg-card{padding:14px 16px}"
+         ".ly-word_grid .wg-grid[data-cols='3'] .wg-card{padding:calc(14px * var(--pad-scale,1)) calc(16px * var(--pad-scale,1))}"
          ".ly-word_grid .wg-grid[data-cols='3'] .wg-word{font-size:clamp(17px,2.2vw,22px)}"
          ".ly-word_grid .wg-grid[data-cols='3'] .wg-phon{font-size:12px}"
          ".ly-word_grid .wg-grid[data-cols='3'] .wg-meta{font-size:13px}"
          ".ly-word_grid .wg-grid[data-cols='3'] .wg-ex{font-size:12px}"
          # ---- 4 列（7-12 词）：紧凑 ----
          ".ly-word_grid .wg-grid[data-cols='4']{gap:10px}"
-         ".ly-word_grid .wg-grid[data-cols='4'] .wg-card{padding:12px 14px}"
+         ".ly-word_grid .wg-grid[data-cols='4'] .wg-card{padding:calc(12px * var(--pad-scale,1)) calc(14px * var(--pad-scale,1))}"
          ".ly-word_grid .wg-grid[data-cols='4'] .wg-word{font-size:clamp(15px,1.9vw,19px)}"
          ".ly-word_grid .wg-grid[data-cols='4'] .wg-phon{font-size:11px;margin-bottom:6px}"
          ".ly-word_grid .wg-grid[data-cols='4'] .wg-meta{font-size:12px}"

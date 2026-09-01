@@ -42,11 +42,11 @@ DEF = LayoutDef(
         "pitfall": {"type": "str", "max_chars": 90},
     },
     applicable={"cats": "*", "kinds": ["concept"], "stages": "*"},
-    css=(".ly-concept{padding:6% 8%}"
-         ".ly-concept .concept-statement{font-size:clamp(20px,3.6vw,32px);font-weight:800;color:var(--primary);margin:0 0 18px;line-height:1.4}"
+    css=(".ly-concept{padding:calc(6% * var(--pad-scale,1)) calc(8% * var(--pad-scale,1))}"
+         ".ly-concept .concept-statement{font-size:calc(clamp(20px,3.6vw,32px) * var(--title-scale,1));font-weight:800;color:var(--primary);margin:0 0 18px;line-height:1.4}"
          ".ly-concept .concept-points{margin:0 0 18px;padding-left:22px;font-size:clamp(15px,2.3vw,20px);line-height:1.7}"
          ".ly-concept .concept-points li{margin:6px 0}"
-         ".ly-concept .concept-callout{border:1px dashed;padding:12px 16px;border-radius:12px;font-size:clamp(14px,2.1vw,18px);margin-top:14px;line-height:1.6}"
+         ".ly-concept .concept-callout{border:var(--card-border,1px dashed);padding:calc(12px * var(--pad-scale,1)) calc(16px * var(--pad-scale,1));border-radius:var(--radius,12px);box-shadow:var(--card-shadow,none);background:var(--surface);font-size:clamp(14px,2.1vw,18px);margin-top:14px;line-height:1.6}"
          ".ly-concept .co-tag{font-weight:800;margin-right:8px}"),
     _render=render,
 )

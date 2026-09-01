@@ -184,16 +184,36 @@ def run(form, out_dir=None, env=None, verbose=True):
             #   弱模型：auto_kb 确定性引擎 + 教学专家协议展开 + 自审闭环（为 GLM-4-Flash 设计）。
             strong = client.is_strong() if hasattr(client, "is_strong") else False
             if strong:
-                # 强模型独立链路：教师 AGENT 输出教学语义 → 程序确定性映射成 segments
+                # 强模型双 agent 闭环：
+                #   内容 agent 全自主（retrieve_kb 检索课文→规划→生成→check_fact 自检）产 LessonContent
+                #   → 程序确定性映射 segments → 审核 agent 独立审核（通过/打回+理由）
+                #   → 打回则内容 agent 拿理由重做（最多 max_review 次）。客户端不支持 tool-calling 回退单次。
                 from courseware_engine.kb_adapter import _derive_subject_cat, _derive_stage, _derive_lesson_type
                 kb["subject_cat"] = _derive_subject_cat(kb.get("subject", ""))
                 kb["stage"] = _derive_stage(kb.get("grade", ""))
                 kb["lesson_type"] = _derive_lesson_type(kb, kb["subject_cat"])
-                from courseware_engine.strong_gen import generate_content, content_to_segments
-                lc = generate_content(kb, client, max_attempts=4)
-                if lc is None:
-                    raise RuntimeError("强模型未产出有效教学内容")
-                kb["segments"] = content_to_segments(lc, kb)
+                from courseware_engine.strong_agent import (
+                    generate_content_agent, review_segments_agent)
+                from courseware_engine.strong_gen import content_to_segments
+                max_review = int(os.environ.get("AGENT_MAX_REVIEW", "2"))
+                feedback = ""
+                for attempt in range(max_review + 1):
+                    lc = generate_content_agent(kb, client, feedback=feedback)
+                    if lc is None:
+                        raise RuntimeError("强模型内容 agent 未产出有效教学内容")
+                    segs = content_to_segments(lc, kb)
+                    approved, feedback, score = review_segments_agent(kb, segs, client)
+                    if approved:
+                        kb["segments"] = segs
+                        if attempt > 0:
+                            print(f"  [闭环] 第{attempt}次打回重做后审核通过（score={score}）", flush=True)
+                        break
+                    if attempt < max_review:
+                        print(f"  [闭环] 审核打回（第{attempt+1}次），内容 agent 按意见重做", flush=True)
+                else:
+                    # 超过打回次数仍不通过：用最后一版放行（保底出片），但在 review_info 标记
+                    kb["segments"] = segs
+                    print(f"  [闭环] 超 {max_review} 次打回仍未通过，用最后一版保底放行", flush=True)
             else:
                 from courseware_engine.enrich_llm import enrich_chinese
                 from courseware_engine.kb_adapter import auto_kb
@@ -203,26 +223,44 @@ def run(form, out_dir=None, env=None, verbose=True):
                 # 自审闭环：教学专家协议展开 → LLM 专家审核 → 打回重生成 → 再审核
                 kb, _retries = expand_with_review(kb, client, max_retry=2)
 
-            _palettes = [
-                {"primary": "#9a3412", "primary700": "#7c2d12", "accent": "#0f766e",
-                 "bg": "#f7f3ec", "surface": "#fffdf8", "ink": "#292524", "muted": "#78716c",
-                 "line": "#e7ddcb", "cover1": "#b45309", "cover2": "#7c2d12"},
-                {"primary": "#0f766e", "primary700": "#115e59", "accent": "#b45309",
-                 "bg": "#f3f7f4", "surface": "#ffffff", "ink": "#1c2b27", "muted": "#5f7a72",
-                 "line": "#d6e6df", "cover1": "#0f766e", "cover2": "#134e4a"},
-                {"primary": "#3730a3", "primary700": "#1e1b4b", "accent": "#0f766e",
-                 "bg": "#f4f5fb", "surface": "#ffffff", "ink": "#1a1a2e", "muted": "#6b6b8a",
-                 "line": "#dadaea", "cover1": "#3730a3", "cover2": "#1e1b4b"},
-            ]
-            _h = sum(ord(c) for c in (kb.get("topic") or "")) % len(_palettes)
-            recipe = StyleRecipe(
-                palette=dict(_palettes[_h]),
-                fonts={"head": '"Noto Serif SC","Songti SC","SimSun",serif',
-                       "body": '"PingFang SC","Microsoft YaHei","sans-serif"'},
-                decorations=["seal"],
-                illustration={"style": "line_art", "diagram_kinds": []},
-                layout_prefs={},
-            )
+            # 样式 recipe：
+            #   ① 用户在备课页选了风格（form["style"] 为 11 风格 id）→ 优先用 style_map
+            #      映射的固定配色+字体（保版式，只换皮肤），强/弱模型路径都生效；
+            #   ② 未选风格：强模型走样式 agent（palette_hint/mood/density 由 agent 决策，
+            #      色值仍程序确定性映射合法 hex）；弱模型按课题取模的确定性 recipe。
+            from courseware_engine.style_map import recipe_for_style
+            recipe = recipe_for_style(form.get("style"))
+            if recipe is not None:
+                if verbose:
+                    print(f"  [风格] 应用用户选定风格：{form.get('style')}", flush=True)
+            elif strong:
+                from courseware_engine.schemas import DesignDNA
+                from courseware_engine.strong_agent import generate_recipe_agent
+                dna = DesignDNA(subject_cat=kb.get("subject_cat", "general"),
+                                stage=kb.get("stage", "mid"),
+                                lesson_type=kb.get("lesson_type", "standard"))
+                recipe = generate_recipe_agent(dna, kb, client)
+            else:
+                _palettes = [
+                    {"primary": "#9a3412", "primary700": "#7c2d12", "accent": "#0f766e",
+                     "bg": "#f7f3ec", "surface": "#fffdf8", "ink": "#292524", "muted": "#78716c",
+                     "line": "#e7ddcb", "cover1": "#b45309", "cover2": "#7c2d12"},
+                    {"primary": "#0f766e", "primary700": "#115e59", "accent": "#b45309",
+                     "bg": "#f3f7f4", "surface": "#ffffff", "ink": "#1c2b27", "muted": "#5f7a72",
+                     "line": "#d6e6df", "cover1": "#0f766e", "cover2": "#134e4a"},
+                    {"primary": "#3730a3", "primary700": "#1e1b4b", "accent": "#0f766e",
+                     "bg": "#f4f5fb", "surface": "#ffffff", "ink": "#1a1a2e", "muted": "#6b6b8a",
+                     "line": "#dadaea", "cover1": "#3730a3", "cover2": "#1e1b4b"},
+                ]
+                _h = sum(ord(c) for c in (kb.get("topic") or "")) % len(_palettes)
+                recipe = StyleRecipe(
+                    palette=dict(_palettes[_h]),
+                    fonts={"head": '"Noto Serif SC","Songti SC","SimSun",serif',
+                           "body": '"PingFang SC","Microsoft YaHei","sans-serif"'},
+                    decorations=["seal"],
+                    illustration={"style": "line_art", "diagram_kinds": []},
+                    layout_prefs={},
+                )
             pages = content_fill(kb)
             pages, _ = validate_deck(pages, kb, cat=kb.get("subject_cat"))
             # 最终审核报告：确定性门禁必跑；LLM 语义审核仅在弱模型路径跑
@@ -284,9 +322,11 @@ if __name__ == "__main__":
     ap.add_argument("--topic", required=True)
     ap.add_argument("--duration", default="40")
     ap.add_argument("--out", default=None)
+    ap.add_argument("--style", default=None, help="课件风格 id（graffiti/magazine/swiss/ink/devblue/apple/brutalist/glass/dracula/serif/business），选了则覆盖默认配色")
     args = ap.parse_args()
     form = {"subject": args.subject, "grade": args.grade,
-            "topic": args.topic, "duration": args.duration}
+            "topic": args.topic, "duration": args.duration,
+            "style": args.style}
     res = run(form, out_dir=args.out)
     print("\n=== 完成 ===")
     print("教案 JSON:", res["lesson_json"])

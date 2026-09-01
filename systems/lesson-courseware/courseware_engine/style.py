@@ -92,24 +92,108 @@ def seeded_recipe(dna, pack=None):
     return recipe.validate()
 
 
+# 密度 → padding 缩放系数（用于 layout 的 padding/margin）
+DENSITY_SCALE = {"compact": 0.75, "balanced": 1.0, "spacious": 1.3}
+
+
 def recipe_to_css_vars(recipe):
     p = recipe.palette
+    cs = getattr(recipe, "card_style", None) or {}
+    ts = getattr(recipe, "title_style", None) or {}
+    density = getattr(recipe, "density", "balanced")
+    dscale = DENSITY_SCALE.get(density, 1.0)
+    radius = cs.get("radius", 12)
+    bw = cs.get("border_width", 2)
+    bs = cs.get("border_style", "solid")
+    shadow = cs.get("shadow", "none")
+    pad_scale = round(cs.get("padding_scale", 1.0) * dscale, 3)
+    title_scale = ts.get("size_scale", 1.0)
+    title_deco = ts.get("decoration", "none")
+    ls = ts.get("letter_spacing", 0)
     return (
         "<style>:root{"
         f"--primary:{p['primary']};--primary700:{p['primary700']};--accent:{p['accent']};"
         f"--bg:{p['bg']};--surface:{p['surface']};--ink:{p['ink']};"
         f"--muted:{p['muted']};--line:{p['line']};--cover1:{p['cover1']};--cover2:{p['cover2']};"
         f"--font-head:{recipe.fonts.get('head', FONT_STACKS['serif'])};"
-        f"--font-body:{recipe.fonts.get('body', FONT_STACKS['sans'])};--radius:14px;"
+        f"--font-body:{recipe.fonts.get('body', FONT_STACKS['sans'])};"
+        # 整套视觉变量（带默认值，旧配方不填时渲染不变）
+        f"--radius:{radius}px;"
+        f"--card-border:{bw}px {bs} var(--line);"
+        f"--card-shadow:{shadow};"
+        f"--pad-scale:{pad_scale};"
+        f"--title-scale:{title_scale};"
+        f"--title-ls:{ls}px;"
+        f"--title-deco:{title_deco};"
         "}</style>"
     )
 
 
 def recipe_to_scoped_css(recipe):
-    """recipe 驱动的版式级覆盖（字体/基础排版）；具体版式差异由各 LayoutDef.css 提供。"""
-    return (
-        "<style>"
-        ".deck,.ly{font-family:var(--font-body);color:var(--ink);}"
-        ".deck h1,.deck h2,.deck h3,.ly-h{font-family:var(--font-head);}"
-        "</style>"
-    )
+    """recipe 驱动的版式级覆盖：字体 + 整套视觉（背景层/卡片/标题装饰/每页装饰）。"""
+    bg = getattr(recipe, "background", None) or {}
+    bg_css = bg.get("css", "")
+    page_decor = getattr(recipe, "page_decor", None) or []
+
+    css = [
+        ".deck,.ly{font-family:var(--font-body);color:var(--ink);}",
+        ".deck h1,.deck h2,.deck h3,.ly-h{font-family:var(--font-head);"
+        "letter-spacing:var(--title-ls);}",
+        # 卡片统一吃变量（各 layout 写死的 border/radius 由变量覆盖）
+        ".tier-layer,.concept-callout,.step-card,.obj-card,.sum-card,.hw-card{"
+        "border-radius:var(--radius)!important;box-shadow:var(--card-shadow);}",
+        # 标题装饰
+        ".ly-h{font-size:calc(1em * var(--title-scale));}",
+    ]
+    # 标题装饰样式
+    deco_css = {
+        "underline": ".ly-h{border-bottom:3px solid var(--primary);padding-bottom:6px;display:inline-block;}",
+        "side_bar": ".ly-h{border-left:6px solid var(--primary);padding-left:14px;}",
+        "highlight": ".ly-h{background:linear-gradient(transparent 60%,var(--accent) 60%);padding:0 4px;}",
+        "outline": ".ly-h{-webkit-text-stroke:1px var(--primary);color:transparent;}",
+    }
+    ts = getattr(recipe, "title_style", None) or {}
+    if ts.get("decoration") in deco_css:
+        css.append(deco_css[ts["decoration"]])
+    # deck 背景层（纹理/渐变/点阵）
+    if bg_css:
+        css.append(f"#deck::before{{content:'';position:absolute;inset:0;z-index:0;pointer-events:none;{bg_css}}}")
+        css.append("#deck .slide{z-index:1;}")
+    # 每页装饰元素
+    for d in page_decor:
+        css.append(_page_decor_css(d))
+    return "<style>" + "".join(x for x in css if x) + "</style>"
+
+
+def _page_decor_css(name):
+    """每页装饰元素的 CSS（右上角印章/侧边色带/网格线等，pointer-events:none 不挡内容）。"""
+    table = {
+        "seal": ".slide::after{content:'课';position:absolute;top:20px;right:22px;width:44px;height:44px;"
+                "line-height:44px;text-align:center;border:2.5px solid var(--primary);border-radius:6px;"
+                "color:var(--primary);font-size:22px;font-weight:800;font-family:var(--font-head);"
+                "opacity:.35;pointer-events:none;z-index:5;}",
+        "corner_line": ".slide::before{content:'';position:absolute;top:0;left:0;width:60px;height:60px;"
+                       "border-top:4px solid var(--primary);border-left:4px solid var(--primary);"
+                       "opacity:.5;pointer-events:none;z-index:5;}",
+        "side_band": ".slide::before{content:'';position:absolute;top:0;left:0;bottom:0;width:8px;"
+                     "background:var(--primary);opacity:.85;pointer-events:none;z-index:5;}",
+        "grid_lines": ".slide::before{content:'';position:absolute;inset:0;"
+                      "background:repeating-linear-gradient(0deg,transparent,transparent 39px,var(--line) 39px,var(--line) 40px),"
+                      "repeating-linear-gradient(90deg,transparent,transparent 39px,var(--line) 39px,var(--line) 40px);"
+                      "opacity:.35;pointer-events:none;z-index:0;}",
+        "pixel_block": ".slide::after{content:'';position:absolute;bottom:18px;right:18px;width:48px;height:48px;"
+                       "background:conic-gradient(var(--primary) 25%,var(--accent) 0 50%,var(--primary) 0 75%,var(--accent) 0);"
+                       "background-size:24px 24px;image-rendering:pixelated;opacity:.6;pointer-events:none;z-index:5;}",
+        "glow": ".slide::before{content:'';position:absolute;top:-40%;right:-20%;width:70%;height:80%;"
+                "background:radial-gradient(circle,var(--accent) 0%,transparent 60%);"
+                "opacity:.18;pointer-events:none;z-index:0;}",
+        "thick_rule": ".slide::before{content:'';position:absolute;top:0;left:0;right:0;height:10px;"
+                      "background:var(--ink);pointer-events:none;z-index:5;}",
+        "gold_line": ".slide::after{content:'';position:absolute;bottom:14px;left:10%;right:10%;height:2px;"
+                     "background:linear-gradient(90deg,transparent,var(--accent),transparent);"
+                     "pointer-events:none;z-index:5;}",
+        "wave": ".slide::after{content:'';position:absolute;bottom:0;left:0;right:0;height:6px;"
+                "background:repeating-linear-gradient(90deg,var(--accent) 0 12px,transparent 12px 24px);"
+                "opacity:.5;pointer-events:none;z-index:5;}",
+    }
+    return table.get(name, "")
