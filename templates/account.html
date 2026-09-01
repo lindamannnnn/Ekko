@@ -244,9 +244,42 @@
       <div class="btn-bar">
         <button type="submit" class="btn">保存 API KEY</button>
         <button type="submit" name="ai_api_key" value="" class="btn btn-secondary">清空</button>
+        <button type="button" id="testKeyBtn" class="btn btn-secondary">测试连接</button>
       </div>
+      <p id="testKeyResult" class="section-sub" style="display:none;margin-top:10px;font-weight:600;"></p>
     </form>
   </div>
+
+  <script>
+  (function(){
+    var btn = document.getElementById('testKeyBtn');
+    var out = document.getElementById('testKeyResult');
+    if (!btn) return;
+    btn.addEventListener('click', function(){
+      out.style.display = 'block';
+      out.style.color = 'var(--muted,#64748b)';
+      out.textContent = '⏳ 正在测试连接…';
+      btn.disabled = true;
+      var fd = new FormData();
+      fd.append('csrf_token', '{{ csrf_token() }}');
+      fd.append('ai_api_key', document.getElementById('ai_api_key').value);
+      fd.append('ai_base_url', document.getElementById('ai_base_url').value);
+      fd.append('ai_model', document.getElementById('ai_model').value);
+      fetch("{{ url_for('main.account_test_key') }}", {method:'POST', body:fd})
+        .then(function(r){return r.json();})
+        .then(function(d){
+          out.style.color = d.ok ? '#047857' : '#b91c1c';
+          out.textContent = (d.ok ? '✅ ' : '❌ ') + (d.message || '');
+          btn.disabled = false;
+        })
+        .catch(function(e){
+          out.style.color = '#b91c1c';
+          out.textContent = '❌ 请求失败：' + e;
+          btn.disabled = false;
+        });
+    });
+  })();
+  </script>
 
   <div class="account-card">
     <h2>课前备课 · 生成记录</h2>

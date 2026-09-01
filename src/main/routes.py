@@ -1,6 +1,6 @@
 """主蓝图路由。"""
 import os
-from flask import Blueprint, redirect, url_for, render_template, request, flash
+from flask import Blueprint, redirect, url_for, render_template, request, flash, jsonify
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 
@@ -10,6 +10,26 @@ from models.lesson import Review
 from models.class_student import Klass, Student
 
 bp = Blueprint('main', __name__)
+
+
+@bp.route('/account/test-key', methods=['POST'])
+@login_required
+def account_test_key():
+    """账号页 AI KEY 连通性测试：用表单填入的 key/base_url/model 发最小请求验证。
+
+    用户没填某字段时回退到其已保存的配置，都没填回退平台默认（GLM-4-Flash）。
+    """
+    from ai.llm_client import LLMClient
+    key = (request.form.get('ai_api_key') or '').strip() or (current_user.ai_api_key or '')
+    base_url = (request.form.get('ai_base_url') or '').strip() or (current_user.ai_base_url or '')
+    model = (request.form.get('ai_model') or '').strip() or (current_user.ai_model or '')
+    client = LLMClient(
+        api_key=key or None,
+        base_url=base_url or None,
+        model=model or None,
+    )
+    ok, msg = client.test_connection()
+    return jsonify({'ok': ok, 'message': msg})
 
 
 @bp.route('/')

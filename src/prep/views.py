@@ -293,6 +293,27 @@ def api_user_key():
     return redirect(url_for("prep.subject") + "#model-info")
 
 
+@prep_bp.route("/api/user/key/test", methods=["POST"])
+@login_required
+def api_user_key_test():
+    """备课账号页 AI KEY 连通性测试：用表单填入的 key/base_url/model 发最小请求验证。
+
+    用户没填某字段时回退到其已保存的配置，都没填回退平台默认（GLM-4-Flash）。
+    """
+    from ai.llm_client import LLMClient
+    user = current_user
+    key = (request.form.get("ai_api_key") or "").strip() or (user.ai_api_key or "")
+    base_url = (request.form.get("ai_base_url") or "").strip() or (user.ai_base_url or "")
+    model = (request.form.get("ai_model") or "").strip() or (user.ai_model or "")
+    client = LLMClient(
+        api_key=key or None,
+        base_url=base_url or None,
+        model=model or None,
+    )
+    ok, msg = client.test_connection()
+    return jsonify({"ok": ok, "message": msg})
+
+
 @prep_bp.route("/subject", methods=["GET", "POST"])
 @login_required
 def subject():

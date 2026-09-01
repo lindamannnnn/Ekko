@@ -95,3 +95,48 @@ class LLMClient:
         if last_err is not None:
             raise last_err
         raise RuntimeError("所有 API KEY 均调用失败")
+
+    def test_connection(self, timeout=25):
+        """连通性测试：发一个最小 chat 请求验证 key/base_url/model 是否可用。
+
+        返回 (ok: bool, message: str)。不抛异常，把各类错误转成人话提示。
+        只测第一个 key（多 key 轮询场景下首 key 可用即视为连通）。
+        """
+        key = self.api_keys[0] if self.api_keys else ""
+        if not key:
+            return False, "未填写 API KEY"
+        if not self.base_url:
+            return False, "未填写接口地址"
+        payload = {
+            "model": self.model,
+            "messages": [{"role": "user", "content": "hi"}],
+            "max_tokens": 1,
+        }
+        headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+        try:
+            r = requests.post(
+                f"{self.base_url.rstrip('/')}/chat/completions",
+                headers=headers, json=payload, timeout=timeout, proxies=self.proxies,
+            )
+            if r.status_code in (401, 403):
+                return False, "API KEY 无效或无权限（401/403）"
+            if r.status_code == 404:
+                return False, "接口地址或模型名错误（404，请检查接口地址与模型名）"
+            if r.status_code == 429:
+                return False, "触发限流（429），KEY 有效但当前请求被拒，稍后重试"
+            r.raise_for_status()
+            data = r.json()
+            if data.get("choices"):
+                return True, f"连接成功（模型 {self.model} 响应正常）"
+            return False, "接口返回异常（无 choices）"
+        except requests.HTTPError as e:
+            code = e.response.status_code if e.response is not None else "?"
+            return False, f"HTTP {code}：{str(e)[:80]}"
+        except requests.ConnectTimeout:
+            return False, "连接超时（接口地址可能不可达）"
+        except requests.ConnectionError:
+            return False, "连接失败（接口地址无法访问，请检查网络/地址）"
+        except requests.RequestException as e:
+            return False, f"请求异常：{str(e)[:80]}"
+        except Exception as e:  # noqa: BLE001
+            return False, f"未知错误：{str(e)[:80]}"

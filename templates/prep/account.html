@@ -48,9 +48,43 @@
     <div style="margin-top:12px;display:flex;gap:10px;">
       <button type="submit" class="btn btn-primary">保存 API KEY</button>
       <button type="submit" name="action" value="clear" class="btn">清空</button>
+      <button type="button" id="testKeyBtn" class="btn">测试连接</button>
     </div>
+    <p id="testKeyResult" style="display:none;margin:10px 0 0;font-size:13.5px;font-weight:600;"></p>
   </form>
 </div>
+<script>
+(function(){
+  var btn = document.getElementById('testKeyBtn');
+  var out = document.getElementById('testKeyResult');
+  var form = btn.closest('form');
+  if (!btn || !form) return;
+  function val(n){ var el = form.querySelector('[name="'+n+'"]'); return el ? el.value : ''; }
+  btn.addEventListener('click', function(){
+    out.style.display = 'block';
+    out.style.color = '#64748b';
+    out.textContent = '⏳ 正在测试连接…';
+    btn.disabled = true;
+    var fd = new FormData();
+    fd.append('csrf_token', form.querySelector('[name="csrf_token"]').value);
+    fd.append('ai_api_key', val('ai_api_key'));
+    fd.append('ai_base_url', val('ai_base_url'));
+    fd.append('ai_model', val('ai_model'));
+    fetch("{{ url_for('prep.api_user_key_test') }}", {method:'POST', body:fd})
+      .then(function(r){return r.json();})
+      .then(function(d){
+        out.style.color = d.ok ? '#047857' : '#b91c1c';
+        out.textContent = (d.ok ? '✅ ' : '❌ ') + (d.message || '');
+        btn.disabled = false;
+      })
+      .catch(function(e){
+        out.style.color = '#b91c1c';
+        out.textContent = '❌ 请求失败：' + e;
+        btn.disabled = false;
+      });
+  });
+})();
+</script>
 <script>
 function toggleHelp(id) {
   const el = document.getElementById(id);
