@@ -159,12 +159,12 @@ def _run_subject_job(job_id: str, user_id: str, app):
         os.makedirs(job_dir, exist_ok=True)
 
         env = dict(os.environ)
-        # 优先使用用户自定义 key
-        if user.ai_api_key:
+        # 仅当本次任务勾选「使用我的 KEY」时才覆盖默认通道
+        if job.use_own_key and user.ai_api_key:
             env["AI_API_KEY"] = user.ai_api_key
-        if user.ai_base_url:
+        if job.use_own_key and user.ai_base_url:
             env["AI_BASE_URL"] = user.ai_base_url
-        if user.ai_model:
+        if job.use_own_key and user.ai_model:
             env["AI_MODEL"] = user.ai_model
 
         try:
@@ -225,12 +225,12 @@ def _run_content_job(job_id: str, user_id: str, app):
             return
         try:
             env = dict(os.environ)
-            # 优先使用用户自定义 key
-            if user and user.ai_api_key:
+            # 仅当本次任务勾选「使用我的 KEY」时才覆盖默认通道
+            if job.use_own_key and user and user.ai_api_key:
                 env["AI_API_KEY"] = user.ai_api_key
-            if user and user.ai_base_url:
+            if job.use_own_key and user and user.ai_base_url:
                 env["AI_BASE_URL"] = user.ai_base_url
-            if user and user.ai_model:
+            if job.use_own_key and user and user.ai_model:
                 env["AI_MODEL"] = user.ai_model
             slides = segment(job.original_text or "", env=env)
             if not slides:
@@ -342,6 +342,7 @@ def subject():
                 duration=int(duration),
                 style=style,
                 title=title or topic,
+                use_own_key=request.form.get("use_own_key") == "on",
             )
             db.session.add(job)
             db.session.commit()

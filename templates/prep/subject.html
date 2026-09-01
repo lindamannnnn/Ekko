@@ -44,6 +44,16 @@
       </div>
     </div>
 
+    {% if mask_key %}
+    <div style="margin-top:14px;display:flex;align-items:center;gap:8px;">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;margin:0;">
+        <input type="checkbox" name="use_own_key" value="on"
+               style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;">
+        <span>使用我的 API KEY（{{ mask_key }}）生成本次课件</span>
+      </label>
+    </div>
+    {% endif %}
+
     <button type="submit" class="btn btn-primary" style="width:100%;margin-top:22px;padding:14px;">生成教案 + 课件</button>
   </form>
 </div>
