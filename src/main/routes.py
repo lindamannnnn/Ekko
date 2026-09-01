@@ -53,12 +53,15 @@ def account():
             key = (request.form.get('ai_api_key') or '').strip()
             base_url = (request.form.get('ai_base_url') or '').strip()
             model = (request.form.get('ai_model') or '').strip()
+            use_own = request.form.get('ai_use_own_key') == 'on'
             if key:
                 current_user.ai_api_key = key
             else:
                 current_user.ai_api_key = None
+                use_own = False  # 没 key 时强制关开关
             current_user.ai_base_url = base_url or None
             current_user.ai_model = model or None
+            current_user.ai_use_own_key = use_own
             db.session.commit()
             flash('API KEY 已保存' if key else 'API KEY 已清空', 'success')
         elif action == 'profile':

@@ -159,12 +159,12 @@ def _run_subject_job(job_id: str, user_id: str, app):
         os.makedirs(job_dir, exist_ok=True)
 
         env = dict(os.environ)
-        # 优先使用用户自定义 key
-        if user.ai_api_key:
+        # 优先使用用户自定义 key（仅当用户显式开启「使用自己的 KEY」开关）
+        if user.ai_use_own_key and user.ai_api_key:
             env["AI_API_KEY"] = user.ai_api_key
-        if user.ai_base_url:
+        if user.ai_use_own_key and user.ai_base_url:
             env["AI_BASE_URL"] = user.ai_base_url
-        if user.ai_model:
+        if user.ai_use_own_key and user.ai_model:
             env["AI_MODEL"] = user.ai_model
 
         try:
@@ -225,12 +225,12 @@ def _run_content_job(job_id: str, user_id: str, app):
             return
         try:
             env = dict(os.environ)
-            # 优先使用用户自定义 key
-            if user and user.ai_api_key:
+            # 优先使用用户自定义 key（仅当用户显式开启「使用自己的 KEY」开关）
+            if user and user.ai_use_own_key and user.ai_api_key:
                 env["AI_API_KEY"] = user.ai_api_key
-            if user and user.ai_base_url:
+            if user and user.ai_use_own_key and user.ai_base_url:
                 env["AI_BASE_URL"] = user.ai_base_url
-            if user and user.ai_model:
+            if user and user.ai_use_own_key and user.ai_model:
                 env["AI_MODEL"] = user.ai_model
             slides = segment(job.original_text or "", env=env)
             if not slides:
@@ -279,17 +279,20 @@ def api_user_key():
     key = (request.form.get("ai_api_key") or "").strip()
     base_url = (request.form.get("ai_base_url") or "").strip()
     model = (request.form.get("ai_model") or "").strip()
+    use_own = request.form.get("ai_use_own_key") == "on"
     action = request.form.get("action")
 
     if action == "clear" or not key:
         user.ai_api_key = None
         user.ai_base_url = base_url or None
         user.ai_model = model or None
+        user.ai_use_own_key = False
         flash("API KEY 已清空")
     else:
         user.ai_api_key = key
         user.ai_base_url = base_url or None
         user.ai_model = model or None
+        user.ai_use_own_key = use_own
         flash("API KEY 已保存")
 
     db.session.commit()
@@ -357,6 +360,7 @@ def subject():
         user=user,
         error=error,
         mask_key=_mask_key(user.ai_api_key or ""),
+        use_own_key=user.ai_use_own_key,
     )
 
 

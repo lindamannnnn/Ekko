@@ -91,6 +91,13 @@
         <input type="text" name="ai_model" placeholder="gpt-4o">
       </div>
     </div>
+    <div style="margin-top:14px;display:flex;align-items:center;gap:8px;">
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:14px;margin:0;">
+        <input type="checkbox" name="ai_use_own_key" {% if use_own_key %}checked{% endif %}
+               style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;">
+        <span><strong>使用我自己的 KEY 生成</strong>（关闭时即使已保存 KEY 也走系统默认模型）</span>
+      </label>
+    </div>
     <div style="margin-top:12px;display:flex;gap:10px;">
       <button type="submit" class="btn btn-primary">保存到我的账户</button>
       <button type="submit" name="action" value="clear" class="btn">清空</button>

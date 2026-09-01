@@ -30,6 +30,8 @@ class User(UUIDMixin, db.Model):
     ai_api_key = Column(String(255), nullable=True)
     ai_base_url = Column(String(512), nullable=True)
     ai_model = Column(String(128), nullable=True)
+    # 开关：True=使用自己的 key 生成，False=即使存了 key 也走平台默认
+    ai_use_own_key = Column(Boolean, default=False, nullable=False)
 
     __table_args__ = (
         UniqueConstraint('auth_provider', 'external_id', name='uq_user_provider_external'),
