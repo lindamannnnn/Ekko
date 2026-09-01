@@ -116,8 +116,8 @@ _STYLE_TABLE = {
     },
     "glass": {  # 暗色玻璃拟态：暗色渐变 + 天青/紫 + 发光 + 大圆角
         "palette": {"primary": "#38bdf8", "primary700": "#0ea5e9", "accent": "#a78bfa",
-                    "bg": "#0f172a", "surface": "#1e293b", "ink": "#e2e8f0", "muted": "#94a3b8",
-                    "line": "#334155", "cover1": "#38bdf8", "cover2": "#a78bfa"},
+                    "bg": "#0f172a", "surface": "#1e293b", "ink": "#f1f5f9", "muted": "#94a3b8",
+                    "line": "#475569", "cover1": "#38bdf8", "cover2": "#a78bfa"},
         "fonts": {"head": _SANS, "body": _SANS},
         "card_style": {"radius": 20, "border_width": 1, "border_style": "solid",
                        "shadow": "0 8px 32px rgba(56,189,248,.15)", "padding_scale": 1.1},
@@ -129,8 +129,8 @@ _STYLE_TABLE = {
     },
     "dracula": {  # 霓虹暗夜：dracula 配色 + 紫色光晕 + 暗夜渐变
         "palette": {"primary": "#bd93f9", "primary700": "#9d6fe8", "accent": "#8be9fd",
-                    "bg": "#282a36", "surface": "#44475a", "ink": "#f8f8f2", "muted": "#6272a4",
-                    "line": "#44475a", "cover1": "#bd93f9", "cover2": "#8be9fd"},
+                    "bg": "#282a36", "surface": "#44475a", "ink": "#f8f8f2", "muted": "#7a8bb5",
+                    "line": "#565a6e", "cover1": "#bd93f9", "cover2": "#8be9fd"},
         "fonts": {"head": _SANS, "body": _SANS},
         "card_style": {"radius": 10, "border_width": 1, "border_style": "solid",
                        "shadow": "0 4px 20px rgba(189,147,249,.2)", "padding_scale": 1.0},

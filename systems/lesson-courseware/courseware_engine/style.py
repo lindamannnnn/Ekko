@@ -146,10 +146,11 @@ def recipe_to_scoped_css(recipe):
         ".ly-h{font-size:calc(1em * var(--title-scale));}",
     ]
     # 标题装饰样式
+    # highlight：底部垫色带，padding 拉开避免色带贴字；圆角跟随卡片风格
     deco_css = {
         "underline": ".ly-h{border-bottom:3px solid var(--primary);padding-bottom:6px;display:inline-block;}",
         "side_bar": ".ly-h{border-left:6px solid var(--primary);padding-left:14px;}",
-        "highlight": ".ly-h{background:linear-gradient(transparent 60%,var(--accent) 60%);padding:0 4px;}",
+        "highlight": ".ly-h{background:linear-gradient(transparent 62%,var(--accent) 62%);padding:2px 8px;border-radius:var(--radius,4px);display:inline-block;}",
         "outline": ".ly-h{-webkit-text-stroke:1px var(--primary);color:transparent;}",
     }
     ts = getattr(recipe, "title_style", None) or {}
@@ -178,17 +179,17 @@ def _page_decor_css(name):
         "side_band": ".slide::before{content:'';position:absolute;top:0;left:0;bottom:0;width:8px;"
                      "background:var(--primary);opacity:.85;pointer-events:none;z-index:5;}",
         "grid_lines": ".slide::before{content:'';position:absolute;inset:0;"
-                      "background:repeating-linear-gradient(0deg,transparent,transparent 39px,var(--line) 39px,var(--line) 40px),"
-                      "repeating-linear-gradient(90deg,transparent,transparent 39px,var(--line) 39px,var(--line) 40px);"
-                      "opacity:.35;pointer-events:none;z-index:0;}",
+                      "background:repeating-linear-gradient(0deg,transparent,transparent 39px,var(--muted) 39px,var(--muted) 40px),"
+                      "repeating-linear-gradient(90deg,transparent,transparent 39px,var(--muted) 39px,var(--muted) 40px);"
+                      "opacity:.18;pointer-events:none;z-index:0;}",
         "pixel_block": ".slide::after{content:'';position:absolute;bottom:18px;right:18px;width:48px;height:48px;"
                        "background:conic-gradient(var(--primary) 25%,var(--accent) 0 50%,var(--primary) 0 75%,var(--accent) 0);"
                        "background-size:24px 24px;image-rendering:pixelated;opacity:.6;pointer-events:none;z-index:5;}",
         "glow": ".slide::before{content:'';position:absolute;top:-40%;right:-20%;width:70%;height:80%;"
                 "background:radial-gradient(circle,var(--accent) 0%,transparent 60%);"
                 "opacity:.18;pointer-events:none;z-index:0;}",
-        "thick_rule": ".slide::before{content:'';position:absolute;top:0;left:0;right:0;height:10px;"
-                      "background:var(--ink);pointer-events:none;z-index:5;}",
+        "thick_rule": ".slide::before{content:'';position:absolute;top:0;left:0;right:0;height:8px;"
+                      "background:var(--accent);pointer-events:none;z-index:5;}",
         "gold_line": ".slide::after{content:'';position:absolute;bottom:14px;left:10%;right:10%;height:2px;"
                      "background:linear-gradient(90deg,transparent,var(--accent),transparent);"
                      "pointer-events:none;z-index:5;}",
