@@ -23,16 +23,25 @@ def _extract_json(text):
     t = text.strip()
     t = re.sub(r"^```(?:json)?\s*", "", t)
     t = re.sub(r"\s*```$", "", t)
+    t = t.rstrip("`")  # 兜底：剥掉结尾残留的反引号（模型常吐带围栏尾巴的 JSON）
     try:
         return json.loads(t)
     except Exception:
         pass
+    # 尝试找 {...} 对象
     s, e = t.find("{"), t.rfind("}")
     if s >= 0 and e > s:
         try:
             return json.loads(t[s:e + 1])
         except Exception:
-            return {}
+            pass
+    # 尝试找 [...] 数组（分段生成时模型可能直接返回数组而非 {"concepts": [...]} 对象）
+    s2, e2 = t.find("["), t.rfind("]")
+    if s2 >= 0 and e2 > s2:
+        try:
+            return json.loads(t[s2:e2 + 1])
+        except Exception:
+            pass
     return {}
 
 
@@ -147,6 +156,10 @@ def _agent_prompt(cat, kb):
                  .replace("{key_points}", kps).replace("{formulas}", formulas))
     if cat == "chinese":
         p = CHINESE_AGENT
+        # 古诗课显式标注体裁，触发 concepts 古诗四件套分支（分段生成时模型需知道体裁）
+        if kb.get("lesson_type") == "poem":
+            p = p.replace("【教材原料（事实，只能基于它）】",
+                          "【本课体裁】古诗/词/曲。\n【教材原料（事实，只能基于它）】")
         return (p.replace("{topic}", topic).replace("{text}", text[:1000])
                  .replace("{key_points}", kps))
     if cat == "english":
@@ -156,8 +169,13 @@ def _agent_prompt(cat, kb):
     return ""
 
 
-def generate_content(kb, client, max_attempts=2):
-    """教师 AGENT 一次调用生成 LessonContent。失败重试（含退避）。返回 LessonContent 或 None。"""
+def generate_content(kb, client, max_attempts=2, max_tokens=16000):
+    """教师 AGENT 一次调用生成 LessonContent。失败重试（含退避）。返回 LessonContent 或 None。
+
+    max_tokens：强模型默认 16000（推理模型思考耗 token）；弱模型（GLM-4-Flash）调用方应
+    调低（如 6000）防超出输出上限导致截断（截断 → JSON 不完整 → 解析失败）。
+    支持 kb["_fix_feedback"]：上一轮审核发现的问题注入 user 提示，让模型针对性修正重生成。
+    """
     cat = kb.get("subject_cat") or ""
     prompt = _agent_prompt(cat, kb)
     if not prompt:
@@ -166,24 +184,189 @@ def generate_content(kb, client, max_attempts=2):
         "请为《%s》设计教学内容。\n"
         "只输出一个 JSON 对象（键名见上），不要任何解释文字、不要 markdown 代码块。"
     ) % kb.get("topic", "")
+    # 修正调用：上一轮审核发现的问题注入，让模型针对性修正（不打断一次大调用架构）
+    _fix = kb.get("_fix_feedback")
+    if _fix:
+        user += ("\n\n【上一轮审核发现的问题，本次必须全部修正，不得再犯】\n"
+                 + "\n".join("- " + str(x) for x in _fix))
     for attempt in range(max_attempts):
         try:
             raw = client.complete(
                 [{"role": "system", "content": prompt},
                  {"role": "user", "content": user}],
-                temperature=0.3, timeout=300, max_tokens=16000, retries=4)
+                temperature=0.3, timeout=300, max_tokens=max_tokens, retries=4)
             data = _extract_json(raw)
             if isinstance(data, dict) and data.get("objectives"):
                 return LessonContent.from_dict(data)
             # 解析成功但缺 objectives（结构漂移），记录后重试
-            print(f"  [强模型] 第{attempt+1}次：JSON 解析失败或缺 objectives（raw_len={len(raw)}）", flush=True)
+            print(f"  [生成] 第{attempt+1}次：JSON 解析失败或缺 objectives（raw_len={len(raw)}）", flush=True)
         except Exception as e:
-            print(f"  [强模型] 第{attempt+1}次异常：{e}", flush=True)
+            print(f"  [生成] 第{attempt+1}次异常：{e}", flush=True)
         # 失败退避：推理模型偶发输出漂移/超时/限流，退避后重试更易恢复
         if attempt < max_attempts - 1:
             import time
             time.sleep(min(3 * (attempt + 1), 10))
     return None
+
+
+# ===========================================================================
+# 分段生成（方案A：弱模型语文/英语专用，解决单次6000 token装不下整课的问题）
+# ===========================================================================
+# 拆3-4段，每段只输出该段的键，单段token需求降到2000-4000，GLM-4-Flash轻松装下。
+# 数学不动（已验证6000够）。
+
+# --- 各段输出键定义 ---
+_SEG_KEYS = {
+    "opening": ["title", "objectives", "lead_in"],
+    "concepts": ["concepts"],
+    "analysis": ["analysis"],        # 语文专用：重点句品析单独一段
+    "closing": ["practice", "summary", "board", "homework"],
+}
+
+# --- 各段的补充指令（插在学科协议后面，告诉模型这段只输出哪些键） ---
+_SEG_INSTRUCTION = {
+    "opening": (
+        "\n\n【本次只输出 opening 段】\n"
+        "只输出一个 JSON 对象，键名固定为：title, objectives, lead_in。\n"
+        "不要输出 concepts/practice/summary/board/homework，那是后续段的任务。"
+    ),
+    "concepts": (
+        "\n\n【本次只输出 concepts 段——本课的概念讲解部分】\n"
+        "只输出一个 JSON 对象，键名固定为：concepts。\n"
+        "concepts 是数组，每个元素 {\"statement\":\"...\",\"points\":[\"...\",\"...\"]}。\n"
+        "【重要】concepts 的 statement 必须是「内容框架标题」（如「作者/背景」「阅读提示」「段落理解」），"
+        "绝不能把教材原文句子当 statement。points 是对该框架的展开讲解。\n"
+        "【注意】本次不要输出「重点句品析」——品析有独立的 analysis 段处理。\n"
+        "每个 concept 的 points 至少 3 条，每条必须是完整的一句话（不能只有标题）。\n"
+        "不要输出 title/objectives/lead_in/practice/summary/board/homework/analysis。"
+    ),
+    "analysis": (
+        "\n\n【本次只输出 analysis 段——重点句品析，这是本课最核心的教学内容】\n"
+        "只输出一个 JSON 对象，键名固定为：analysis。\n"
+        "analysis 是数组，每个元素 {\"sentence\":\"原文句子\",\"meaning\":\"在文中什么意思\",\"technique\":\"本句真正用的写法\",\"effect\":\"表达效果+换字对比\"}。\n"
+        "【硬性规则】\n"
+        "1. sentence 必须是教材原文中的完整句子，一字不差照抄。\n"
+        "2. meaning/technique/effect 三个字段都必须写完整的一句话，不能只有词。\n"
+        "3. 品析 2-3 句，每句都要有实质内容。\n"
+        "4. technique 必须准确判断（比喻/拟人/夸张/排比/细节描写/动作描写/心理描写/对比/象征），不能乱标。\n"
+        "不要输出 title/objectives/lead_in/concepts/practice/summary/board/homework。"
+    ),
+    "closing": (
+        "\n\n【本次只输出 closing 段】\n"
+        "只输出一个 JSON 对象，键名固定为：practice, summary, board, homework。\n"
+        "practice 和 homework 结构：{\"basic\":[{\"q\":\"...\",\"a\":\"...\"}], \"standard\":[...], \"advanced\":[...]}。\n"
+        "summary 结构：{\"points\":[\"要点1\",\"要点2\"], \"formula\":\"\"}。\n"
+        "board 结构：{\"center\":\"课题\", \"branches\":[{\"label\":\"分支名\",\"items\":[\"内容1\"]}]}。\n"
+        "【环节完整性 · 最高优先级】practice/homework 必须含 basic/standard/advanced 三档各有至少 1 题；"
+        "summary.points 至少 3 条；board 必须有 center 和至少 2 个 branches。\n"
+        "【注意】practice 和 homework 的每道题都必须有完整答案（a 字段），禁止写「答案略」。\n"
+        "不要输出 title/objectives/lead_in/concepts/analysis。"
+    ),
+}
+
+# --- 各段的 max_tokens ---
+_SEG_MAX_TOKENS = {
+    "opening": 2000,
+    "concepts": 4000,   # 讲解段：作者背景/阅读提示/段落理解
+    "analysis": 4000,   # 品析段：重点句品析写透
+    "closing": 4000,
+}
+
+
+def _generate_segment(kb, client, seg_name, max_attempts=3):
+    """生成 LessonContent 的一个段。返回 dict（该段的键值对）或 None。"""
+    cat = kb.get("subject_cat") or ""
+    base_prompt = _agent_prompt(cat, kb)
+    if not base_prompt:
+        return None
+    prompt = base_prompt + _SEG_INSTRUCTION[seg_name]
+    user = (
+        "请为《%s》设计教学内容（%s 段）。\n"
+        "只输出一个 JSON 对象，不要任何解释文字、不要 markdown 代码块。"
+    ) % (kb.get("topic", ""), seg_name)
+    # 修正反馈：把审核问题注入到 concepts/analysis/closing 段（问题最集中）
+    _fix = kb.get("_fix_feedback")
+    if _fix and seg_name in ("concepts", "analysis", "closing"):
+        user += ("\n\n【上一轮审核发现的问题，本次必须全部修正，不得再犯】\n"
+                 + "\n".join("- " + str(x) for x in _fix))
+    max_tokens = _SEG_MAX_TOKENS[seg_name]
+    for attempt in range(max_attempts):
+        try:
+            raw = client.complete(
+                [{"role": "system", "content": prompt},
+                 {"role": "user", "content": user}],
+                temperature=0.3, timeout=300, max_tokens=max_tokens, retries=4)
+            data = _extract_json(raw)
+            # 模型可能直接返回数组（如 concepts 段返回 [{...},{...}]），自动包成 dict
+            expected = _SEG_KEYS[seg_name]
+            if isinstance(data, list) and len(expected) == 1:
+                data = {expected[0]: data}
+            # 校验：该段至少有一个预期键
+            if isinstance(data, dict) and any(data.get(k) for k in expected):
+                return data
+            print(f"  [分段:{seg_name}] 第{attempt+1}次：JSON 解析失败或缺键（raw_len={len(raw)}）", flush=True)
+        except Exception as e:
+            print(f"  [分段:{seg_name}] 第{attempt+1}次异常：{e}", flush=True)
+        if attempt < max_attempts - 1:
+            import time
+            time.sleep(min(3 * (attempt + 1), 10))
+    return None
+
+
+def generate_content_segmented(kb, client, max_attempts=3):
+    """分段生成 LessonContent（语文/英语弱模型专用）。
+
+    语文4段：opening → concepts(讲解) → analysis(品析) → closing
+    英语3段：opening → concepts → closing（英语concepts包含句型+词汇教学，不需要单独品析段）
+    每段独立调用+独立重试，任何一段失败则整体失败（不凑合）。
+    返回 LessonContent 或 None。
+    """
+    cat = kb.get("subject_cat") or ""
+    if cat == "chinese":
+        segments = ("opening", "concepts", "analysis", "closing")
+    else:
+        segments = ("opening", "concepts", "closing")
+
+    merged = {}
+    for seg_name in segments:
+        seg_data = _generate_segment(kb, client, seg_name, max_attempts=max_attempts)
+        if seg_data is None:
+            print(f"  [分段] {seg_name} 段生成失败，整体中止", flush=True)
+            return None
+        merged.update(seg_data)
+
+    # analysis 段的 [{sentence, meaning, technique, effect}] 转成 concepts 格式的品析 concept
+    if "analysis" in merged and merged["analysis"]:
+        analysis_list = merged.pop("analysis")
+        if isinstance(analysis_list, list):
+            analysis_points = []
+            for item in analysis_list:
+                if isinstance(item, dict) and item.get("sentence"):
+                    s = item["sentence"]
+                    m = item.get("meaning", "")
+                    t = item.get("technique", "")
+                    e = item.get("effect", "")
+                    point = f"『{s}』"
+                    if m:
+                        point += f" 意思：{m}"
+                    if t:
+                        point += f" 手法：{t}"
+                    if e:
+                        point += f" 好在哪：{e}"
+                    analysis_points.append(point)
+            if analysis_points:
+                concepts = merged.get("concepts", [])
+                concepts.append({
+                    "statement": "重点句品析",
+                    "points": analysis_points,
+                })
+                merged["concepts"] = concepts
+
+    # 组装成完整 LessonContent（from_dict 做键名归一化+容错）
+    lc = LessonContent.from_dict(merged)
+    if not lc.objectives:
+        return None
+    return lc
 
 
 # ===========================================================================

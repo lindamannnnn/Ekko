@@ -64,6 +64,11 @@ def _truncated(text):
 _TEMPLATE_BLACKLIST = ("同学们", "大家看", "大家想一想", "想一想", "布置作业",
                        "认读字母", "跟读", "齐读", "今天我们来", "这节课我们",
                        "我们一起来")
+# 注意：lead_in 情境导入页允许「同学们」等自然称呼（教师课堂用语），
+# 但 concept/steps 等知识展开页仍禁止。
+
+# lead_in 页允许的自然称呼（情境导入需要教师口吻）
+_TEMPLATE_LEADIN_ALLOW = ("同学们",)
 
 
 def _template_phrases(text):
@@ -112,10 +117,16 @@ def _common_check(kb, segs):
             for t in slots.get(field, []) or []:
                 if isinstance(t, str) and _truncated(t):
                     issues.append(f"[第{i}页] 文本疑似截断：{t[:40]}")
-        # 教学页模板套话（只查 steps/品析/词汇教学等展开页，不查作业/练习）
-        if seg.get("layout") == "steps" or seg.get("kind") == "concept":
-            body = " ".join(str(x) for x in (slots.get("points") or slots.get("steps") or []))
-            hits = _template_phrases(body)
+        # 教学页模板套话（查 steps/品析/词汇教学等展开页 + lead_in 情境导入页，不查作业/练习）
+        if seg.get("layout") == "steps" or seg.get("kind") in ("concept", "lead_in"):
+            # lead_in 的套话在 scenario/question 字段；展开页在 points/steps 字段
+            if seg.get("kind") == "lead_in":
+                body = " ".join(str(slots.get(f) or "") for f in ("scenario", "question"))
+                # lead_in 允许自然称呼（同学们），只查其它套话
+                hits = [ph for ph in _template_phrases(body) if ph not in _TEMPLATE_LEADIN_ALLOW]
+            else:
+                body = " ".join(str(x) for x in (slots.get("points") or slots.get("steps") or []))
+                hits = _template_phrases(body)
             if hits:
                 issues.append(f"[第{i}页] 模板套话未绑本课：{'、'.join(hits)}")
     return issues

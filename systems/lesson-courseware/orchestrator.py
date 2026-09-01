@@ -215,13 +215,62 @@ def run(form, out_dir=None, env=None, verbose=True):
                     kb["segments"] = segs
                     print(f"  [闭环] 超 {max_review} 次打回仍未通过，用最后一版保底放行", flush=True)
             else:
-                from courseware_engine.enrich_llm import enrich_chinese
-                from courseware_engine.kb_adapter import auto_kb
-                from courseware_engine.reviewer import expand_with_review
-                kb = enrich_chinese(kb, client)   # 免费模型层（先富化译文/赏析/作者背景）
-                kb = auto_kb(kb)                  # 确定性引擎（读富化字段生成 segments）
-                # 自审闭环：教学专家协议展开 → LLM 专家审核 → 打回重生成 → 再审核
-                kb, _retries = expand_with_review(kb, client, max_retry=2)
+                # 弱模型分流（方案A，搬自 G:\test 镜像的改良链路）：
+                #   数学：一次大调用 max_tokens=6000（内容短，已验证够用）
+                #   语文/英语：分段生成 opening → concepts → analysis(语文) → closing（3-4 段，
+                #             解决单次 6000 token 装不下整课导致缩水/截断）
+                # 两条路都保留「语义审核 → 带反馈修正重生成」闭环（最多2轮）。
+                from courseware_engine.kb_adapter import _derive_subject_cat, _derive_stage, _derive_lesson_type
+                kb["subject_cat"] = _derive_subject_cat(kb.get("subject", ""))
+                kb["stage"] = _derive_stage(kb.get("grade", ""))
+                kb["lesson_type"] = _derive_lesson_type(kb, kb["subject_cat"])
+                from courseware_engine.strong_gen import (
+                    generate_content, generate_content_segmented, content_to_segments)
+                from courseware_engine.reviewer import llm_review
+                _cat = kb.get("subject_cat") or ""
+                if _cat == "math":
+                    lc = generate_content(kb, client, max_attempts=4, max_tokens=6000)
+                    if lc is None:
+                        raise RuntimeError("弱模型一次大调用未产出有效教学内容")
+                    for _round in range(2):
+                        kb["segments"] = content_to_segments(lc, kb)
+                        _issues = llm_review(kb, client)
+                        if not _issues:
+                            break
+                        if verbose:
+                            print(f"  [修正] 第{_round+1}轮：审核发现 {len(_issues)} 处语义问题，带反馈重生成", flush=True)
+                        kb["_fix_feedback"] = _issues
+                        lc2 = generate_content(kb, client, max_attempts=2, max_tokens=6000)
+                        if lc2 is not None:
+                            lc = lc2
+                    kb.pop("_fix_feedback", None)
+                else:
+                    # 语文/英语：分段生成（opening → concepts → analysis → closing）
+                    # 分段失败时再试一次分段（不是直接回退一次大调用——6000 token 不够语文用）
+                    lc = generate_content_segmented(kb, client, max_attempts=3)
+                    if lc is None:
+                        if verbose:
+                            print("  [分段] 第1次分段生成失败，再试一次", flush=True)
+                        lc = generate_content_segmented(kb, client, max_attempts=2)
+                    if lc is None:
+                        if verbose:
+                            print("  [分段] 第2次分段也失败，回退一次大调用", flush=True)
+                        lc = generate_content(kb, client, max_attempts=3, max_tokens=6000)
+                    if lc is None:
+                        raise RuntimeError("弱模型分段生成+一次大调用兜底均未产出有效教学内容")
+                    for _round in range(2):
+                        kb["segments"] = content_to_segments(lc, kb)
+                        _issues = llm_review(kb, client)
+                        if not _issues:
+                            break
+                        if verbose:
+                            print(f"  [修正] 第{_round+1}轮：审核发现 {len(_issues)} 处语义问题，带反馈重生成", flush=True)
+                        kb["_fix_feedback"] = _issues
+                        lc2 = generate_content_segmented(kb, client, max_attempts=2)
+                        if lc2 is not None:
+                            lc = lc2
+                    kb.pop("_fix_feedback", None)
+                kb["segments"] = content_to_segments(lc, kb)
 
             # 样式 recipe：
             #   ① 用户在备课页选了风格（form["style"] 为 11 风格 id）→ 优先用 style_map

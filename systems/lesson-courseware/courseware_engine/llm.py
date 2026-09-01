@@ -119,6 +119,9 @@ class LLMClient:
     # ------------------------------------------------------------------
     def _post(self, url, body, timeout, retries):
         last_err = None
+        # 429 限流单独用更多次数+更长退避（免费层模型如 GLM-4-Flash 并发极低，需等窗口恢复）
+        rate_limit_retries = 6   # 429 专用重试次数
+        rate_limit_wait = 15     # 429 起始等待秒数（指数退避，封顶 60s）
         for attempt in range(1, max(retries, 1) + 1):
             try:
                 req = urllib.request.Request(url, data=body, method="POST")
@@ -133,9 +136,14 @@ class LLMClient:
             except urllib.error.HTTPError as e:
                 detail = e.read().decode("utf-8", "replace")[:300]
                 if e.code == 429:
-                    # 限流：重试 + 更长退避（连续批量跑时 API 会限流）
-                    last_err = RuntimeError(f"LLM 限流 429: {detail}")
-                    time.sleep(min(5 * attempt, 20))
+                    # 限流：更多次数 + 更长退避（免费层模型并发极低，需等窗口恢复）
+                    rate_limit_retries -= 1
+                    if rate_limit_retries <= 0:
+                        raise RuntimeError(f"LLM 限流 429（重试耗尽）: {detail}")
+                    wait = min(rate_limit_wait, 60)
+                    print(f"  [LLM] 429 限流，{wait}s 后重试（剩 {rate_limit_retries} 次）", flush=True)
+                    time.sleep(wait)
+                    rate_limit_wait = min(rate_limit_wait * 2, 60)
                     continue
                 # 其它 4xx（鉴权/参数错误）不重试，立即抛出
                 if 400 <= e.code < 500:
