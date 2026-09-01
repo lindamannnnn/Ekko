@@ -177,6 +177,9 @@ def _run_subject_job(job_id: str, user_id: str, app):
                 "--duration", str(job.duration or 40),
                 "--out", job_dir,
             ]
+            # 学科生成课件：把用户在备课页选的风格传给 orchestrator（保版式换配色/字体）
+            if job.style:
+                cmd += ["--style", job.style]
             result = subprocess.run(cmd, env=env, capture_output=True, text=True, timeout=900)
             if result.returncode != 0:
                 raise RuntimeError(result.stderr[:500] or "生成失败")
