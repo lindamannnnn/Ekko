@@ -34,6 +34,25 @@
 
 课前备课按「学科 + 年级 + 课题」从 975 篇教材课文知识库检索原文。初版用模糊打分（topic 互含 +100 / subject +10 / grade +5），线上实测出现五年级课题错配三年级课文的「张冠李戴」。改为**精确锚定**（学科一致 + 年级段归一化一致 + 课题精确/包含兜底，见 `systems/lesson-courseware/courseware_engine/kb.py` 的 `_grade_core`），并删掉了一条会把好结果重切页覆盖掉的渲染旁路——这个 bug 是用户拿真实课件反馈「页面重复、内容不对」后定位到的。
 
+### 课件生成：强弱模型分离的双路径
+
+教案→课件链路按模型能力自动分流（`orchestrator.py` 的 `is_strong()` 判定）：
+
+- **弱模型路径（默认 GLM-4-Flash，免费）**：`enrich_chinese`（古诗译文/赏析/作者背景富化）→ `auto_kb`（KB→内容骨架确定性引擎）→ `teach_expand`（数学/语文/英语专家协议展开）→ `expand_with_review`（LLM 专家审核，不达标打回重试 ×2）。弱模型不直接吐结构，只做内容富化，结构由程序钉死。
+- **强模型路径（用户自带 deepseek/gpt-4o/claude）**：`strong_gen.generate_content` 一次大调用产出教学语义 → `content_to_segments` 程序确定性映射成 typed slides（杜绝键名漂移）。强模型输出已稳定，跳过自审闭环省 token。
+
+两条路径共享同一套确定性层（KB 检索、`auto_kb`/`content_to_segments` 映射、`validate_deck` 硬伤门禁、HTML 渲染），LLM 层只负责「内容富化」。**能用工程手段补的短板，不为更强的模型付十倍价钱**——这是弱模型路径存在的理由。
+
+### 内容上传分支：防御性解析非规范输入
+
+`systems/lesson-courseware/content-upload/` 是非学科分支，接收用户上传的任意培训材料（不再假设规整 markdown）。真实用户贴来的内容格式千奇百怪，解析器做了三层防御：
+
+- **代码块启发式识别**：无围栏裸代码（如 C++ 教案里标题后直接跟 `#include <iostream>`）用 `_looks_like_code()` 识别特征行（预处理器指令/流操作符/花括号/分号结尾），同时防 `#include` 误判为 markdown 标题、`C++程序` 误判为代码。
+- **章节层级识别**：用户文档编号本身就乱（`1.` `2.` `4.` 跳到 `10.`，后面又出现 `1.` `8.`），规则切页用「汉字数字永远是章节 + 阿拉伯数字严格递增才算」区分主章节 vs 列表项，空标题自动合并。
+- **markdown 标记清洗兜底**：无论 LLM 还是规则切页，每个 bullet 先按 `\n` 拆行、逐行剥掉行首残留的 `#`/`-`/`*`/`>` 任意顺序连写（`### ### 嵌套`、`- - - 三连` 都能剥净）。
+
+渲染层 11 套风格（graffiti 像素游戏风/swiss 瑞士国际主义/ink 水墨/glass 暗色玻璃拟态等），emoji 锚点严格只在 graffiti 生效，其它 10 套 0 emoji。**用户输入永远比你假设的脏，解析器要做防御性设计，不能假设标准格式。**
+
 ### 安全与多租户
 
 CSRF 全局开启（纯 API 豁免）、密码 bcrypt 哈希、登录滑动窗口限流（`src/security/ratelimit.py`，仅计失败、成功即清零，正常用户永不被误伤）、按用户隔离数据查询、密钥全部走环境变量不入库。限流目前是单实例内存实现——代码里明确标注了多实例时需换 Redis，这是刻意的部署形态权衡。
@@ -63,7 +82,8 @@ class-review-system/
 │   ├── parsers/             # 课件文档解析
 │   ├── security/            # 上传魔数校验 + 登录限流
 │   └── services/            # 去重 / 学期阶段总结
-├── systems/lesson-courseware/   # 课前备课子系统（KB 检索 + 课件渲染引擎）
+├── systems/lesson-courseware/   # 课前备课子系统（KB 检索 + 强弱模型分离 + 课件渲染引擎）
+│   └── content-upload/       # 非学科分支（用户上传任意内容 → 11 风格单文件 HTML）
 ├── templates/ static/       # 前端
 ├── migrations/ seeds/       # schema 迁移 / 学科预置数据
 ├── docs/ reports/           # 设计文档 / 全量走查报告
@@ -96,6 +116,8 @@ python run.py           # http://127.0.0.1:5000
 ## 部署
 
 见 [`DEPLOY.md`](DEPLOY.md)：Docker 部署、生产检查清单（固定 `SECRET_KEY`、HTTPS、数据库备份、多实例时限流换 Redis）。完整变更历史见 [`CHANGELOG.md`](CHANGELOG.md)，架构索引见 [`CLAUDE.md`](CLAUDE.md)。
+
+**双容器共享代码注意**：`systems/lesson-courseware/` 被 `web:5000`（课评）和 `courseware:5001`（课件）两个容器共享，任何改动需重建两者（`docker compose up -d --build web courseware`），只重建一个另一个还跑旧镜像。
 
 ## 许可证
 
