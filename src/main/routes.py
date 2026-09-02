@@ -83,7 +83,7 @@ def account():
                 flash('密码已修改', 'success')
         return redirect(url_for('main.account'))
 
-    # —— 课前备课生成记录（文件保留 7 天，数据库记录永久）——
+    # —— 课前备课生成记录（文件保留 7 天，过期记录不再展示）——
     prep_jobs = PrepJob.query.filter_by(user_id=current_user.id) \
         .order_by(PrepJob.created_at.desc()).limit(50).all()
     cutoff = datetime.utcnow() - timedelta(days=_PREP_RETENTION_DAYS)
@@ -93,6 +93,11 @@ def account():
             (j.courseware_path and os.path.isfile(j.courseware_path)) or
             (j.lesson_path and os.path.isfile(j.lesson_path))
         )
+    # 文件已过期的成功记录不展示（失败记录保留留痕）
+    prep_jobs = [
+        j for j in prep_jobs
+        if not (j.status == 'success' and (j.expired or not j.has_files))
+    ]
 
     # —— 课后课评记录（永久保存，按班级分组，每班最近 3 条）——
     review_rows = (

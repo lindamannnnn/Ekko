@@ -319,7 +319,7 @@
 
   <div class="account-card">
     <h2>课前备课 · 生成记录</h2>
-    <p class="section-sub">文件保留 <strong>{{ prep_retention }}</strong> 天，过期后自动清理；数据库记录永久保存。</p>
+    <p class="section-sub">文件保留 <strong>{{ prep_retention }}</strong> 天，过期后不再展示；失败记录留痕保留。</p>
     {% if prep_jobs %}
     <div class="record-list">
       {% for j in prep_jobs %}
