@@ -307,6 +307,7 @@ input::placeholder, textarea::placeholder { color: #a3a3a3; }
   text-transform: uppercase;
   font-size: 13px;
   border-radius: 0;
+  flex-shrink: 0; white-space: nowrap;
 }
 .topnav a:hover {
   background: #ffcc00;
@@ -329,6 +330,7 @@ input::placeholder, textarea::placeholder { color: #a3a3a3; }
   background: #ffffff;
   color: #000000;
   border: 2px solid #000000;
+  flex-shrink: 0; white-space: nowrap;
 }
 .topnav .help-btn-strong:hover {
   background: #ffcc00;

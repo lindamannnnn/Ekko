@@ -283,6 +283,7 @@ input::placeholder, textarea::placeholder { color: #475569; }
 .topnav a {
   color: var(--text-2); text-decoration: none; font-size: 14px;
   padding: 7px 12px; border-radius: var(--radius-xs); transition: all .2s;
+  flex-shrink: 0; white-space: nowrap;
 }
 .topnav a:hover { background: var(--accent-soft); color: var(--text); }
 .topnav .nav-sep { width: 1px; height: 22px; background: var(--border-subtle); }
@@ -304,6 +305,7 @@ input::placeholder, textarea::placeholder { color: #475569; }
   border: 1px solid var(--border-strong);
   font-weight: 600;
   display: inline-flex; align-items: center; gap: 4px;
+  flex-shrink: 0; white-space: nowrap;
 }
 .topnav .help-btn-strong:hover {
   background: linear-gradient(135deg, rgba(59,130,246,.28), rgba(6,182,212,.28));
