@@ -326,13 +326,17 @@ input::placeholder, textarea::placeholder { color: #a3a3a3; }
   width: 28px; height: 28px;
   border-radius: 0;
 }
-.topnav .help-btn-strong {
+/* 「💡 新手引导」醒目按钮（独立类 tour-entry，避免被页面级 .help-btn 污染） */
+.topnav .tour-entry {
   background: #ffffff;
   color: #000000;
   border: 2px solid #000000;
+  display: inline-flex; align-items: center; gap: 5px;
   flex-shrink: 0; white-space: nowrap;
+  padding: 4px 12px; line-height: 1.4;
 }
-.topnav .help-btn-strong:hover {
+.topnav .tour-entry span { font-size: 14px; line-height: 1; display: inline-flex; }
+.topnav .tour-entry:hover {
   background: #ffcc00;
   color: #000000;
 }
