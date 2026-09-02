@@ -142,6 +142,8 @@
 }
 .record-detail .rec-time { color: var(--text-3, var(--text-2)); }
 .record-row .btn-sm { padding: 3px 10px; font-size: 12.5px; }
+.rec-content { white-space: pre-line; line-height: 1.75; }
+.rec-date { color: var(--text-2); }
 
 .empty-tip { color: var(--text-2); font-size: 14px; margin: 4px 0 0; }
 .status-pill {
@@ -349,24 +351,27 @@
 
   <div class="account-card">
     <h2>课后课评 · 课评记录</h2>
-    <p class="section-sub">课评记录永久保存，不可清理。每个班级展示最近 3 条，点击可查看这篇课评。</p>
+    <p class="section-sub">课评记录永久保存，不可清理。每个班级展示最近 3 条，点击行展开预览，点「查看」进入详情。</p>
     {% if reviews %}
     <div class="record-list">
       {% for rv in reviews %}
-      <a class="record-card" href="{{ url_for('reviews.view_review', review_id=rv.review_id) }}">
-        <div class="record-header">
+      <div class="record-item">
+        <div class="record-row" onclick="toggleRecord(this)">
+          <span class="record-caret">▶</span>
           <span class="record-title">{{ rv.class_name }} · {{ rv.student_name }}</span>
-          <span class="record-meta">
-            {% if rv.status == 'confirmed' %}<span class="status-pill status-confirmed">已确认</span>
-            {% elif rv.status == 'draft' %}<span class="status-pill status-draft">草稿</span>
-            {% elif rv.status == 'pending' %}<span class="status-pill status-pending">待生成</span>
-            {% elif rv.status == 'failed' %}<span class="status-pill status-failed">失败</span>
-            {% else %}<span class="status-pill">{{ rv.status }}</span>{% endif %}
-            {% if rv.created_at %} · {{ rv.created_at.strftime('%Y-%m-%d') }}{% endif %}
-          </span>
+          {% if rv.status == 'confirmed' %}<span class="status-pill status-confirmed">已确认</span>
+          {% elif rv.status == 'draft' %}<span class="status-pill status-draft">草稿</span>
+          {% elif rv.status == 'pending' %}<span class="status-pill status-pending">待生成</span>
+          {% elif rv.status == 'failed' %}<span class="status-pill status-failed">失败</span>
+          {% else %}<span class="status-pill">{{ rv.status }}</span>{% endif %}
+          <span class="record-grow"></span>
+          {% if rv.created_at %}<span class="record-meta rec-date">{{ rv.created_at.strftime('%Y-%m-%d') }}</span>{% endif %}
+          <a class="btn btn-sm" href="{{ url_for('reviews.view_review', review_id=rv.review_id) }}" onclick="event.stopPropagation()">查看</a>
         </div>
-        <p class="record-snippet {% if not rv.content %}empty{% endif %}">{{ rv.content or '（暂无正文）' }}</p>
-      </a>
+        <div class="record-detail">
+          <div class="rec-content {% if not rv.content %}empty{% endif %}">{{ rv.content or '（暂无正文）' }}</div>
+        </div>
+      </div>
       {% endfor %}
     </div>
     {% else %}
