@@ -109,6 +109,40 @@
 .record-snippet.empty { opacity: 0.7; font-style: italic; }
 .record-actions { margin-top: 10px; }
 
+/* 可折叠的备课生成记录（点击行展开详情） */
+.record-item {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.record-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; cursor: pointer;
+  user-select: none;
+}
+.record-row:hover { background: rgba(148,163,184,.08); }
+.record-row:hover .record-title { color: var(--accent); }
+.record-caret {
+  flex: 0 0 auto; width: 12px; text-align: center;
+  color: var(--text-2); font-size: 11px; line-height: 1;
+  transition: transform .15s ease;
+}
+.record-item.open .record-caret { transform: rotate(90deg); }
+.record-item .record-title {
+  flex: 0 1 auto; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.record-grow { flex: 1 1 auto; }
+.record-detail {
+  display: none;
+  padding: 2px 14px 12px 36px;
+  color: var(--text-2); font-size: 13px; line-height: 1.8;
+  border-top: 1px dashed var(--border);
+}
+.record-detail .rec-time { color: var(--text-3, var(--text-2)); }
+.record-row .btn-sm { padding: 3px 10px; font-size: 12.5px; }
+
 .empty-tip { color: var(--text-2); font-size: 14px; margin: 4px 0 0; }
 .status-pill {
   display: inline-block;
@@ -287,25 +321,23 @@
     {% if prep_jobs %}
     <div class="record-list">
       {% for j in prep_jobs %}
-      <div class="record-card record-card-static">
-        <div class="record-header">
+      <div class="record-item">
+        <div class="record-row" onclick="toggleRecord(this)">
+          <span class="record-caret">▶</span>
           <span class="record-title">{{ j.title or j.filename or j.topic or '未命名' }}</span>
-          <span class="record-meta">
-            {% if j.status == 'success' %}<span class="status-pill status-confirmed">成功</span>
-            {% elif j.status == 'failed' %}<span class="status-pill status-failed">失败</span>
-            {% else %}<span class="status-pill status-pending">{{ j.status }}</span>{% endif %}
-            · {{ j.created_at.strftime('%Y-%m-%d %H:%M') if j.created_at }}
-          </span>
-        </div>
-        <div class="record-snippet">
-          {% if j.mode == 'subject' %}学科生成 · {{ j.subject }} {{ j.grade }}《{{ j.topic }}》{% else %}内容生成 · {{ j.filename }}{% endif %} · 风格 {{ j.style or '—' }}
-        </div>
-        <div class="record-actions">
+          {% if j.status == 'success' %}<span class="status-pill status-confirmed">成功</span>
+          {% elif j.status == 'failed' %}<span class="status-pill status-failed">失败</span>
+          {% else %}<span class="status-pill status-pending">{{ j.status }}</span>{% endif %}
+          <span class="record-grow"></span>
           {% if j.status == 'success' and j.has_files %}
-            <a class="btn btn-sm" href="{{ url_for('prep.result', job=j.id) }}">查看</a>
+          <a class="btn btn-sm" href="{{ url_for('prep.result', job=j.id) }}" onclick="event.stopPropagation()">查看</a>
           {% elif j.status == 'success' %}
-            <span class="record-meta">文件已过期</span>
+          <span class="record-meta">文件已过期</span>
           {% endif %}
+        </div>
+        <div class="record-detail">
+          <div>{% if j.mode == 'subject' %}学科生成 · {{ j.subject }} {{ j.grade }}《{{ j.topic }}》{% else %}内容生成 · {{ j.filename }}{% endif %} · 风格 {{ j.style or '—' }}</div>
+          <div class="rec-time">{{ j.created_at.strftime('%Y-%m-%d %H:%M') if j.created_at }}</div>
         </div>
       </div>
       {% endfor %}
@@ -347,6 +379,13 @@ function toggleHelp(id) {
   const el = document.getElementById(id);
   if (!el) return;
   el.style.display = el.style.display === 'none' ? 'block' : 'none';
+}
+function toggleRecord(row) {
+  const item = row.closest('.record-item');
+  if (!item) return;
+  const open = item.classList.toggle('open');
+  const detail = item.querySelector('.record-detail');
+  if (detail) detail.style.display = open ? 'block' : 'none';
 }
 </script>
 {% endblock %}
