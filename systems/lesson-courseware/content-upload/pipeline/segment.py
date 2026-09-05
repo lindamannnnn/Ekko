@@ -372,9 +372,42 @@ _MARK_STRIP = re.compile(
 )
 
 
+# 行内 markdown 格式标记（行首剥完后，行内的这些也会原样带到课件上，需一并清理）
+_INLINE_MD_RULES = [
+    (re.compile(r"\*\*(.+?)\*\*"), r"\1"),          # **加粗**
+    (re.compile(r"__(.+?)__"), r"\1"),              # __加粗__
+    (re.compile(r"(?<!\*)\*([^*\n]+?)\*(?!\*)"), r"\1"),  # *斜体*
+    (re.compile(r"(?<!_)_([^_\n]+?)_(?!_)"), r"\1"),      # _斜体_
+    (re.compile(r"~~(.+?)~~"), r"\1"),              # ~~删除线~~
+    (re.compile(r"`([^`]+?)`"), r"\1"),             # `行内代码`
+    (re.compile(r"\[([^\]]+)\]\(([^)]+)\)"), r"\1"),  # [文字](链接) → 留文字
+    (re.compile(r"!\[[^\]]*\]\([^)]+\)"), ""),      # ![图片](链接) → 去掉
+    (re.compile(r"~~"), ""),                        # 剩余散落的 ~~
+    (re.compile(r"\*\*"), ""),                      # 剩余散落的 **
+]
+
+
+def _clean_inline(s: str) -> str:
+    """清理行内 markdown 格式标记（**加粗** / *斜体* / `代码` / [文字](链接) 等）。
+
+    特例：代码块占位符 §§CODE_BLOCK_N§§ 内部含下划线，会被 _斜体_ 规则误清，
+    需要原样跳过。
+    """
+    if not s:
+        return s
+    # 整行就是占位符，或含占位符 → 不做行内清理（占位符完整性优先）
+    if "§§" in s:
+        return s.strip()
+    out = s
+    for _ in range(2):  # 处理嵌套/连续
+        for rx, rep in _INLINE_MD_RULES:
+            out = rx.sub(rep, out)
+    return out.strip()
+
+
 def _clean_line(l: str) -> str:
     """从行首连续剥除 markdown 标记符号（#/--*/.../>/：/. 等任意顺序）。
-    增强：处理括号/中文标点 + 反复 sub 直到稳定。"""
+    增强：处理括号/中文标点 + 反复 sub 直到稳定 + 行内格式清理。"""
     s = (l or "").rstrip()
     # 反复 sub 直到稳定(罕见的多层嵌套)
     for _ in range(4):
@@ -382,7 +415,7 @@ def _clean_line(l: str) -> str:
         if n == s.strip():
             break
         s = n
-    return s.strip()
+    return _clean_inline(s)
 
 
 def _looks_heading(l: str) -> bool:
