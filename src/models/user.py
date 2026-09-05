@@ -1,4 +1,5 @@
 """用户、凭证、用量、生成日志相关模型。"""
+import os
 from datetime import datetime
 
 from sqlalchemy import (
@@ -50,6 +51,16 @@ class User(UUIDMixin, db.Model):
 
     def get_id(self):
         return str(self.id)
+
+    @property
+    def is_demo(self) -> bool:
+        """演示账号：邮箱与环境变量 DEMO_ACCOUNT_EMAIL 一致即视为演示账号。
+
+        演示账号仅用于面试 / 展示场景，密码由平台托管：
+        UI 隐藏修改密码表单、后端拦截修改密码请求，其余功能正常可用。
+        """
+        demo_email = os.environ.get('DEMO_ACCOUNT_EMAIL', '').strip().lower()
+        return bool(demo_email and self.email and self.email.lower() == demo_email)
 
     def __repr__(self):
         return f"<User {self.email or self.external_id}>"

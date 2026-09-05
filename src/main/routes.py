@@ -68,19 +68,22 @@ def account():
                 db.session.commit()
                 flash('昵称已更新', 'success')
         elif action == 'password':
-            current_password = request.form.get('current_password', '')
-            new_password = request.form.get('new_password', '')
-            confirm_password = request.form.get('confirm_password', '')
-            if not PasswordProvider.check_password(current_user, current_password):
-                flash('当前密码不正确', 'danger')
-            elif new_password != confirm_password:
-                flash('两次输入的新密码不一致', 'danger')
-            elif len(new_password) < 6:
-                flash('新密码至少 6 位', 'danger')
+            if current_user.is_demo:
+                flash('演示账号密码由平台托管，不可修改', 'danger')
             else:
-                current_user.password_hash = PasswordProvider.hash_password(new_password)
-                db.session.commit()
-                flash('密码已修改', 'success')
+                current_password = request.form.get('current_password', '')
+                new_password = request.form.get('new_password', '')
+                confirm_password = request.form.get('confirm_password', '')
+                if not PasswordProvider.check_password(current_user, current_password):
+                    flash('当前密码不正确', 'danger')
+                elif new_password != confirm_password:
+                    flash('两次输入的新密码不一致', 'danger')
+                elif len(new_password) < 6:
+                    flash('新密码至少 6 位', 'danger')
+                else:
+                    current_user.password_hash = PasswordProvider.hash_password(new_password)
+                    db.session.commit()
+                    flash('密码已修改', 'success')
         return redirect(url_for('main.account'))
 
     # —— 课前备课生成记录（文件保留 7 天，过期记录不再展示）——

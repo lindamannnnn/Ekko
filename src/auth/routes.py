@@ -245,7 +245,7 @@ def forgot_password():
     if form.validate_on_submit():
         email = form.email.data.strip().lower()
         user = User.query.filter_by(email=email).first()
-        if user:
+        if user and not user.is_demo:
             token = generate_token(user.id, RESET_SALT, RESET_MAX_AGE)
             link = url_for('auth.reset_password', token=token, _external=True)
             sent = send_email(
@@ -270,6 +270,9 @@ def reset_password(token):
     user = db.session.get(User, uid)
     if not user:
         flash('重置链接无效', 'danger')
+        return redirect(url_for('auth.login'))
+    if user.is_demo:
+        flash('演示账号密码由平台托管，不可重置', 'danger')
         return redirect(url_for('auth.login'))
     form = ResetPasswordForm()
     if form.validate_on_submit():

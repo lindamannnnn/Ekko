@@ -204,7 +204,7 @@
 <div class="account-page">
   <div class="page-header">
     <h1>账号设置</h1>
-    <p class="ph-sub">管理个人信息、修改密码与 AI 通道</p>
+    <p class="ph-sub">{% if current_user.is_demo %}管理个人信息与 AI 通道（密码由平台托管，不可修改）{% else %}管理个人信息、修改密码与 AI 通道{% endif %}</p>
   </div>
 
   <div class="account-card">
@@ -232,6 +232,12 @@
 
   <div class="account-card">
     <h2>修改密码</h2>
+    {% if current_user.is_demo %}
+    <div class="help-panel" style="margin-bottom:0;">
+      <p><strong>🔒 演示账号</strong></p>
+      <p>本账号用于产品演示，密码由平台托管、不可修改，以免演示时被改掉导致无法登录。</p>
+    </div>
+    {% else %}
     <form method="post" action="{{ url_for('main.account') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="action" value="password">
@@ -253,6 +259,7 @@
         <button type="submit" class="btn">修改密码</button>
       </div>
     </form>
+    {% endif %}
   </div>
 
   <div class="account-card" id="prep-key">
