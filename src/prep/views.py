@@ -77,6 +77,9 @@ def _clean_md_symbols_with_llm(slides: list, env: dict) -> list:
     """用 LLM 把 slides 里的 markdown 符号去掉，保留内容。
     如果 LLM 失败则原样返回（不阻塞生成）。"""
     import json as _json
+    import sys as _sys
+    # 确保 content-upload 的 pipeline 在路径里
+    _sys.path.insert(0, "/app/systems/lesson-courseware/content-upload")
     from pipeline.llm import make_client
     from pipeline.segment import _extract_json_array
 
