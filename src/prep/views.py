@@ -12,6 +12,7 @@ import sys
 import uuid
 import json
 import hashlib
+import html
 import threading
 import subprocess
 from pathlib import Path
@@ -68,6 +69,38 @@ GRADES = [f"{g}{s}" for g in range(1, 10) for s in ("年级上", "年级下")]
 
 DEMO_DIR = os.path.join(PREP_ROOT, "_style_demos")
 os.makedirs(DEMO_DIR, exist_ok=True)
+
+
+# ---------- 行内 markdown → HTML（content-upload 后处理） ----------
+
+_MD_INLINE_RULES = [
+    (re.compile(r"\*\*(.+?)\*\*"), r"<strong>\1</strong>"),
+    (re.compile(r"__(.+?)__"), r"<strong>\1</strong>"),
+    (re.compile(r"(?<!\*)\*([^*\n<]+?)\*(?!\*)"), r"<em>\1</em>"),
+    (re.compile(r"(?<!_)_([^_\n<]+?)_(?!_)"), r"<em>\1</em>"),
+    (re.compile(r"~~(.+?)~~"), r"<del>\1</del>"),
+    (re.compile(r"`([^`<]+?)`"), r"<code>\1</code>"),
+    (re.compile(r"\[([^\]]+)\]\(([^)]+)\)"), r'<a href="\2" target="_blank" rel="noopener">\1</a>'),
+    (re.compile(r"!\[[^\]]*\]\([^)]+\)"), ""),
+]
+
+
+def _md_inline_text(s: str) -> str:
+    """把行内 markdown 符号转成 HTML，其余转义防 XSS。"""
+    if not s:
+        return ""
+    text = html.escape(str(s), quote=True)
+    for rx, rep in _MD_INLINE_RULES:
+        text = rx.sub(rep, text)
+    return text
+
+
+def _md_inline_slides(slides: list) -> list:
+    """把 slides 里所有 title 和 bullets 的行内 markdown 转成 HTML。"""
+    for s in slides:
+        s["title"] = _md_inline_text(s.get("title") or "")
+        s["bullets"] = [_md_inline_text(b) for b in (s.get("bullets") or [])]
+    return slides
 
 
 # ---------- 工具函数 ----------
@@ -232,11 +265,14 @@ def _run_content_job(job_id: str, user_id: str, app):
                 env["AI_BASE_URL"] = user.ai_base_url
             if job.use_own_key and user and user.ai_model:
                 env["AI_MODEL"] = user.ai_model
-            # content-upload 不走 LLM：GLM-4-Flash 会剥掉行内格式符号（**加粗**、`代码`），
+            # content-upload 不走 LLM 切页：GLM-4-Flash 会剥掉行内格式符号（**加粗**、`代码`）。
             # 规则降级（_regex_segment）能完整保留格式，且代码块提取、章节层级识别都已稳定。
             slides = segment(job.original_text or "", env=env, allow_llm=False)
             if not slides:
                 raise RuntimeError("切页失败：未能将内容拆分为幻灯片")
+
+            # 后处理：把 bullets 里的行内 markdown 符号转成 HTML（保留格式、去符号）
+            slides = _md_inline_slides(slides)
             title = job.title or slides[0].get("title") or "我的课件"
             html_out = render(slides, job.style or STYLE_IDS[0], title=title)
             out_path = os.path.join(PREP_ROOT, job_id, "index.html")
