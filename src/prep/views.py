@@ -445,11 +445,10 @@ def content_style(cid):
         job.style = style
         job.title = title or job.filename
         db.session.commit()
-        app = current_app._get_current_object()
-        t = threading.Thread(target=_run_content_job, args=(cid, user.id, app))
-        t.daemon = True
-        t.start()
-        return redirect(url_for("prep.generating", job=cid))
+        # 同步生成（不走线程）：gunicorn 多 worker 环境下 threading 不可靠，
+        # 且 content-upload 切页+渲染是毫秒级操作，不需要异步。
+        _run_content_job(cid, user.id, current_app._get_current_object())
+        return redirect(url_for("prep.result", job=cid))
     return render_template("prep/content_style.html", job=job, styles=list_styles(), user=user)
 
 
