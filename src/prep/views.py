@@ -92,19 +92,19 @@ def _md_inline_text(s: str) -> str:
         return ""
     text = str(s)
     # 占位符替换（转义后这些字符不变）
-    text = re.sub(r"\*\*(.+?)\*\*", r"\x01BOLD\x02\1\x01/BOLD\x02", text)
-    text = re.sub(r"__(.+?)__", r"\x01BOLD\x02\1\x01/BOLD\x02", text)
-    text = re.sub(r"`([^`\n<]+?)`", r"\x01CODE\x02\1\x01/CODE\x02", text)
-    text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\x01LINK\x02\1\x01URL\x02\2\x01/URL\x02", text)
+    text = re.sub(r"\*\*(.+?)\*\*", chr(1) + "BOLD" + chr(2) + r"\1" + chr(1) + "/BOLD" + chr(2), text)
+    text = re.sub(r"__(.+?)__", chr(1) + "BOLD" + chr(2) + r"\1" + chr(1) + "/BOLD" + chr(2), text)
+    text = re.sub(r"`([^`\n<]+?)`", chr(1) + "CODE" + chr(2) + r"\1" + chr(1) + "/CODE" + chr(2), text)
+    text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", chr(1) + "LINK" + chr(2) + r"\1" + chr(1) + "URL" + chr(2) + r"\2" + chr(1) + "/URL" + chr(2), text)
     text = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", text)
     # 转义剩余内容
     text = html.escape(text, quote=True)
     # 恢复 HTML 标签
-    text = re.sub(r"\x01BOLD\x02(.*?)\x01/BOLD\x02", r"<strong>\1</strong>", text)
-    text = re.sub(r"\x01CODE\x02(.*?)\x01/CODE\x02", r"<code>\1</code>", text)
-    text = re.sub(r"\x01LINK\x02(.*?)\x01URL\x02(.*?)\x01/URL\x02", r'<a href="\2" target="_blank" rel="noopener">\1</a>', text)
+    text = re.sub(chr(1) + "BOLD" + chr(2) + r"(.*?)" + chr(1) + "/BOLD" + chr(2), r"<strong>\1</strong>", text)
+    text = re.sub(chr(1) + "CODE" + chr(2) + r"(.*?)" + chr(1) + "/CODE" + chr(2), r"<code>\1</code>", text)
+    text = re.sub(chr(1) + "LINK" + chr(2) + r"(.*?)" + chr(1) + "URL" + chr(2) + r"(.*?)" + chr(1) + "/URL" + chr(2), r'<a href="\2" target="_blank" rel="noopener">\1</a>', text)
     # 清理占位符
-    text = text.replace("\x01", "").replace("\x02", "")
+    text = text.replace(chr(1), "").replace(chr(2), "")
     return text
 
 
