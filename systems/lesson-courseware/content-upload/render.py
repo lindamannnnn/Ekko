@@ -139,45 +139,12 @@ def _esc(s):
     return html.escape(str(s), quote=True)
 
 
-# ---- 行内 markdown → HTML（bullets 用，保留格式、去符号、防 XSS）----
-# 顺序很重要：先占位、再格式、再恢复，避免 ** 和 * 互相干扰
-_MD_PATTERNS = [
-    # 代码块占位符保护（提前替换成占位符，不参与格式转换）
-    (re.compile(r"§§CODE_BLOCK_(\d+)§§"), lambda m: f"\x00CODE{m.group(1)}\x00"),
-    # 图片：整段去掉
-    (re.compile(r"!\[[^\]]*\]\([^)]+\)"), lambda m: ""),
-    # 链接：[文字](url) → <a href="url">文字</a>
-    (re.compile(r"\[([^\]]+)\]\(([^)]+)\)"), lambda m: f'<a href="{m.group(2)}" target="_blank" rel="noopener">{m.group(1)}</a>'),
-    # 加粗：**text** / __text__
-    (re.compile(r"\*\*(.+?)\*\*"), lambda m: f"<strong>{m.group(1)}</strong>"),
-    (re.compile(r"__(.+?)__"), lambda m: f"<strong>{m.group(1)}</strong>"),
-    # 斜体：*text* / _text_（避免误伤占位符里的 _，占位符已提前保护）
-    (re.compile(r"(?<!\*)\*([^*\n<]+?)\*(?!\*)"), lambda m: f"<em>{m.group(1)}</em>"),
-    (re.compile(r"(?<!_)_([^_\n<]+?)_(?!_)"), lambda m: f"<em>{m.group(1)}</em>"),
-    # 删除线：~~text~~
-    (re.compile(r"~~(.+?)~~"), lambda m: f"<del>{m.group(1)}</del>"),
-    # 行内代码：`code`
-    (re.compile(r"`([^`<]+?)`"), lambda m: f"<code>{m.group(1)}</code>"),
-]
-
-
-def _md_inline(s: str) -> str:
-    """把行内 markdown 语法转成 HTML，其余内容转义防 XSS。
-    仅用于 bullets 渲染；标题不用（保持纯文本）。"""
-    if not s:
-        return ""
-    text = str(s)
-    # 如果已有 HTML 标签（markdown-it-py 后处理已转），直接返回不重复转义
-    if re.search(r"</?(strong|em|del|code|a|br|p|div|span|ul|ol|li|h[1-6])[^>]*>", text, re.I):
-        return text
-    # 先转义所有内容，再按顺序替换 md → HTML
-    text = html.escape(text, quote=True)
-    # 占位符恢复标记（转义后 § 不变，\x00 也不变）
-    for rx, fn in _MD_PATTERNS:
-        text = rx.sub(fn, text)
-    # 恢复代码块占位符（转义后是 \x00CODE0\x00）
-    text = re.sub(r"\x00CODE(\d+)\x00", lambda m: f"§§CODE_BLOCK_{m.group(1)}§§", text)
-    return text
+# ---- 行内 markdown → HTML（bullets/标题用，markdown-it-py 实现）----
+# 统一走 pipeline.mdhtml.render_inline：
+#   **加粗** → <strong>，*斜体* → <em>，`代码` → <code>，链接 → <a>
+#   代码块占位符 §§CODE_BLOCK_N§§ 原样保留（_slide_html 单独处理）
+# 输入是 markdown 原文（segment 保留符号），输出即合法 HTML，直接插入模板。
+from pipeline.mdhtml import render_inline as _md_inline
 
 
 # ---- 涂鸦默认风格：标题自动配 emoji 锚点（仅 graffiti 生效）----

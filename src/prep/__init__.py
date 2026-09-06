@@ -9,8 +9,10 @@ import sys
 from flask import Blueprint
 
 PREP_DIR = os.path.dirname(os.path.abspath(__file__))
+# 系统 A 自己的 content-upload（class-review-system/systems/lesson-courseware/content-upload）
+# 不指向 E:/001/lesson-courseware/content-upload（系统 B 冻结区，改了不会生效）
 CONTENT_UPLOAD_DIR = os.path.normpath(
-    os.path.join(PREP_DIR, '..', '..', '..', 'lesson-courseware', 'content-upload')
+    os.path.join(PREP_DIR, '..', '..', 'systems', 'lesson-courseware', 'content-upload')
 )
 if CONTENT_UPLOAD_DIR not in sys.path:
     sys.path.insert(0, CONTENT_UPLOAD_DIR)

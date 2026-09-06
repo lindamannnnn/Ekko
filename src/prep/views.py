@@ -30,10 +30,11 @@ from extensions import db
 from models import User, PrepJob
 from . import prep_bp
 
-from .pipeline.ingest import ingest_file, ingest_text
-from .pipeline.segment import segment
-from .pipeline.moderate import moderate
-from .render import render, list_styles, STYLE_IDS
+# content-upload 模块统一走 sys.path（__init__.py 已加入 lesson-courseware/content-upload）
+from pipeline.ingest import ingest_file, ingest_text
+from pipeline.segment import segment
+from pipeline.moderate import moderate
+from render import render, list_styles, STYLE_IDS
 from .kb_courses import list_kb_courses, get_entry, kb_to_slides
 
 
@@ -69,20 +70,6 @@ GRADES = [f"{g}{s}" for g in range(1, 10) for s in ("年级上", "年级下")]
 
 DEMO_DIR = os.path.join(PREP_ROOT, "_style_demos")
 os.makedirs(DEMO_DIR, exist_ok=True)
-
-
-# ---------- 行内 markdown → HTML（content-upload 后处理） ----------
-
-def _md_inline_slides(slides: list) -> list:
-    """把 slides 里所有 title 和 bullets 的行内 markdown 转成 HTML。
-    用 markdown-it-py 库，稳定可靠。"""
-    from markdown_it import MarkdownIt
-    md = MarkdownIt()
-
-    for s in slides:
-        s["title"] = md.renderInline(s.get("title") or "")
-        s["bullets"] = [md.renderInline(str(b)) for b in (s.get("bullets") or [])]
-    return slides
 
 
 # ---------- 工具函数 ----------
@@ -247,14 +234,15 @@ def _run_content_job(job_id: str, user_id: str, app):
                 env["AI_BASE_URL"] = user.ai_base_url
             if job.use_own_key and user and user.ai_model:
                 env["AI_MODEL"] = user.ai_model
-            # content-upload 不走 LLM 切页：GLM-4-Flash 会剥掉行内格式符号（**加粗**、`代码`）。
-            # 规则降级（_regex_segment）能完整保留格式，且代码块提取、章节层级识别都已稳定。
-            slides = segment(job.original_text or "", env=env, allow_llm=False)
+            # LLM 切页（prompt 已要求保留行内符号 + 连贯性）；失败自动降级规则切页
+            slides = segment(job.original_text or "", env=env, allow_llm=True)
             if not slides:
                 raise RuntimeError("切页失败：未能将内容拆分为幻灯片")
 
-            # 后处理：把行内 markdown 转成 HTML（保留格式、去符号）
-            slides = _md_inline_slides(slides)
+            # LLM 审核连贯性：切碎的内容重新合并/调整（不改写文字；失败则原样）
+            from pipeline.review import review_slides
+            slides = review_slides(slides, env=env)
+
             title = job.title or slides[0].get("title") or "我的课件"
             html_out = render(slides, job.style or STYLE_IDS[0], title=title)
             out_path = os.path.join(PREP_ROOT, job_id, "index.html")
