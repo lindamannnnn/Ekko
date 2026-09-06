@@ -95,13 +95,13 @@ def _clean_md_symbols_with_llm(slides: list, env: dict) -> list:
         return slides
 
     prompt = (
-        "请把下面 JSON 数组里的文本中的 markdown 格式符号去掉，保留内容。\n"
+        "请把下面 JSON 数组里的文本中的 markdown 格式符号转成 HTML 标签，保留格式。\n"
         "规则：\n"
-        "1. **加粗** → 加粗（去掉 **）\n"
-        "2. *斜体* → 斜体（去掉 *）\n"
-        "3. `代码` → 代码（去掉 `）\n"
-        "4. [文字](链接) → 文字（去掉链接语法）\n"
-        "5. ~~删除线~~ → 删除线（去掉 ~~）\n"
+        "1. **加粗** → <strong>加粗</strong>\n"
+        "2. *斜体* → <em>斜体</em>\n"
+        "3. `代码` → <code>代码</code>\n"
+        "4. [文字](链接) → <a href=\"链接\">文字</a>\n"
+        "5. ~~删除线~~ → <del>删除线</del>\n"
         "6. 代码块占位符 §§CODE_BLOCK_N§§ 原样保留\n"
         "7. 只输出处理后的 JSON 数组，不要解释\n"
         "输入 JSON："
