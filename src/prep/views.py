@@ -451,10 +451,27 @@ def content_style(cid):
         job.style = style
         job.title = title or job.filename
         db.session.commit()
-        # 同步生成（不走线程）：gunicorn 多 worker 环境下 threading 不可靠，
-        # 且 content-upload 切页+渲染是毫秒级操作，不需要异步。
-        _run_content_job(cid, user.id, current_app._get_current_object())
-        return redirect(url_for("prep.result", job=cid))
+        # 异步生成：LLM 切页+审核需要几秒到十几秒，同步会阻塞请求（用户看到"没反应"）。
+        # 走线程 + generating 动画页，前端轮询 /status/<job> 等完成后跳转。
+        app = current_app._get_current_object()
+        def _run():
+            try:
+                _run_content_job(cid, user.id, app)
+            except Exception as e:
+                # 线程异常兜底：标记 failed，不让 job 永远卡在 running
+                try:
+                    with app.app_context():
+                        j = PrepJob.query.get(cid)
+                        if j and j.status == "running":
+                            j.status = "failed"
+                            j.error_msg = f"后台线程异常: {str(e)[:200]}"
+                            db.session.commit()
+                except Exception:
+                    pass
+        t = threading.Thread(target=_run)
+        t.daemon = True
+        t.start()
+        return redirect(url_for("prep.generating", job=cid))
     return render_template("prep/content_style.html", job=job, styles=list_styles(), user=user)
 
 
