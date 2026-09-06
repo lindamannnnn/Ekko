@@ -71,58 +71,17 @@ DEMO_DIR = os.path.join(PREP_ROOT, "_style_demos")
 os.makedirs(DEMO_DIR, exist_ok=True)
 
 
-# ---------- 行内 markdown 符号清理（content-upload 后处理） ----------
+# ---------- 行内 markdown → HTML（content-upload 后处理） ----------
 
-def _clean_md_symbols_with_llm(slides: list, env: dict) -> list:
-    """用 LLM 把 slides 里的 markdown 符号去掉，保留内容。
-    如果 LLM 失败则原样返回（不阻塞生成）。"""
-    import json as _json
-    import sys as _sys
-    # 确保 content-upload 的 pipeline 在路径里
-    _sys.path.insert(0, "/app/systems/lesson-courseware/content-upload")
-    from pipeline.llm import make_client
-    from pipeline.segment import _extract_json_array
+def _md_inline_slides(slides: list) -> list:
+    """把 slides 里所有 title 和 bullets 的行内 markdown 转成 HTML。
+    用 markdown-it-py 库，稳定可靠。"""
+    from markdown_it import MarkdownIt
+    md = MarkdownIt()
 
-    # 收集所有文本
-    texts = []
     for s in slides:
-        texts.append(s.get("title") or "")
-        texts.extend([str(b) for b in (s.get("bullets") or [])])
-
-    # 有格式符号才处理
-    has_md = any(re.search(r"\*\*|\*|_|~~|`|\[.*\]\(.*\)", t) for t in texts)
-    if not has_md:
-        return slides
-
-    prompt = (
-        "请把下面 JSON 数组里的文本中的 markdown 格式符号转成 HTML 标签，保留格式。\n"
-        "规则：\n"
-        "1. **加粗** → <strong>加粗</strong>\n"
-        "2. *斜体* → <em>斜体</em>\n"
-        "3. `代码` → <code>代码</code>\n"
-        "4. [文字](链接) → <a href=\"链接\">文字</a>\n"
-        "5. ~~删除线~~ → <del>删除线</del>\n"
-        "6. 代码块占位符 §§CODE_BLOCK_N§§ 原样保留\n"
-        "7. 只输出处理后的 JSON 数组，不要解释\n"
-        "输入 JSON："
-    )
-
-    try:
-        client = make_client(env)
-        # 分批处理（防 token 超限）
-        for i, s in enumerate(slides):
-            payload = [s.get("title") or ""] + [str(b) for b in (s.get("bullets") or [])]
-            out = client.complete(
-                [{"role": "system", "content": prompt},
-                 {"role": "user", "content": _json.dumps(payload, ensure_ascii=False)}],
-                temperature=0.1, max_tokens=2000, retries=2)
-            arr = _extract_json_array(out)
-            if arr and len(arr) == len(payload):
-                s["title"] = arr[0]
-                s["bullets"] = arr[1:] if len(arr) > 1 else []
-    except Exception:
-        pass  # LLM 失败则原样返回
-
+        s["title"] = md.renderInline(s.get("title") or "")
+        s["bullets"] = [md.renderInline(str(b)) for b in (s.get("bullets") or [])]
     return slides
 
 
@@ -294,8 +253,8 @@ def _run_content_job(job_id: str, user_id: str, app):
             if not slides:
                 raise RuntimeError("切页失败：未能将内容拆分为幻灯片")
 
-            # 后处理：用 LLM 把行内 markdown 符号去掉（保留内容）
-            slides = _clean_md_symbols_with_llm(slides, env=env)
+            # 后处理：把行内 markdown 转成 HTML（保留格式、去符号）
+            slides = _md_inline_slides(slides)
             title = job.title or slides[0].get("title") or "我的课件"
             html_out = render(slides, job.style or STYLE_IDS[0], title=title)
             out_path = os.path.join(PREP_ROOT, job_id, "index.html")
