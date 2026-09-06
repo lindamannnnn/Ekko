@@ -167,8 +167,12 @@ def _md_inline(s: str) -> str:
     if not s:
         return ""
     text = str(s)
-    # 如果已有 HTML 标签（LLM 后处理已转），直接返回不重复转义
+    # 如果已有 HTML 标签（LLM 后处理已转），恢复转义并返回
     if re.search(r"</?(strong|em|del|code|a|br|p|div|span)[^>]*>", text, re.I):
+        return text
+    # LLM 可能把 < > 转义成 &lt; &gt;，先恢复再返回
+    if re.search(r"&lt;/?(strong|em|del|code|a|br|p|div|span)[^&]*&gt;", text, re.I):
+        text = html.unescape(text)
         return text
     # 先转义所有内容，再按顺序替换 md → HTML
     text = html.escape(text, quote=True)
