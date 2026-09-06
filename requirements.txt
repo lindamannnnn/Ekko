@@ -18,6 +18,9 @@ email_validator>=2.1.0
 
 # 配置 / 环境变量
 PyYAML>=6.0
+
+# markdown 转 HTML（content-upload 课件行内格式）
+markdown-it-py>=3.0.0
 python-dotenv>=1.0.0
 
 # HTTP（AI 调用，OpenAI 兼容接口）
