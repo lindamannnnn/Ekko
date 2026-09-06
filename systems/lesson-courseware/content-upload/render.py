@@ -220,23 +220,37 @@ def _slide_html(slide: dict, cover: bool = False, title: str = "",
     if style_id == "graffiti":
         raw = _with_emoji(raw)
     t = _md_inline(raw)  # 标题也支持行内格式（**加粗** / `代码` 等）
-    bullets = slide.get("bullets") or []
-    lis = "".join(f"<li>{_md_inline(b)}</li>" for b in bullets if str(b).strip())
-    body = f'<ul class="bullets">{lis}</ul>' if lis else ""
-    # v3 修复：渲染多行代码块
+    # 渲染 bullets：含 §§CODE_BLOCK_N§§ 占位符的替换为代码块
     code = slide.get("code") or ""
-    # v3 修复：渲染多行代码块；inline style 保证即使未来风格 CSS 覆盖 .code-block，
-    # 代码的等宽字体与换行/缩进也不会丢。
+    code_html = ""
     if code.strip():
         code_html = (
             f'<pre class="code-block" style="white-space:pre;overflow-x:auto;">'
             f'<code style="font-family:var(--mono);white-space:pre;display:block;">'
             f'{_esc(code)}</code></pre>'
         )
-    else:
-        code_html = ""
+
+    bullets = slide.get("bullets") or []
+    lis_parts = []
+    for b in bullets:
+        if not str(b).strip():
+            continue
+        b_str = str(b)
+        # 代码块占位符：替换为 <pre><code>
+        m = re.match(r"^§§CODE_BLOCK_(\d+)§§$", b_str.strip())
+        if m and code_html:
+            lis_parts.append(f"<li>{code_html}</li>")
+            code_html = ""  # 只替换一次
+        else:
+            lis_parts.append(f"<li>{_md_inline(b_str)}</li>")
+    lis = "".join(lis_parts)
+    body = f'<ul class="bullets">{lis}</ul>' if lis else ""
+
+    # 如果 code 没被占位符消费，追加到底部
+    if code_html:
+        body += code_html
     return (f'<section class="slide"><div class="slide-inner">'
-            f'<h2 class="title">{t}</h2>{body}{code_html}</div>'
+            f'<h2 class="title">{t}</h2>{body}</div>'
             f'<div class="slide-num"></div></section>')
 
 

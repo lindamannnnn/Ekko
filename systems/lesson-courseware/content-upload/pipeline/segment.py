@@ -128,6 +128,24 @@ class CodeBlockExtractor:
             # 1) 标准 markdown 围栏
             if s.startswith("```"):
                 lang = s[3:].strip()
+                # 判断是否为输入/输出样例（前面有「输入样例」「输出样例」等标记）
+                # 这些不是代码，是数据，不提取为代码块
+                prev_line = lines[i - 1].strip() if i > 0 else ""
+                is_sample = bool(re.search(
+                    r"(输入样例|输出样例|示例输入|示例输出|sample input|sample output)",
+                    prev_line, re.I))
+                if is_sample:
+                    # 保留原样（不提取），让 LLM 把内容拆成 bullets
+                    out.append(line)
+                    i += 1
+                    while i < n:
+                        if lines[i].strip().startswith("```"):
+                            out.append(lines[i])
+                            i += 1
+                            break
+                        out.append(lines[i])
+                        i += 1
+                    continue
                 i += 1
                 code_lines: list[str] = []
                 while i < n:
@@ -335,6 +353,9 @@ def segment_by_llm(text: str, client, max_slides: int = 24) -> list:
         "5. bullets 里直接放原文要点，**行首**的 markdown 结构标记（###、##、-、*、>、•、：开头的序号等）都剥掉；"
         "但**行内**的格式符号必须保留：**加粗**、*斜体*、`代码`、[文字](链接) 这些保留原样，不要删除；\n"
         "6. 如果原文有代码块（如 ```python ... ``` 或 python/运行 ... 开头的代码），必须整段保留在 code 字段中，不要把代码拆进 bullets；\n"
+        "   **特别注意**：输入样例、输出样例的内容（如 `3\\n2\\n5\\n10`）不是代码，是普通文本，"
+        "必须按行拆成 bullets 放在「输入样例：」标记后面；\n"
+        "   **代码块必须放 code 字段**：bullets 里只放 `§§CODE_BLOCK_0§§` 占位符，code 字段放完整代码原文；\n"
         "7. **连贯性（最重要）**：必须理解内容逻辑再切页——\n"
         "   - 同一个例题的「题目描述、分析、代码、输入样例、输出样例、答案」必须放在同一页，绝不拆散到不同页；\n"
         "   - 标题和它的正文必须在同一页，禁止「标题单独一页、正文下一页」；\n"
@@ -345,7 +366,7 @@ def segment_by_llm(text: str, client, max_slides: int = 24) -> list:
         "9. 特别注意：为了保留多行代码，原文中的代码块已被替换为形如 §§CODE_BLOCK_0§§、§§CODE_BLOCK_1§§ 的占位符。"
         "你必须把这些占位符原样放进对应 slide 的 bullets 中，不要展开、不要删除、不要放到 title 里；"
         "系统会自动把它们还原成完整代码。示例：\n"
-        '[{"title":"一、什么是二维数组","bullets":["一维数组是一行数据","二维数组是列表嵌套列表","§§CODE_BLOCK_0§§"]}]'
+        '[{"title":"练习1：多组数据求和","bullets":["题目：输入T，接下来T行每行一个整数","**输入样例：**","3","2","5","10","**输出样例：**","4","10","20","**参考代码：**","§§CODE_BLOCK_0§§"],"code":"#include <iostream>\\nusing namespace std;\\nint main() {\\n    int t; cin >> t;\\n    while (t--) {\\n        int n; cin >> n;\\n        cout << n * 2 << endl;\\n    }\\n    return 0;\\n}"}]'
     )
     try:
         out = client.complete(
