@@ -454,9 +454,10 @@ def content_style(cid):
         # 异步生成：LLM 切页+审核需要几秒到十几秒，同步会阻塞请求（用户看到"没反应"）。
         # 走线程 + generating 动画页，前端轮询 /status/<job> 等完成后跳转。
         app = current_app._get_current_object()
+        user_id = user.id  # 提前提取，避免闭包捕获 current_user 代理（请求结束后销毁）
         def _run():
             try:
-                _run_content_job(cid, user.id, app)
+                _run_content_job(cid, user_id, app)
             except Exception as e:
                 # 线程异常兜底：标记 failed，不让 job 永远卡在 running
                 try:
