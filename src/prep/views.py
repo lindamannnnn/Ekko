@@ -232,7 +232,9 @@ def _run_content_job(job_id: str, user_id: str, app):
                 env["AI_BASE_URL"] = user.ai_base_url
             if job.use_own_key and user and user.ai_model:
                 env["AI_MODEL"] = user.ai_model
-            slides = segment(job.original_text or "", env=env)
+            # content-upload 不走 LLM：GLM-4-Flash 会剥掉行内格式符号（**加粗**、`代码`），
+            # 规则降级（_regex_segment）能完整保留格式，且代码块提取、章节层级识别都已稳定。
+            slides = segment(job.original_text or "", env=env, allow_llm=False)
             if not slides:
                 raise RuntimeError("切页失败：未能将内容拆分为幻灯片")
             title = job.title or slides[0].get("title") or "我的课件"
