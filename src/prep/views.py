@@ -86,12 +86,25 @@ _MD_INLINE_RULES = [
 
 
 def _md_inline_text(s: str) -> str:
-    """把行内 markdown 符号转成 HTML，其余转义防 XSS。"""
+    """把行内 markdown 符号转成 HTML，其余转义防 XSS。
+    关键：先把 ** 和 ` 替换为占位符，转义后再恢复成 HTML 标签。"""
     if not s:
         return ""
-    text = html.escape(str(s), quote=True)
-    for rx, rep in _MD_INLINE_RULES:
-        text = rx.sub(rep, text)
+    text = str(s)
+    # 占位符替换（转义后这些字符不变）
+    text = re.sub(r"\*\*(.+?)\*\*", r"\x01BOLD\x02\1\x01/BOLD\x02", text)
+    text = re.sub(r"__(.+?)__", r"\x01BOLD\x02\1\x01/BOLD\x02", text)
+    text = re.sub(r"`([^`\n<]+?)`", r"\x01CODE\x02\1\x01/CODE\x02", text)
+    text = re.sub(r"\[([^\]]+)\]\(([^)]+)\)", r"\x01LINK\x02\1\x01URL\x02\2\x01/URL\x02", text)
+    text = re.sub(r"!\[[^\]]*\]\([^)]+\)", "", text)
+    # 转义剩余内容
+    text = html.escape(text, quote=True)
+    # 恢复 HTML 标签
+    text = re.sub(r"\x01BOLD\x02(.*?)\x01/BOLD\x02", r"<strong>\1</strong>", text)
+    text = re.sub(r"\x01CODE\x02(.*?)\x01/CODE\x02", r"<code>\1</code>", text)
+    text = re.sub(r"\x01LINK\x02(.*?)\x01URL\x02(.*?)\x01/URL\x02", r'<a href="\2" target="_blank" rel="noopener">\1</a>', text)
+    # 清理占位符
+    text = text.replace("\x01", "").replace("\x02", "")
     return text
 
 
