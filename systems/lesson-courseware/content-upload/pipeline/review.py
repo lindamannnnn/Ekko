@@ -33,12 +33,48 @@ def _extract_json_array(out: str) -> list:
         return []
 
 
-def _split_multi_exercises(slides: list) -> list:
-    """规则拆分：一页里有多个「练习/例题」标记 → 拆分成多页。
+def _split_code_blocks(code: str) -> list:
+    """把合并的 code 字符串拆回独立的代码块。
 
-    识别标记：`练习 1`、`练习 2`、`例题 1`、`例 1`、`Example 1` 等。
+    优先按 restore_slide 写入的分隔符 §§CODE_SEP_N§§ 切（精确还原）；
+    没有分隔符则按启发式（#include / def / class 等新块开头）切；
+    最后退化为按 \\n\\n 切。
     """
-    _EXERCISE_RE = re.compile(r"^(?:练习|例题|例|Example|EXAMPLE)\s*[0-9一二三四五六七八九十]+")
+    if not code or not code.strip():
+        return []
+    # 1) 优先：按 CODE_SEP 分隔符切
+    if "§§CODE_SEP_" in code:
+        parts = re.split(r"§§CODE_SEP_\d+§§\n?", code)
+        return [p.strip() for p in parts if p.strip()]
+    # 2) 启发式：新代码块开头标记
+    lines = code.split("\n")
+    blocks = []
+    cur = []
+    _NEW_BLOCK_RE = re.compile(
+        r"^\s*(?:#include|using namespace|def |class |function |const |let |var |public |private )")
+    for ln in lines:
+        if _NEW_BLOCK_RE.match(ln) and cur and any(c.strip() for c in cur):
+            blocks.append("\n".join(cur).strip())
+            cur = [ln]
+        else:
+            cur.append(ln)
+    if cur and any(c.strip() for c in cur):
+        blocks.append("\n".join(cur).strip())
+    if len(blocks) > 1:
+        return [b for b in blocks if b]
+    # 3) 退化：按 \n\n 切
+    return [c.strip() for c in code.split("\n\n") if c.strip()]
+
+
+def _split_multi_exercises(slides: list) -> list:
+    """规则拆分：一页里有多个「练习/例题/知识点」标记 → 拆分成多页。
+
+    识别标记：`练习 1`、`练习 2`、`例题 1`、`例 1`、`Example 1`、
+    `知识点 1`、`知识点 2`（含 🔴/🟠 等 emoji 前缀）等。
+    代码块按占位符在 bullets 中出现的顺序依次分配（第 1 个占位符 → 第 1 个代码块）。
+    """
+    _EXERCISE_RE = re.compile(
+        r"^(?:\*\*)*(?:[🔴🟠🟡🟢🔵🟣⚡🎯📌]*\s*)*(?:练习|例题|例|Example|EXAMPLE|知识点|考点|要点)\s*[0-9一二三四五六七八九十]+")
     out = []
     for s in slides:
         bullets = s.get("bullets") or []
@@ -54,24 +90,43 @@ def _split_multi_exercises(slides: list) -> list:
 
         # 按练习标记拆分成多页
         code = s.get("code") or ""
-        # code 可能是多个代码块合并的字符串，按 \n\n 分割成块
-        code_blocks = [c.strip() for c in code.split("\n\n") if c.strip()]
+        # code 是多个代码块按 \n\n 拼接的字符串，但代码块内部也有空行，
+        # 不能简单按 \n\n 切。用启发式分块：新块以 #include / 语言标记行开头，
+        # 或按占位符编号对应的顺序块（restore_slide 按占位符编号升序合并）。
+        code_blocks = _split_code_blocks(code)
+        all_ph = []
+        for b in bullets:
+            for m in re.finditer(r"§§CODE_BLOCK_(\d+)§§", str(b)):
+                all_ph.append(int(m.group(1)))
+        all_ph_sorted = sorted(set(all_ph))
+        ph_rank = {ph: rank for rank, ph in enumerate(all_ph_sorted)}
+        n_chunks = len(split_points)
+        # 按页序分配模式：只要代码块数 > 0 就启用（代码块在原文中的顺序与练习/知识点的顺序一致）
+        seq_mode = not all_ph_sorted and code_blocks
+        code_cursor = 0
         for idx, start in enumerate(split_points):
             end = split_points[idx + 1] if idx + 1 < len(split_points) else len(bullets)
             chunk = bullets[start:end]
-            # 第一页保留原标题，后续页用练习标记作为标题
-            title = s.get("title") or ""
-            if idx > 0:
-                title = str(chunk[0]).strip()
-            # code 按占位符索引分配：bullets 里有 §§CODE_BLOCK_N§§ 的页，取第 N 个代码块
-            chunk_code = ""
+            # 每页标题都用该页第一个标记（练习/知识点 N），不保留原合并页的标题
+            # 否则第一页标题是「知识点讲解」这种大节标题，内容却是知识点 1
+            title = str(chunk[0]).strip()
+            chunk_codes = []
             for b in chunk:
-                m = re.search(r"§§CODE_BLOCK_(\d+)§§", str(b))
-                if m and code_blocks:
-                    block_idx = int(m.group(1))
-                    if block_idx < len(code_blocks):
-                        chunk_code = code_blocks[block_idx]
-                    break
+                for m in re.finditer(r"§§CODE_BLOCK_(\d+)§§", str(b)):
+                    ph = int(m.group(1))
+                    rank = ph_rank.get(ph)
+                    if rank is not None and rank < len(code_blocks):
+                        chunk_codes.append(code_blocks[rank])
+            chunk_code = "\n\n".join(chunk_codes)
+            # 顺序分配：本页取一个代码块；最后一页把剩余的都带上
+            if not chunk_code and seq_mode:
+                if idx < n_chunks - 1:
+                    if code_cursor < len(code_blocks):
+                        chunk_code = code_blocks[code_cursor]
+                        code_cursor += 1
+                else:
+                    chunk_code = "\n\n".join(code_blocks[code_cursor:])
+                    code_cursor = len(code_blocks)
             out.append({
                 "title": title,
                 "bullets": chunk,

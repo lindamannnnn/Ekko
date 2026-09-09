@@ -222,6 +222,8 @@ def _slide_html(slide: dict, cover: bool = False, title: str = "",
     t = _md_inline(raw)  # 标题也支持行内格式（**加粗** / `代码` 等）
     # 渲染 bullets：含 §§CODE_BLOCK_N§§ 占位符的替换为代码块
     code = slide.get("code") or ""
+    # 剥掉 restore_slide 写入的代码块分隔符（§§CODE_SEP_N§§），不展示给用户
+    code = re.sub(r"§§CODE_SEP_\d+§§\n?", "", code).strip()
     code_html = ""
     if code.strip():
         code_html = (

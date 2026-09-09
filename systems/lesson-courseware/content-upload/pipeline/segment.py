@@ -154,6 +154,17 @@ class CodeBlockExtractor:
                         break
                     code_lines.append(lines[i])
                     i += 1
+                # 无语言标记的围栏：内容不含代码特征（无 = ; () {} 等）不提取为代码块
+                # 比如 `char → int → long long → double` 这种类型链说明
+                if not lang:
+                    joined = "\n".join(code_lines)
+                    has_code_char = bool(re.search(r"[=;(){}\[\]<>]|->|<<|>>", joined))
+                    if not has_code_char:
+                        # 不是代码，保留原样让 LLM 拆成 bullets
+                        out.append("```")
+                        out.extend(code_lines)
+                        out.append("```")
+                        continue
                 marker = self._add_block(code_lines, lang)
                 if marker:
                     out.append(marker)
@@ -270,7 +281,13 @@ class CodeBlockExtractor:
         if raw_code:
             codes.append(self._replace_code_markers(str(raw_code)))
         if codes:
-            slide["code"] = "\n\n".join(c for c in codes if c.strip())
+            # 用带编号的分隔符合并，review 拆页时能按编号还原成独立代码块
+            # 格式：\n\n§§CODE_SEP_0§§\n<code0>\n\n§§CODE_SEP_1§§\n<code1>
+            parts = []
+            for i, c in enumerate(codes):
+                if c.strip():
+                    parts.append(f"§§CODE_SEP_{i}§§\n{c}")
+            slide["code"] = "\n\n".join(parts)
         else:
             slide.pop("code", None)
         slide["bullets"] = bullets
@@ -359,11 +376,13 @@ def segment_by_llm(text: str, client, max_slides: int = 24) -> list:
         "7. **连贯性（最重要）**：必须理解内容逻辑再切页——\n"
         "   - **一个练习/例题 = 一页**：`### 练习 1` 到 `### 练习 2` 之间的内容必须独立成页，"
         "绝不把多个练习合并到同一页；\n"
+        "   - **一个知识点 = 一页**：`知识点 1`、`知识点 2`（含 `🔴 知识点 1：标题` 这种带 emoji 的）"
+        "各自独立成页，每个知识点的「讲解文字 + 表格 + 代码块 + 考点提示」必须在同一页；\n"
+        "   - **「知识点 N：标题」这一行必须作为该页的 title**，同时原样保留在 bullets 第一行"
+        "（规则拆分要靠它识别边界）；\n"
         "   - 同一个例题的「题目描述、分析、代码、输入样例、输出样例、答案」必须放在同一页，绝不拆散到不同页；\n"
         "   - 标题和它的正文必须在同一页，禁止「标题单独一页、正文下一页」；\n"
-        "   - 一个知识点的「讲解 + 举例 + 易错点」尽量放同一页；\n"
-        "   - 宁可每页内容多一点，也不要把连贯的内容切碎；\n"
-        "   - **每个练习/例题必须独立成页**，即使内容很少也要单独一页；\n"
+        "   - 宁可页数多一点，也不要把多个练习/知识点合并到一页；\n"
         "8. 只输出 JSON 数组，不要任何解释。格式：\n"
         '[{"title":"...","bullets":["..."],"code":"..."}, ...]\n'
         "9. 特别注意：为了保留多行代码，原文中的代码块已被替换为形如 §§CODE_BLOCK_0§§、§§CODE_BLOCK_1§§ 的占位符。"
